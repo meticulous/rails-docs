@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+USAGE = <<~MSG
+  Usage: bin/load [JSONL_PATH]
+    Reads JSONL produced by rails_docs_ingester and writes records to Postgres.
+    Pass `-` or omit the path to read from stdin.
+MSG
+
+require_relative "../config/environment"
+
+input = ARGV[0]
+case input
+when "-h", "--help"
+  warn USAGE
+  exit
+end
+
+io =
+  if input.nil? || input == "-"
+    $stdin
+  else
+    File.open(input, "r")
+  end
+
+begin
+  Loader.new(io).import!
+  warn "Imported successfully."
+ensure
+  io.close unless io == $stdin
+end
