@@ -1,10 +1,199 @@
 /*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
+ * Minimal styles for rails-docs. Intended to evolve into the design system
+ * once that work begins; for now, content-first typographic defaults.
  */
+
+:root {
+  --color-text: #222;
+  --color-muted: #666;
+  --color-link: #c00;
+  --color-link-hover: #800;
+  --color-border: #ddd;
+  --color-bg: #fff;
+  --color-bg-soft: #fafafa;
+  --color-code-bg: #f4f4f4;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --max-width: 64rem;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-code-bg);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+.muted { color: var(--color-muted); }
+
+.site-header {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-soft);
+}
+
+.site-header__inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.site-header__brand {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.site-main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.home h1 { margin-top: 0; }
+.home__lede { font-size: 1.15rem; color: var(--color-muted); }
+
+.version-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.version-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.version-list__link { font-weight: 500; margin-right: 0.5rem; }
+.version-list__meta { color: var(--color-muted); font-size: 0.9rem; }
+
+.entity__breadcrumb {
+  font-family: var(--font-mono);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  margin: 0 0 0.25rem;
+}
+
+.entity__name {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.entity__kind {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0.15em 0.5em;
+}
+
+.entity__version {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  margin-top: 0;
+}
+
+.entity__doc { margin: 2rem 0; }
+
+.entity__source {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.entity section h2 {
+  margin-top: 2rem;
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.25rem;
+}
+
+.method-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.25rem 1rem;
+}
+
+.method-list li {
+  padding: 0.15rem 0;
+}
+
+.method-list__scope {
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+}
+
+.method-group {
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-soft);
+}
+
+.method-group summary {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.method-group summary code {
+  background: transparent;
+  padding: 0;
+}
+
+.method-group__count {
+  color: var(--color-muted);
+  font-weight: normal;
+  font-size: 0.9em;
+}
+
+.method-group .method-list {
+  padding: 0 0.75rem 0.75rem;
+}

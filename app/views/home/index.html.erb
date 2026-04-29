@@ -1,0 +1,26 @@
+<% content_for :title, "Ruby on Rails API" %>
+
+<div class="home">
+  <h1>Ruby on Rails API</h1>
+  <p class="home__lede">
+    Reference documentation for the Ruby on Rails framework, browsable per release.
+  </p>
+
+  <h2>Versions</h2>
+  <% if @package_versions.any? %>
+    <ul class="version-list">
+      <% @package_versions.each do |pv| %>
+        <li>
+          <%= link_to version_label(pv),
+                      entity_path(version: version_url_segment(pv), path: "active_record/base"),
+                      class: "version-list__link" %>
+          <span class="version-list__meta">
+            ord <%= pv.ord %> · ingested <%= time_ago_in_words(pv.ingested_at) %> ago
+          </span>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="muted">No versions ingested yet. Run <code>bin/load</code> to import a JSONL dump.</p>
+  <% end %>
+</div>
