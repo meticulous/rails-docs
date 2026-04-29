@@ -1,0 +1,32 @@
+ar_persistence_save_v8_1_3:
+  entity_identity: ar_persistence_save
+  package_version: v8_1_3
+  framework: activerecord
+  visibility: public
+  doc_markdown: "Saves the record."
+  doc_summary: Saves the record.
+  source_path: activerecord/lib/active_record/persistence.rb
+  source_line_start: 412
+  source_line_end: 450
+
+ar_base_v8_1_3:
+  entity_identity: ar_base
+  package_version: v8_1_3
+  framework: activerecord
+  visibility: public
+
+ar_persistence_v8_1_3:
+  entity_identity: ar_persistence
+  package_version: v8_1_3
+  framework: activerecord
+  visibility: public
+
+foo_name_v8_1_3:
+  entity_identity: foo_name
+  package_version: v8_1_3
+  visibility: public
+
+foo_bar_v8_1_3:
+  entity_identity: foo_bar
+  package_version: v8_1_3
+  visibility: public

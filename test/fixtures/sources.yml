@@ -1,0 +1,5 @@
+rails:
+  slug: rails
+  display_name: Ruby on Rails
+  github_repo: rails/rails
+  default_branch: main

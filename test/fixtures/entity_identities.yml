@@ -1,0 +1,39 @@
+ar_base:
+  source: rails
+  fqn: "ActiveRecord::Base"
+  kind: class
+  name: Base
+  parent_fqn: "ActiveRecord"
+  framework: activerecord
+
+ar_persistence:
+  source: rails
+  fqn: "ActiveRecord::Persistence"
+  kind: module
+  name: Persistence
+  parent_fqn: "ActiveRecord"
+  framework: activerecord
+
+ar_persistence_save:
+  source: rails
+  fqn: "ActiveRecord::Persistence#save"
+  kind: method
+  name: save
+  scope: instance
+  parent_fqn: "ActiveRecord::Persistence"
+  framework: activerecord
+
+foo_name:
+  source: rails
+  fqn: "Foo#name"
+  kind: attribute
+  name: name
+  scope: instance
+  parent_fqn: Foo
+
+foo_bar:
+  source: rails
+  fqn: "Foo::BAR"
+  kind: constant
+  name: BAR
+  parent_fqn: Foo

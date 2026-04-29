@@ -1,0 +1,9 @@
+activerecord:
+  source: rails
+  slug: activerecord
+  display_name: Active Record
+
+activesupport:
+  source: rails
+  slug: activesupport
+  display_name: Active Support
