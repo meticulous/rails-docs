@@ -18,6 +18,7 @@ end
 
 io =
   if input.nil? || input == "-"
+    $stdin.set_encoding(Encoding::UTF_8)
     $stdin
   else
     File.open(input, "r:UTF-8")
@@ -26,6 +27,12 @@ io =
 begin
   Loader.new(io).import!
   warn "Imported successfully."
+rescue Loader::HeaderRequired,
+       Loader::UnsupportedSchemaVersion,
+       Loader::UnknownRecordType,
+       Loader::PackageVersionRequired => e
+  warn "Import failed: #{e.message}"
+  exit 1
 ensure
   io.close unless io == $stdin
 end

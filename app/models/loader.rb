@@ -1,5 +1,10 @@
 require "json"
+require "securerandom"
 
+# Imports a JSONL stream produced by `rails_docs_ingester` into Postgres.
+# The header carries source metadata and a schema_version that this loader
+# tolerates as long as the producer's version is <= our SCHEMA_VERSION
+# (forward-compat for additive field changes).
 class Loader
   SCHEMA_VERSION = 1
 
@@ -11,6 +16,7 @@ class Loader
   def initialize(io, run_id: self.class.next_run_id)
     @io = io
     @run_id = run_id
+    @line_number = 0
     @source = nil
     @package_version = nil
     @framework_cache = {}
@@ -29,7 +35,7 @@ class Loader
   end
 
   def self.next_run_id
-    (Time.now.to_f * 1_000_000).to_i
+    SecureRandom.random_number(2**63)
   end
 
   private
@@ -37,26 +43,26 @@ class Loader
   def read_first_record
     line = @io.gets
     raise HeaderRequired, "JSONL stream is empty" if line.nil?
-    parse_line(line)
+    @line_number = 1
+    JSON.parse(line)
   end
 
   def read_next_record
     while (line = @io.gets)
+      @line_number += 1
       next if line.strip.empty?
-      return parse_line(line)
+      return JSON.parse(line)
     end
     nil
-  end
-
-  def parse_line(line)
-    JSON.parse(line.dup.force_encoding(Encoding::UTF_8))
   end
 
   def process_header(record)
     raise HeaderRequired, "First record must be {type: 'header'}, got #{record['type'].inspect}" \
       unless record["type"] == "header"
-    raise UnsupportedSchemaVersion, "Got #{record['schema_version']}, expected #{SCHEMA_VERSION}" \
-      if record["schema_version"] != SCHEMA_VERSION
+    if record["schema_version"].to_i > SCHEMA_VERSION
+      raise UnsupportedSchemaVersion,
+            "JSONL schema_version=#{record['schema_version']} exceeds loader SCHEMA_VERSION=#{SCHEMA_VERSION}"
+    end
 
     @source = Source.find_or_initialize_by(slug: record["source_slug"])
     @source.assign_attributes(
@@ -79,7 +85,7 @@ class Loader
     when "attribute_version" then upsert_attribute_version(record)
     when "method_param" then upsert_method_param(record)
     when "inheritance_edge" then upsert_inheritance_edge(record)
-    else raise UnknownRecordType, "Unknown record type: #{record['type'].inspect}"
+    else raise UnknownRecordType, "Line #{@line_number}: unknown record type #{record['type'].inspect}"
     end
   end
 
@@ -218,22 +224,42 @@ class Loader
                     .destroy_all
   end
 
+  # One grouped query + one UPDATE FROM VALUES per 1000-row batch. Avoids
+  # the per-identity N+1 of the naive find_each / versions.first /
+  # versions.last loop.
   def refresh_first_last_seen_versions
-    affected_ids = @package_version.entity_versions.pluck(:entity_identity_id)
-    return if affected_ids.empty?
-
-    EntityIdentity.where(id: affected_ids).find_each do |identity|
-      versions = identity.entity_versions.joins(:package_version).order("package_versions.ord ASC")
-      identity.update_columns(
-        first_seen_version_id: versions.first&.package_version_id,
-        last_seen_version_id: versions.last&.package_version_id
+    rows = EntityVersion
+      .joins(:package_version)
+      .where(entity_identity_id: @package_version.entity_versions.select(:entity_identity_id))
+      .group(:entity_identity_id)
+      .pluck(
+        :entity_identity_id,
+        Arel.sql("(array_agg(entity_versions.package_version_id ORDER BY package_versions.ord ASC))[1]"),
+        Arel.sql("(array_agg(entity_versions.package_version_id ORDER BY package_versions.ord DESC))[1]")
       )
+    return if rows.empty?
+
+    rows.each_slice(1_000) do |slice|
+      values = slice.map { |id, first, last|
+        "(#{Integer(id)}, #{quote_nullable_int(first)}, #{quote_nullable_int(last)})"
+      }.join(",")
+      ApplicationRecord.connection.execute(<<~SQL)
+        UPDATE entity_identities AS ei
+        SET first_seen_version_id = data.first_id,
+            last_seen_version_id = data.last_id
+        FROM (VALUES #{values}) AS data(id, first_id, last_id)
+        WHERE ei.id = data.id
+      SQL
     end
+  end
+
+  def quote_nullable_int(value)
+    value.nil? ? "NULL" : Integer(value).to_s
   end
 
   def refresh_inheritance_closure
     InheritanceClosure.where(package_version_id: @package_version.id).delete_all
-    ApplicationRecord.connection.execute(<<~SQL)
+    sql = ApplicationRecord.send(:sanitize_sql_array, [<<~SQL, @package_version.id])
       INSERT INTO inheritance_closures
         (package_version_id, descendant_identity_id, ancestor_identity_id, depth, via_relation)
       WITH RECURSIVE closure AS (
@@ -244,7 +270,7 @@ class Loader
           1 AS depth,
           ie.relation AS via_relation
         FROM inheritance_edges ie
-        WHERE ie.package_version_id = #{@package_version.id}
+        WHERE ie.package_version_id = ?
 
         UNION
 
@@ -263,6 +289,7 @@ class Loader
       FROM closure
       GROUP BY package_version_id, descendant_identity_id, ancestor_identity_id
     SQL
+    ApplicationRecord.connection.execute(sql)
   end
 
   def framework_for(slug)
@@ -292,6 +319,6 @@ class Loader
   def require_package_version!
     return if @package_version
     raise PackageVersionRequired,
-          "package_version record must appear before entity records"
+          "Line #{@line_number}: package_version record must appear before entity records"
   end
 end
