@@ -20,7 +20,7 @@ io =
   if input.nil? || input == "-"
     $stdin
   else
-    File.open(input, "r")
+    File.open(input, "r:UTF-8")
   end
 
 begin

@@ -37,15 +37,19 @@ class Loader
   def read_first_record
     line = @io.gets
     raise HeaderRequired, "JSONL stream is empty" if line.nil?
-    JSON.parse(line)
+    parse_line(line)
   end
 
   def read_next_record
     while (line = @io.gets)
       next if line.strip.empty?
-      return JSON.parse(line)
+      return parse_line(line)
     end
     nil
+  end
+
+  def parse_line(line)
+    JSON.parse(line.dup.force_encoding(Encoding::UTF_8))
   end
 
   def process_header(record)
