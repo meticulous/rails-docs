@@ -152,9 +152,7 @@ class Loader
 
   def upsert_method_version(record)
     version = entity_version_for!(record["fqn"], "method", record["scope"])
-    aliased = if record["aliased_fqn"]
-      identity_for!(record["aliased_fqn"], "method", record["aliased_scope"])
-    end
+    aliased = identity_for(record["aliased_fqn"], "method", record["aliased_scope"]) if record["aliased_fqn"]
     method_version = MethodVersion.find_or_initialize_by(entity_version: version)
     method_version.update!(
       yields: record["yields"],
@@ -166,9 +164,7 @@ class Loader
 
   def upsert_class_version(record)
     version = entity_version_for!(record["fqn"], record["kind"] || "class", nil)
-    superclass = if record["superclass_fqn"]
-      identity_for!(record["superclass_fqn"], record["superclass_kind"] || "class", nil)
-    end
+    superclass = identity_for(record["superclass_fqn"], record["superclass_kind"] || "class", nil) if record["superclass_fqn"]
     class_version = ClassVersion.find_or_initialize_by(entity_version: version)
     class_version.update!(superclass_identity: superclass)
   end
@@ -198,8 +194,9 @@ class Loader
 
   def upsert_inheritance_edge(record)
     require_package_version!
-    child = identity_for!(record["child_fqn"], record["child_kind"], nil)
-    ancestor = identity_for!(record["ancestor_fqn"], record["ancestor_kind"], nil)
+    child = identity_for(record["child_fqn"], record["child_kind"], nil)
+    ancestor = identity_for(record["ancestor_fqn"], record["ancestor_kind"], nil)
+    return unless child && ancestor # silently skip edges referencing un-ingested entities
     edge = InheritanceEdge.find_or_initialize_by(
       package_version: @package_version,
       child_identity: child,
@@ -319,6 +316,17 @@ class Loader
   def identity_for!(fqn, kind, scope)
     @identity_cache[identity_key(fqn, kind, scope)] ||=
       @source.entity_identities.find_by!(fqn: fqn, kind: kind, scope: scope)
+  end
+
+  # Soft sibling: returns nil instead of raising when the identity is
+  # missing. Used for cross-references (aliases, superclasses, edge
+  # endpoints) where the target may legitimately have been suppressed
+  # by RDoc (:nodoc:, vendored, outside the parsed source set).
+  def identity_for(fqn, kind, scope)
+    return nil if fqn.blank?
+    key = identity_key(fqn, kind, scope)
+    return @identity_cache[key] if @identity_cache.key?(key)
+    @identity_cache[key] = @source.entity_identities.find_by(fqn: fqn, kind: kind, scope: scope)
   end
 
   def cache_identity(identity)

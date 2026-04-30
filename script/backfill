@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Backfills a Rails version: worktree the tag, run ingester, run loader.
+#   ./script/backfill v8.0.4 8000004
+# Usage:
+#   tag=v8.0.4 ord=8000004 ./script/backfill
+set -euo pipefail
+
+RAILS_REPO="${RAILS_REPO:-$HOME/Development/Rails/rails}"
+INGESTER_DIR="${INGESTER_DIR:-$HOME/Development/Rails/rails_docs_ingester}"
+RAILS_DOCS_DIR="${RAILS_DOCS_DIR:-$HOME/Development/Rails/rails-docs}"
+JSONL_OUT="${JSONL_OUT:-/tmp/rails-docs-output}"
+
+tag="${1:-${tag:-}}"
+ord="${2:-${ord:-}}"
+
+if [[ -z "$tag" || -z "$ord" ]]; then
+  echo "usage: $0 <tag> <ord>  (e.g. $0 v8.0.4 8000004)" >&2
+  exit 1
+fi
+
+channel="${tag#v}"
+worktree="/tmp/rails-${tag}"
+jsonl="${JSONL_OUT}/${channel}.jsonl"
+
+mkdir -p "$JSONL_OUT"
+
+# Resolve git_sha at the tag (for source links in the rendered pages)
+sha="$(git -C "$RAILS_REPO" rev-parse --short=10 "$tag")"
+
+# Create worktree if not already present
+if [[ ! -d "$worktree" ]]; then
+  git -C "$RAILS_REPO" worktree add "$worktree" "$tag" >/dev/null
+fi
+
+# Build framework path list. Older Rails versions don't have all of these.
+sources=()
+for path in activesupport/lib activerecord/lib activemodel/lib actionpack/lib \
+            actionview/lib actionview/app actionmailer/lib activejob/lib \
+            actioncable/lib actioncable/app activestorage/lib activestorage/app \
+            actionmailbox/lib actionmailbox/app actiontext/lib actiontext/app \
+            railties/lib; do
+  if [[ -d "${worktree}/${path}" ]]; then
+    sources+=("$path")
+  fi
+done
+
+echo "==> Ingesting $tag ($sha) → $jsonl"
+echo "    sources: ${sources[*]}"
+
+(
+  cd "$INGESTER_DIR"
+  bundle exec exe/rails_docs_ingester \
+    --output "$jsonl" \
+    --source-root "$worktree" \
+    --channel "$channel" \
+    --git-ref "$tag" \
+    --git-sha "$sha" \
+    --ord "$ord" \
+    --source-slug rails \
+    --source-display-name "Ruby on Rails" \
+    --source-github-repo rails/rails \
+    --quiet \
+    "${sources[@]}"
+)
+
+echo "==> Loading $jsonl"
+(
+  cd "$RAILS_DOCS_DIR"
+  bin/load "$jsonl"
+)
+
+echo "==> Done $tag"
