@@ -1,0 +1,126 @@
+<% content_for :title, @presenter.title %>
+
+<% content_for :header do %>
+  <%= render "entities/version_switcher", current: @package_version %>
+<% end %>
+
+<article class="entity">
+  <header class="entity__header">
+    <%= render "entities/breadcrumbs", fqn: @presenter.fqn %>
+    <h1 class="entity__name">
+      <span class="entity__kind"><%= @presenter.kind %></span>
+      <%= @presenter.name %>
+    </h1>
+    <p class="entity__version">Ruby on Rails <%= @package_version.channel %></p>
+  </header>
+
+  <div class="entity__layout">
+    <div class="entity__body">
+      <section class="entity__doc">
+        <% if @presenter.doc_html.present? %>
+          <%= @presenter.doc_html.html_safe %>
+        <% elsif @presenter.doc_markdown.present? %>
+          <%= simple_format(h(@presenter.doc_markdown)) %>
+        <% else %>
+          <p class="muted">No documentation comment.</p>
+        <% end %>
+      </section>
+
+      <%= render "entities/source_link", entity_version: @entity_version %>
+
+      <% if @presenter.superclass_identity %>
+        <section class="entity__inherits">
+          <h2>Inherits from</h2>
+          <p><%= entity_link(@presenter.superclass_identity, @package_version) %></p>
+        </section>
+      <% end %>
+
+      <% if @presenter.included_modules.any? %>
+        <section class="entity__includes">
+          <h2 id="section-includes">Includes</h2>
+          <ul class="entity__module-list">
+            <% @presenter.included_modules.each do |mod| %>
+              <li><%= entity_link(mod, @package_version) %></li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @presenter.extended_modules.any? %>
+        <section class="entity__extends">
+          <h2 id="section-extends">Extends</h2>
+          <ul class="entity__module-list">
+            <% @presenter.extended_modules.each do |mod| %>
+              <li><%= entity_link(mod, @package_version) %></li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @presenter.constants.any? %>
+        <section class="entity__constants">
+          <h2 id="section-constants">Constants</h2>
+          <ul class="entity__simple-list">
+            <% @presenter.constants.each do |const| %>
+              <li><%= entity_link(const, @package_version) %></li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @presenter.attributes.any? %>
+        <section class="entity__attributes">
+          <h2 id="section-attributes">Attributes</h2>
+          <ul class="entity__simple-list">
+            <% @presenter.attributes.each do |attr| %>
+              <li><%= entity_link(attr, @package_version) %></li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @presenter.own_methods.any? %>
+        <section class="entity__own-methods">
+          <h2 id="section-methods">Methods (defined here)</h2>
+          <ul class="method-list">
+            <% @presenter.own_methods.each do |method_identity| %>
+              <li>
+                <span class="method-list__scope"><%= method_identity.scope == "singleton" ? "self." : "#" %></span>
+                <%= entity_link(method_identity, @package_version, label: method_identity.name) %>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @presenter.inherited_methods_grouped.any? %>
+        <section class="entity__inherited-methods">
+          <h2 id="section-inherited">Methods (inherited)</h2>
+          <% @presenter.inherited_methods_grouped.each do |ancestor_fqn, methods| %>
+            <details class="method-group" open>
+              <summary>
+                From <%= link_to ancestor_fqn, entity_path(version: version_url_segment(@package_version), path: fqn_to_path(ancestor_fqn)) %>
+                <span class="method-group__count">(<%= methods.size %>)</span>
+              </summary>
+              <ul class="method-list">
+                <% methods.each do |parent_fqn, method_name, method_scope, method_fqn| %>
+                  <% parent_path = fqn_to_path(parent_fqn) %>
+                  <% slug = MethodSlug.encode(method_name) %>
+                  <% slug = "#{slug}.class" if method_scope == "singleton" %>
+                  <li>
+                    <span class="method-list__scope"><%= method_scope == "singleton" ? "self." : "#" %></span>
+                    <%= link_to method_name, entity_path(version: version_url_segment(@package_version), path: "#{parent_path}/#{slug}") %>
+                  </li>
+                <% end %>
+              </ul>
+            </details>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
+
+    <aside class="entity__outline">
+      <%= render "entities/outline", presenter: @presenter %>
+    </aside>
+  </div>
+</article>

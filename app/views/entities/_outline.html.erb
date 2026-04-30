@@ -1,0 +1,23 @@
+<nav class="outline" aria-label="On this page">
+  <h2 class="outline__title">On this page</h2>
+  <ul>
+    <% if presenter.included_modules.any? %>
+      <li><a href="#section-includes">Includes</a></li>
+    <% end %>
+    <% if presenter.extended_modules.any? %>
+      <li><a href="#section-extends">Extends</a></li>
+    <% end %>
+    <% if presenter.constants.any? %>
+      <li><a href="#section-constants">Constants</a></li>
+    <% end %>
+    <% if presenter.attributes.any? %>
+      <li><a href="#section-attributes">Attributes</a></li>
+    <% end %>
+    <% if presenter.own_methods.any? %>
+      <li><a href="#section-methods">Methods</a></li>
+    <% end %>
+    <% if presenter.inherited_methods_grouped.any? %>
+      <li><a href="#section-inherited">Inherited methods (<%= presenter.inherited_methods_grouped.sum { |_, m| m.size } %>)</a></li>
+    <% end %>
+  </ul>
+</nav>

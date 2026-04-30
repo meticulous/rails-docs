@@ -1,0 +1,86 @@
+<% content_for :title, @presenter.title %>
+
+<% content_for :header do %>
+  <%= render "entities/version_switcher", current: @package_version %>
+<% end %>
+
+<article class="entity entity--method">
+  <header class="entity__header">
+    <%= render "entities/breadcrumbs", fqn: @presenter.fqn %>
+    <h1 class="entity__name">
+      <span class="entity__kind"><%= @presenter.scope == "singleton" ? "class method" : "instance method" %></span>
+      <code><%= @presenter.scope_prefix %><%= @presenter.name %></code>
+    </h1>
+    <p class="entity__version">Ruby on Rails <%= @package_version.channel %></p>
+  </header>
+
+  <% if @presenter.signature_text.present? || @presenter.call_seq.present? %>
+    <section class="entity__signature">
+      <h2 class="visually-hidden">Signature</h2>
+      <% if @presenter.call_seq.present? %>
+        <pre class="signature signature--call-seq"><code><%= @presenter.call_seq %></code></pre>
+      <% else %>
+        <pre class="signature"><code><%= @presenter.scope_prefix %><%= @presenter.name %><%= @presenter.signature_text %></code></pre>
+      <% end %>
+    </section>
+  <% end %>
+
+  <section class="entity__doc">
+    <% if @presenter.doc_html.present? %>
+      <%= @presenter.doc_html.html_safe %>
+    <% elsif @presenter.doc_markdown.present? %>
+      <%= simple_format(h(@presenter.doc_markdown)) %>
+    <% else %>
+      <p class="muted">No documentation comment.</p>
+    <% end %>
+  </section>
+
+  <% if @presenter.method_params.any? %>
+    <section class="entity__params">
+      <h2>Parameters</h2>
+      <dl class="param-list">
+        <% @presenter.method_params.each do |param| %>
+          <dt>
+            <code><%= param.name %></code>
+            <span class="param-list__kind"><%= param.kind %></span>
+            <% if param.default_expr.present? %>
+              <span class="param-list__default">= <%= param.default_expr %></span>
+            <% end %>
+          </dt>
+          <% if param.doc.present? %>
+            <dd><%= param.doc %></dd>
+          <% end %>
+        <% end %>
+      </dl>
+    </section>
+  <% end %>
+
+  <% if @presenter.aliased %>
+    <section class="entity__alias">
+      <h2>Alias for</h2>
+      <p><%= entity_link(@presenter.aliased, @package_version) %></p>
+    </section>
+  <% end %>
+
+  <% if @presenter.source_code.present? %>
+    <section class="entity__source-code">
+      <details>
+        <summary>Source</summary>
+        <pre><code><%= @presenter.source_code %></code></pre>
+      </details>
+    </section>
+  <% end %>
+
+  <%= render "entities/source_link", entity_version: @entity_version %>
+
+  <% if @presenter.parent_identity %>
+    <section class="entity__back">
+      <p>
+        Defined in
+        <%= link_to @presenter.identity.parent_fqn,
+                    entity_path(version: version_url_segment(@package_version),
+                                path: fqn_to_path(@presenter.identity.parent_fqn)) %>
+      </p>
+    </section>
+  <% end %>
+</article>

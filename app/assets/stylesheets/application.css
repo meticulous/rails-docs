@@ -197,3 +197,199 @@ pre code {
 .method-group .method-list {
   padding: 0 0.75rem 0.75rem;
 }
+
+/* Breadcrumbs */
+.breadcrumbs {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin-bottom: 0.25rem;
+}
+
+.breadcrumbs ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.breadcrumbs li:not(:last-child)::after {
+  content: "::";
+  margin-left: 0.25rem;
+  color: var(--color-muted);
+}
+
+.breadcrumbs a { color: var(--color-link); }
+.breadcrumbs [aria-current="page"] { color: var(--color-text); }
+
+/* Layout (body + outline aside) */
+.entity__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14rem;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 60rem) {
+  .entity__layout { grid-template-columns: 1fr; }
+  .entity__outline { order: -1; }
+}
+
+.entity__body { min-width: 0; }
+
+.entity__doc h1, .entity__doc h2, .entity__doc h3 {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.entity__doc h2 { font-size: 1.15rem; }
+.entity__doc h3 { font-size: 1rem; }
+.entity__doc pre {
+  background: var(--color-code-bg);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.entity__doc :not(pre) > code {
+  white-space: nowrap;
+}
+
+/* Outline */
+.outline {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  font-size: 0.9rem;
+  border-left: 1px solid var(--color-border);
+  padding-left: 1rem;
+}
+
+.outline__title {
+  margin-top: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.outline ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.outline li { margin: 0.25rem 0; }
+
+/* Version switcher */
+.version-switcher {
+  margin-left: auto;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.version-switcher select {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+}
+
+.version-switcher--single {
+  font-family: var(--font-mono);
+  background: var(--color-code-bg);
+  padding: 0.15em 0.5em;
+  border-radius: 3px;
+}
+
+/* Module list (for Includes/Extends) */
+.entity__module-list,
+.entity__simple-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 0.25rem 1rem;
+}
+
+/* Signature block on method pages */
+.signature {
+  background: var(--color-code-bg);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.signature--call-seq { white-space: pre; }
+
+/* Params list on method pages */
+.param-list dt {
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+}
+
+.param-list__kind {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0 0.4em;
+  font-family: var(--font-body);
+}
+
+.param-list__default { color: var(--color-muted); }
+.param-list dd { margin: 0.25rem 0 0 1rem; color: var(--color-muted); }
+
+/* Source code block on method pages */
+.entity__source-code summary {
+  cursor: pointer;
+  color: var(--color-muted);
+  margin: 1rem 0 0.5rem;
+}
+
+.entity__source-code pre {
+  background: var(--color-code-bg);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  white-space: pre;
+}
+
+.entity__back {
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,11 @@
+<% if entity_version.source_path.present? %>
+  <p class="entity__source">
+    Defined in <code><%= entity_version.source_path %></code><%= " line #{entity_version.source_line_start}" if entity_version.source_line_start %>
+    <% if (gh = github_source_url(entity_version)) %>
+      · <%= link_to "View on GitHub", gh, rel: "noopener noreferrer", target: "_blank" %>
+    <% end %>
+    <% if (edit = github_edit_url(entity_version)) %>
+      · <%= link_to "Improve this page", edit, rel: "noopener noreferrer", target: "_blank" %>
+    <% end %>
+  </p>
+<% end %>
