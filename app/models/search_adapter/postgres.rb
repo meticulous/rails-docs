@@ -8,8 +8,12 @@ class SearchAdapter::Postgres
     started_at = Time.now
     return empty_response(started_at) if query.blank?
 
-    scope = matching(query)
-    scope = scope.where(package_version: version) if version
+    scope = matching(query).joins(:entity_identity)
+    # Default to current_stable so searches don't surface duplicates
+    # across versions. Explicit `version:` overrides, supporting the
+    # version-scoped search UI.
+    effective_version = version || PackageVersion.current_stable
+    scope = scope.where(package_version: effective_version) if effective_version
 
     total = scope.count
     rows = scope
@@ -36,11 +40,23 @@ class SearchAdapter::Postgres
     EntityVersion.where("search_vector @@ websearch_to_tsquery('english', ?)", query)
   end
 
+  # Kind-aware boost: methods, attributes, and constants are typically what
+  # users search for ("has_many", "save", "find_by"); modules and classes
+  # are reachable via search but shouldn't outrank a method whose name
+  # exactly matches the query just because the module's body mentions it
+  # often. Multipliers are intentionally modest so a strong-name match
+  # on a class still beats a weak body match on a method.
   def rank_expression(query)
     Arel.sql(
       ApplicationRecord.send(:sanitize_sql_array, [
-        "ts_rank_cd(search_vector, websearch_to_tsquery('english', ?), 32) * " \
-          "CASE WHEN deprecated THEN 0.4 ELSE 1.0 END DESC",
+        "ts_rank_cd(entity_versions.search_vector, websearch_to_tsquery('english', ?), 32) * " \
+          "CASE WHEN entity_versions.deprecated THEN 0.4 ELSE 1.0 END * " \
+          "CASE entity_identities.kind " \
+          "  WHEN 'method' THEN 1.6 " \
+          "  WHEN 'attribute' THEN 1.4 " \
+          "  WHEN 'constant' THEN 1.2 " \
+          "  ELSE 1.0 " \
+          "END DESC",
         query
       ])
     )

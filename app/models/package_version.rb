@@ -26,4 +26,10 @@ class PackageVersion < ApplicationRecord
 
   validates :channel, presence: true, uniqueness: { scope: :source_id }
   validates :git_ref, :git_sha, :ord, presence: true
+
+  # Highest-ord ingested release that isn't a prerelease. Used as the
+  # default "current" view for canonical URLs and unscoped search.
+  def self.current_stable
+    where.not(ingested_at: nil).where(prerelease: [nil, ""]).order(ord: :desc).first
+  end
 end
