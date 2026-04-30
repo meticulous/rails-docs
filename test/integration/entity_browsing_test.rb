@@ -26,6 +26,18 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".version-list a", text: "v8.1.3"
   end
 
+  test "every page renders the accessibility scaffolding" do
+    get root_path
+    assert_response :success
+    # Skip-to-main keyboard affordance, paired with the matching id on
+    # <main> so Tab → Enter actually jumps content.
+    assert_select "a.skip-link[href=?]", "#main-content", text: /Skip to main/
+    assert_select "main#main-content"
+    # Landmarks
+    assert_select "header.site-header"
+    assert_select "footer.site-footer"
+  end
+
   test "every page emits a Content-Security-Policy header" do
     get root_path
     assert_response :success

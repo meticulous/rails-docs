@@ -49,6 +49,8 @@
 
   <body data-controller="keyboard search-palette"
         data-action="keydown.meta+k@window->search-palette#open keydown.ctrl+k@window->search-palette#open">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
     <header class="site-header">
       <div class="site-header__inner">
         <%= link_to "Ruby on Rails API", root_path, class: "site-header__brand" %>
@@ -65,7 +67,7 @@
       </div>
     </header>
 
-    <main class="site-main">
+    <main class="site-main" id="main-content" tabindex="-1">
       <%= yield %>
     </main>
 

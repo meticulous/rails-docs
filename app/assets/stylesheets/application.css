@@ -717,6 +717,43 @@ h4:hover > .anchor-link,
   border: 0;
 }
 
+/* Skip-to-main keyboard affordance — invisible until focused. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-bg);
+  color: var(--color-link);
+  border: 2px solid var(--color-link);
+  font-weight: 600;
+  z-index: 100;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  top: 0.5rem;
+  outline: none;
+}
+
+/* Default visible Tab outline. Components that paint their own focus
+ * indicator (palette__input, site-header__search input, anchor-link)
+ * suppress this with `outline: none` paired with their custom paint. */
+:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
+}
+
+/* Honor user motion preferences across all animations and transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Search box in site header */
 .site-header__search {
   flex: 1;
