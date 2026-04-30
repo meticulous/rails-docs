@@ -43,7 +43,8 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body data-controller="keyboard">
+  <body data-controller="keyboard search-palette"
+        data-action="keydown.meta+k@window->search-palette#open keydown.ctrl+k@window->search-palette#open">
     <header class="site-header">
       <div class="site-header__inner">
         <%= link_to "Ruby on Rails API", root_path, class: "site-header__brand" %>
@@ -67,5 +68,7 @@
     <footer class="site-footer">
       <p>API documentation for the Ruby on Rails framework.</p>
     </footer>
+
+    <%= render "shared/search_palette" %>
   </body>
 </html>

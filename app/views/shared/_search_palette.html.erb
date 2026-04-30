@@ -1,0 +1,22 @@
+<dialog class="palette"
+        data-search-palette-target="dialog"
+        data-action="click->search-palette#close keydown->search-palette#onKeydown">
+  <div class="palette__inner" data-action="click->search-palette#stopPropagation">
+    <input type="search"
+           class="palette__input"
+           placeholder="Search Rails docs"
+           autocomplete="off"
+           autocorrect="off"
+           autocapitalize="off"
+           spellcheck="false"
+           data-search-palette-target="input"
+           data-action="input->search-palette#onInput">
+    <ul class="palette__results" data-search-palette-target="results" role="listbox"></ul>
+    <p class="palette__empty muted" data-search-palette-target="empty">
+      Type at least 2 characters to search.
+    </p>
+    <p class="palette__hint muted">
+      <kbd>↑↓</kbd> navigate · <kbd>↵</kbd> open · <kbd>esc</kbd> close
+    </p>
+  </div>
+</dialog>

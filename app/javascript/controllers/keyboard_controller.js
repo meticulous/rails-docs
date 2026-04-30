@@ -1,12 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Global keyboard shortcuts.
+// Global "/" shortcut to focus the inline header search box. ⌘/Ctrl-K
+// is owned by search_palette_controller (it opens the modal palette).
 //
-//   ⌘/Ctrl-K  → focus the site-header search box
-//   /         → focus the search box (when not already in an input)
-//
-// The controller is attached to <body>; targets are found by selector so
-// individual elements don't need data-keyboard-target wiring.
+// The controller is attached to <body>; the search input is found by
+// selector so it doesn't need data-keyboard-target wiring.
 export default class extends Controller {
   connect() {
     this.boundHandle = this.handle.bind(this)
@@ -18,12 +16,6 @@ export default class extends Controller {
   }
 
   handle(event) {
-    if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-      event.preventDefault()
-      this.focusSearch()
-      return
-    }
-
     if (event.key === "/" && !this.isTypingInField(event.target)) {
       event.preventDefault()
       this.focusSearch()
