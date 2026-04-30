@@ -4,9 +4,14 @@ class EntitiesController < ApplicationController
   def show
     @package_version = PackageVersion.find_by!(channel: channel_from_param)
     @identity = resolve_entity!
-    @entity_version = @identity.entity_versions.find_by!(package_version: @package_version)
-    @presenter = build_presenter
-    render template_for(@identity)
+    @entity_version = @identity.entity_versions.find_by(package_version: @package_version)
+
+    if @entity_version
+      @presenter = build_presenter
+      render template_for(@identity)
+    else
+      render "entities/missing", status: :not_found
+    end
   end
 
   private

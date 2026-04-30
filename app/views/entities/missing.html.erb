@@ -1,0 +1,59 @@
+<% content_for :title, "#{@identity.fqn} — not in v#{@package_version.channel}" %>
+
+<% content_for :header do %>
+  <%= render "entities/version_switcher", current: @package_version %>
+<% end %>
+
+<article class="entity entity--missing">
+  <header class="entity__header">
+    <%= render "entities/breadcrumbs", fqn: @identity.fqn %>
+    <h1 class="entity__name">
+      <span class="entity__kind"><%= @identity.kind %></span>
+      <%= @identity.name %>
+    </h1>
+    <p class="entity__version muted">
+      Not present in Ruby on Rails <%= @package_version.channel %>.
+    </p>
+  </header>
+
+  <% first_seen = @identity.first_seen_version %>
+  <% last_seen = @identity.last_seen_version %>
+
+  <section class="entity__doc">
+    <% if first_seen && last_seen %>
+      <p>
+        <strong><code><%= @identity.fqn %></code></strong> was documented from
+        <%= link_to version_label(first_seen),
+                    entity_path(version: version_url_segment(first_seen),
+                                path: entity_url_path(@identity)) %>
+        through
+        <%= link_to version_label(last_seen),
+                    entity_path(version: version_url_segment(last_seen),
+                                path: entity_url_path(@identity)) %>.
+      </p>
+      <% if last_seen.ord < @package_version.ord %>
+        <p class="muted">
+          It looks like the entity was removed in a release between
+          <%= version_label(last_seen) %> and v<%= @package_version.channel %>.
+        </p>
+      <% elsif first_seen.ord > @package_version.ord %>
+        <p class="muted">
+          The entity was introduced after v<%= @package_version.channel %> shipped.
+        </p>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="entity__missing-jumps">
+    <h2>Available in</h2>
+    <ul class="entity__module-list">
+      <% @identity.available_versions.distinct.order(ord: :desc).each do |pv| %>
+        <li>
+          <%= link_to version_label(pv),
+                      entity_path(version: version_url_segment(pv),
+                                  path: entity_url_path(@identity)) %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+</article>
