@@ -6,6 +6,11 @@ Rails.application.routes.draw do
   get "/search", to: "search#index", as: :search
   get "/sitemap.xml", to: "sitemaps#index", as: :sitemap, defaults: { format: :xml }
 
+  # Legacy sdoc URL shapes — 301 to the current stable equivalent.
+  get "/classes/*sdoc_path", to: "legacy_redirects#class_show", format: false
+  get "/files/*sdoc_path", to: "legacy_redirects#file_show", format: false
+  get "/_legacy_method", to: "legacy_redirects#method_redirect"
+
   scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
     get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
     get "*entity_path/-/diff/:other_version",
