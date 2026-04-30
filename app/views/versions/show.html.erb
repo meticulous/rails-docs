@@ -1,0 +1,46 @@
+<% content_for :title, "Ruby on Rails #{@package_version.channel}" %>
+<% content_for :canonical_url, version_url(version: version_url_segment(@package_version)) %>
+
+<% content_for :header do %>
+  <%= render "entities/version_switcher", current: @package_version %>
+<% end %>
+
+<article class="version-overview">
+  <header>
+    <p class="entity__breadcrumb">Ruby on Rails</p>
+    <h1>Version <%= @package_version.channel %></h1>
+    <p class="muted">
+      <% if @package_version.released_on %>
+        Released <%= @package_version.released_on.to_fs(:long) %>.
+      <% end %>
+      Ingested <%= time_ago_in_words(@package_version.ingested_at) %> ago
+      from <code><%= @package_version.git_ref %></code>.
+    </p>
+  </header>
+
+  <section>
+    <h2>Frameworks</h2>
+    <% if @frameworks.any? %>
+      <div class="framework-grid">
+        <% @frameworks.each do |slug, display_name, entity_count| %>
+          <%
+            top_module_fqn = display_name.delete(" ")
+            top_module = Source.find_by(slug: "rails")&.entity_identities&.where(kind: %w[module class])&.find_by(fqn: top_module_fqn)
+          %>
+          <article class="framework-card">
+            <h3>
+              <% if top_module %>
+                <%= entity_link(top_module, @package_version, label: display_name) %>
+              <% else %>
+                <%= display_name %>
+              <% end %>
+            </h3>
+            <p class="muted"><%= number_with_delimiter(entity_count) %> documented entities</p>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="muted">No frameworks ingested for this version.</p>
+    <% end %>
+  </section>
+</article>

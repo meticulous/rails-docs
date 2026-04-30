@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   get "/_legacy_method", to: "legacy_redirects#method_redirect"
 
   scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
+    get "/", to: "versions#show", as: :version
     get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
     get "*entity_path/-/diff/:other_version",
         to: "diffs#show",

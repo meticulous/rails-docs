@@ -6,16 +6,31 @@
     Reference documentation for the Ruby on Rails framework, browsable per release.
   </p>
 
-  <h2>Versions</h2>
   <% if @package_versions.any? %>
+    <% current = @package_versions.first %>
+    <p class="home__lede">
+      Latest:
+      <%= link_to version_label(current), version_path(version: version_url_segment(current)),
+                  class: "version-list__link" %>
+      —
+      <%= link_to "browse frameworks",
+                  version_path(version: version_url_segment(current)) %>
+      ·
+      <%= link_to "search docs", search_path %>
+    </p>
+
+    <h2>All ingested versions</h2>
     <ul class="version-list">
       <% @package_versions.each do |pv| %>
         <li>
           <%= link_to version_label(pv),
-                      entity_path(version: version_url_segment(pv), path: "active_record/base"),
+                      version_path(version: version_url_segment(pv)),
                       class: "version-list__link" %>
           <span class="version-list__meta">
-            ord <%= pv.ord %> · ingested <%= time_ago_in_words(pv.ingested_at) %> ago
+            <% if pv.released_on %>
+              released <%= pv.released_on.to_fs(:long) %> ·
+            <% end %>
+            ingested <%= time_ago_in_words(pv.ingested_at) %> ago
           </span>
         </li>
       <% end %>
