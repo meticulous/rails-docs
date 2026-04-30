@@ -20,4 +20,4 @@
   data[:description] = presenter.doc_summary if presenter.respond_to?(:doc_summary) && presenter.doc_summary.present?
   data.compact!
 %>
-<script type="application/ld+json"><%= raw JSON.generate(data) %></script>
+<script type="application/ld+json" nonce="<%= content_security_policy_nonce %>"><%= raw JSON.generate(data) %></script>

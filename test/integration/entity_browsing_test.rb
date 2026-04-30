@@ -26,6 +26,17 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".version-list a", text: "v8.1.3"
   end
 
+  test "every page emits a Content-Security-Policy header" do
+    get root_path
+    assert_response :success
+    csp = response.headers["Content-Security-Policy"]
+    assert csp.present?, "Expected CSP header to be set"
+    assert_match(/default-src 'none'/, csp)
+    assert_match(/script-src 'self' 'nonce-/, csp)
+    assert_match(/frame-ancestors 'none'/, csp)
+    assert_match(/object-src 'none'/, csp)
+  end
+
   test "home page surfaces frameworks for the current stable" do
     get root_path
     assert_response :success

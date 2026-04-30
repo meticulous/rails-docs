@@ -30,14 +30,19 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  # Kamal terminates TLS at the proxy, then forwards plain HTTP to the
+  # container — assume_ssl tells Rails the original request was HTTPS so
+  # secure cookies, HSTS, and url_for(only_path: false) all do the right
+  # thing.
+  config.assume_ssl = true
 
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
-
-  # Skip http-to-https redirect for the default health check endpoint.
-  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+  # Force all access to the app over SSL, use Strict-Transport-Security,
+  # and use secure cookies. Skip the redirect for the Kamal liveness
+  # probe (`/up`) and our app-level probe (`/health`) so they stay HTTP.
+  config.force_ssl = true
+  config.ssl_options = {
+    redirect: { exclude: ->(request) { request.path.in?(%w[/up /health]) } }
+  }
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
@@ -46,7 +51,9 @@ Rails.application.configure do
   # Change to "debug" to log everything (including potentially personally-identifiable information!).
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Prevent health checks from clogging up the logs.
+  # Prevent the Kamal liveness probe from clogging up the logs. Our
+  # app-level `/health` probe is hit at a lower cadence, so we leave
+  # it audible on purpose.
   config.silence_healthcheck_path = "/up"
 
   # Don't log any deprecations.
@@ -85,12 +92,14 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # DNS rebinding protection. Comma-separated list of allowed hosts
+  # comes from the deploy environment (`RAILS_ALLOWED_HOSTS`); falls
+  # back to api.rubyonrails.org when unset so a misconfigured env var
+  # doesn't accept arbitrary Host headers.
+  config.hosts = ENV.fetch("RAILS_ALLOWED_HOSTS", "api.rubyonrails.org").split(",").map(&:strip)
+  # Liveness/health endpoints get hit by container probes that don't
+  # always set Host correctly — exempt them.
+  config.host_authorization = {
+    exclude: ->(request) { request.path.in?(%w[/up /health]) }
+  }
 end

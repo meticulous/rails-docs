@@ -1,29 +1,34 @@
-# Be sure to restart your server when you modify this file.
+# Application-wide Content Security Policy. Locked-down by default,
+# with nonces auto-applied to importmap script tags and our JSON-LD
+# blocks. The schema:
+#
+#   default-src     'none'             — block by default; allow per-type
+#   script-src      'self' 'nonce-...' — self-hosted JS + nonce'd inline
+#   style-src       'self' 'nonce-...' — self-hosted CSS + nonce'd inline
+#   img-src         'self' data:       — self-hosted + data: (inline SVG)
+#   font-src        'self'             — self-hosted only
+#   connect-src     'self'             — XHR/fetch to /search/suggest.json
+#   form-action     'self'             — form posts to our endpoints only
+#   base-uri        'self'             — prevent <base> hijacking
+#   frame-ancestors 'none'             — block embedding (clickjacking)
+#   object-src      'none'             — no Flash / object plugins
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.default_src     :none
+    policy.script_src      :self
+    policy.style_src       :self
+    policy.img_src         :self, :data
+    policy.font_src        :self
+    policy.connect_src     :self
+    policy.form_action     :self
+    policy.base_uri        :self
+    policy.frame_ancestors :none
+    policy.object_src      :none
+  end
 
-# Define an application-wide content security policy.
-# See the Securing Rails Applications Guide for more information:
-# https://guides.rubyonrails.org/security.html#content-security-policy-header
-
-# Rails.application.configure do
-#   config.content_security_policy do |policy|
-#     policy.default_src :self, :https
-#     policy.font_src    :self, :https, :data
-#     policy.img_src     :self, :https, :data
-#     policy.object_src  :none
-#     policy.script_src  :self, :https
-#     policy.style_src   :self, :https
-#     # Specify URI for violation reports
-#     # policy.report_uri "/csp-violation-report-endpoint"
-#   end
-#
-#   # Generate session nonces for permitted importmap, inline scripts, and inline styles.
-#   config.content_security_policy_nonce_generator = ->(request) { request.session.id.to_s }
-#   config.content_security_policy_nonce_directives = %w(script-src style-src)
-#
-#   # Automatically add `nonce` to `javascript_tag`, `javascript_include_tag`, and `stylesheet_link_tag`
-#   # if the corresponding directives are specified in `content_security_policy_nonce_directives`.
-#   # config.content_security_policy_nonce_auto = true
-#
-#   # Report violations without enforcing the policy.
-#   # config.content_security_policy_report_only = true
-# end
+  # Nonce generator + the directives that opt into nonces. Rails will
+  # auto-apply the nonce to importmap and javascript_tag output; we
+  # also pull it through to our JSON-LD partial via `content_security_policy_nonce`.
+  config.content_security_policy_nonce_generator = ->(request) { SecureRandom.base64(16) }
+  config.content_security_policy_nonce_directives = %w[script-src style-src]
+end
