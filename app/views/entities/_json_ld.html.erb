@@ -1,0 +1,23 @@
+<%
+  data = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: presenter.fqn,
+    name: presenter.fqn,
+    inLanguage: "en",
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Ruby on Rails API",
+      url: root_url
+    },
+    proficiencyLevel: "Expert",
+    articleSection: presenter.respond_to?(:entity_version) && presenter.entity_version.framework&.display_name,
+    author: { "@type": "Organization", name: "Rails Foundation" },
+    publisher: { "@type": "Organization", name: "Rails Foundation" },
+    datePublished: package_version.released_on || package_version.ingested_at&.to_date,
+    url: url_for(only_path: false)
+  }
+  data[:description] = presenter.doc_summary if presenter.respond_to?(:doc_summary) && presenter.doc_summary.present?
+  data.compact!
+%>
+<script type="application/ld+json"><%= raw JSON.generate(data) %></script>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-controller="theme">
   <head>
     <title><%= content_for(:title) || "Ruby on Rails API" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,6 +8,31 @@
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+
+    <% if (canonical = content_for(:canonical_url)).present? %>
+      <link rel="canonical" href="<%= canonical %>">
+    <% end %>
+
+    <% if (description = content_for(:meta_description)).present? %>
+      <meta name="description" content="<%= description %>">
+    <% end %>
+
+    <meta property="og:type" content="<%= content_for(:og_type).presence || 'article' %>">
+    <meta property="og:title" content="<%= content_for(:title) || 'Ruby on Rails API' %>">
+    <% if (description = content_for(:meta_description)).present? %>
+      <meta property="og:description" content="<%= description %>">
+    <% end %>
+    <% if (canonical = content_for(:canonical_url)).present? %>
+      <meta property="og:url" content="<%= canonical %>">
+    <% end %>
+    <meta property="og:site_name" content="Ruby on Rails API">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="<%= content_for(:title) || 'Ruby on Rails API' %>">
+    <% if (description = content_for(:meta_description)).present? %>
+      <meta name="twitter:description" content="<%= description %>">
+    <% end %>
+
     <%= yield :head %>
 
     <link rel="icon" href="/icon.png" type="image/png">
@@ -27,6 +52,11 @@
                                 autocomplete: "off", aria: { label: "Search documentation" } %>
         <% end %>
         <%= yield :header %>
+        <button type="button"
+                class="theme-toggle"
+                data-action="click->theme#toggle"
+                data-theme-target="button"
+                aria-label="Toggle dark mode"></button>
       </div>
     </header>
 

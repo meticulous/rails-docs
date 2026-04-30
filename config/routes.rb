@@ -4,8 +4,10 @@ Rails.application.routes.draw do
   root "home#index"
 
   get "/search", to: "search#index", as: :search
+  get "/sitemap.xml", to: "sitemaps#index", as: :sitemap, defaults: { format: :xml }
 
   scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
+    get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
     get "*path",
         to: "entities#show",
         as: :entity,

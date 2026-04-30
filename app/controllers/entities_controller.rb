@@ -1,4 +1,6 @@
 class EntitiesController < ApplicationController
+  before_action :load_available_versions
+
   def show
     @package_version = PackageVersion.find_by!(channel: channel_from_param)
     @identity = resolve_entity!
@@ -8,6 +10,10 @@ class EntitiesController < ApplicationController
   end
 
   private
+
+  def load_available_versions
+    @available_versions = PackageVersion.where.not(ingested_at: nil).order(ord: :desc)
+  end
 
   def channel_from_param
     params[:version] == "edge" ? "edge" : params[:version].sub(/\Av/, "")

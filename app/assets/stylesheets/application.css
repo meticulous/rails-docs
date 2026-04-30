@@ -3,18 +3,99 @@
  * once that work begins; for now, content-first typographic defaults.
  */
 
+/*
+ * Color palette mirrors guides.rubyonrails.org (rails/guides). Brand red
+ * #C81418 is the Foundation token; gray scale and dark-mode tokens come
+ * from rails/guides/assets/stylesrc/style.scss + _dark.scss so the API
+ * site and the guides site read as one product.
+ */
+
 :root {
-  --color-text: #222;
-  --color-muted: #666;
-  --color-link: #c00;
-  --color-link-hover: #800;
-  --color-border: #ddd;
+  --rf-brand: #C81418;
+  --rf-brand-light: #d8181c;
+  --rf-brand-lighter: #e83d40;
+  --rf-brand-lightest: #f17072;
+  --rf-brand-dark: #831114;
+  --rf-brand-darker: #6a0e10;
+
+  --gray-100: #FAF9F8;
+  --gray-200: #F5F3F1;
+  --gray-300: #EBEBEA;
+  --gray-400: #DCDCD8;
+  --gray-500: #A9A9A8;
+  --gray-600: #666666;
+  --gray-700: #3A3939;
+  --gray-800: #343434;
+  --gray-850: #2E2E2E;
+  --gray-900: #292929;
+  --gray-1000: #181818;
+
+  --color-text: var(--gray-900);
+  --color-muted: var(--gray-600);
+  --color-link: var(--rf-brand);
+  --color-link-hover: var(--rf-brand-dark);
+  --color-border: var(--gray-300);
   --color-bg: #fff;
-  --color-bg-soft: #fafafa;
-  --color-code-bg: #f4f4f4;
+  --color-bg-soft: var(--gray-100);
+  --color-code-bg: var(--gray-200);
+
   --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --max-width: 64rem;
+  --radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #E5E5E5;
+    --color-muted: var(--gray-500);
+    --color-link: var(--rf-brand-lightest);
+    --color-link-hover: var(--rf-brand-lighter);
+    --color-border: var(--gray-850);
+    --color-bg: var(--gray-1000);
+    --color-bg-soft: var(--gray-900);
+    --color-code-bg: var(--gray-900);
+  }
+}
+
+[data-theme="light"] {
+  --color-text: var(--gray-900);
+  --color-muted: var(--gray-600);
+  --color-link: var(--rf-brand);
+  --color-link-hover: var(--rf-brand-dark);
+  --color-border: var(--gray-300);
+  --color-bg: #fff;
+  --color-bg-soft: var(--gray-100);
+  --color-code-bg: var(--gray-200);
+}
+
+[data-theme="dark"] {
+  --color-text: #E5E5E5;
+  --color-muted: var(--gray-500);
+  --color-link: var(--rf-brand-lightest);
+  --color-link-hover: var(--rf-brand-lighter);
+  --color-border: var(--gray-850);
+  --color-bg: var(--gray-1000);
+  --color-bg-soft: var(--gray-900);
+  --color-code-bg: var(--gray-900);
+}
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background: var(--color-bg-soft);
 }
 
 * { box-sizing: border-box; }
@@ -42,7 +123,7 @@ code {
   font-size: 0.9em;
   background: var(--color-code-bg);
   padding: 0.1em 0.3em;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 pre code {
@@ -125,7 +206,7 @@ pre code {
   letter-spacing: 0.05em;
   color: var(--color-muted);
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 0.15em 0.5em;
 }
 
@@ -173,7 +254,7 @@ pre code {
 .method-group {
   margin-bottom: 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius);
   background: var(--color-bg-soft);
 }
 
@@ -249,7 +330,7 @@ pre code {
 .entity__doc pre {
   background: var(--color-code-bg);
   padding: 0.75rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   overflow-x: auto;
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -301,7 +382,7 @@ pre code {
   font-size: inherit;
   padding: 0.25rem 0.5rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius);
   background: var(--color-bg);
 }
 
@@ -309,7 +390,7 @@ pre code {
   font-family: var(--font-mono);
   background: var(--color-code-bg);
   padding: 0.15em 0.5em;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 /* Module list (for Includes/Extends) */
@@ -327,7 +408,7 @@ pre code {
 .signature {
   background: var(--color-code-bg);
   padding: 0.75rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: 0.95rem;
   margin: 1rem 0;
@@ -351,7 +432,7 @@ pre code {
   letter-spacing: 0.05em;
   color: var(--color-muted);
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 0 0.4em;
   font-family: var(--font-body);
 }
@@ -369,7 +450,7 @@ pre code {
 .entity__source-code pre {
   background: var(--color-code-bg);
   padding: 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius);
   overflow-x: auto;
   font-family: var(--font-mono);
   font-size: 0.85rem;
@@ -407,7 +488,7 @@ pre code {
   font-size: 0.95rem;
   padding: 0.4rem 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius);
   background: var(--color-bg);
 }
 
@@ -433,7 +514,7 @@ pre code {
   font-size: 1rem;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
 .search-page__submit {
@@ -442,7 +523,7 @@ pre code {
   font-size: 1rem;
   border: 1px solid var(--color-border);
   background: var(--color-bg-soft);
-  border-radius: 4px;
+  border-radius: var(--radius);
   cursor: pointer;
 }
 
@@ -484,7 +565,7 @@ pre code {
   letter-spacing: 0.05em;
   color: var(--color-muted);
   border: 1px solid var(--color-border);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 0.1em 0.4em;
 }
 

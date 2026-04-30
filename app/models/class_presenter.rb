@@ -15,7 +15,7 @@ class ClassPresenter
   end
 
   def own_methods
-    methods_for([identity.fqn]).order(:scope, :name)
+    @own_methods ||= methods_for([identity.fqn]).order(:scope, :name).to_a
   end
 
   def inherited_methods_grouped
@@ -24,34 +24,37 @@ class ClassPresenter
     ancestor_fqns = ordered_ancestor_fqns
     return @inherited_methods_grouped = [] if ancestor_fqns.empty?
 
-    methods = methods_for(ancestor_fqns).pluck(:parent_fqn, :name, :scope, :fqn)
-    grouped = methods.group_by { |row| row[0] }
-    @inherited_methods_grouped = ancestor_fqns
-      .filter_map { |fqn| (rows = grouped[fqn]) && [fqn, rows.sort_by { |r| [r[2].to_s, r[1]] }] }
+    grouped = methods_for(ancestor_fqns).group_by(&:parent_fqn)
+    @inherited_methods_grouped = ancestor_fqns.filter_map { |fqn|
+      rows = grouped[fqn]
+      next unless rows
+      [fqn, rows.sort_by { |r| [r.scope.to_s, r.name] }]
+    }
   end
 
   def superclass_identity
-    entity_version.class_version&.superclass_identity
+    return @superclass_identity if defined?(@superclass_identity)
+    @superclass_identity = entity_version.class_version&.superclass_identity
   end
 
   def included_modules
-    edges_by_relation("include")
+    @included_modules ||= edges_by_relation("include")
   end
 
   def extended_modules
-    edges_by_relation("extend")
+    @extended_modules ||= edges_by_relation("extend")
   end
 
   def prepended_modules
-    edges_by_relation("prepend")
+    @prepended_modules ||= edges_by_relation("prepend")
   end
 
   def constants
-    methods_for([identity.fqn], kind: "constant").order(:name)
+    @constants ||= methods_for([identity.fqn], kind: "constant").order(:name).to_a
   end
 
   def attributes
-    methods_for([identity.fqn], kind: "attribute").order(:name)
+    @attributes ||= methods_for([identity.fqn], kind: "attribute").order(:name).to_a
   end
 
   private

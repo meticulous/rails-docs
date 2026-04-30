@@ -1,9 +1,8 @@
-<% versions = PackageVersion.where.not(ingested_at: nil).order(ord: :desc) %>
-<% if versions.size > 1 %>
+<% if @available_versions && @available_versions.size > 1 %>
   <div class="version-switcher">
     <label for="version-switcher-select">Version:</label>
     <select id="version-switcher-select" data-controller="version-switcher" data-action="change->version-switcher#switch">
-      <% versions.each do |pv| %>
+      <% @available_versions.each do |pv| %>
         <option value="<%= version_url_segment(pv) %>" <%= "selected" if pv.id == current.id %>>
           <%= version_label(pv) %>
         </option>

@@ -37,11 +37,13 @@ class SearchAdapter::Postgres
   end
 
   def rank_expression(query)
-    quoted = ApplicationRecord.connection.quote(query)
-    Arel.sql(<<~SQL.squish + " DESC")
-      ts_rank_cd(search_vector, websearch_to_tsquery('english', #{quoted}), 32)
-        * CASE WHEN deprecated THEN 0.4 ELSE 1.0 END
-    SQL
+    Arel.sql(
+      ApplicationRecord.send(:sanitize_sql_array, [
+        "ts_rank_cd(search_vector, websearch_to_tsquery('english', ?), 32) * " \
+          "CASE WHEN deprecated THEN 0.4 ELSE 1.0 END DESC",
+        query
+      ])
+    )
   end
 
   def empty_response(started_at)
