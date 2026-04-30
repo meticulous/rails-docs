@@ -45,7 +45,7 @@ class WebhooksTest < ActionDispatch::IntegrationTest
       "git_ref" => "v8.1.3",
       "git_sha" => "abcdef0123",
       "ord" => 8001003,
-      "source_dirs" => ["activesupport/lib", "activerecord/lib"]
+      "source_dirs" => [ "activesupport/lib", "activerecord/lib" ]
     }
   end
 

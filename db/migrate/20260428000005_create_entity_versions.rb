@@ -23,10 +23,10 @@ class CreateEntityVersions < ActiveRecord::Migration[8.1]
     end
 
     add_index :entity_versions,
-              [:entity_identity_id, :package_version_id],
+              [ :entity_identity_id, :package_version_id ],
               unique: true,
               name: "idx_entity_versions_unique"
     add_index :entity_versions, :search_vector, using: :gin
-    add_index :entity_versions, [:framework_id, :package_version_id]
+    add_index :entity_versions, [ :framework_id, :package_version_id ]
   end
 end

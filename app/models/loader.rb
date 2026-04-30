@@ -220,7 +220,7 @@ class Loader
   # the four-weight scheme (name=A, signature/params=B, summary=C, body=D).
   # Postgres FTS ranks accordingly when ts_rank_cd is applied.
   def refresh_search_vectors
-    sql = ApplicationRecord.sanitize_sql([<<~SQL, @package_version.id])
+    sql = ApplicationRecord.sanitize_sql([ <<~SQL, @package_version.id ])
       UPDATE entity_versions ev
       SET search_vector =
         setweight(to_tsvector('english', COALESCE(ei.name, '')), 'A') ||
@@ -275,7 +275,7 @@ class Loader
 
   def refresh_inheritance_closure
     InheritanceClosure.where(package_version_id: @package_version.id).delete_all
-    sql = ApplicationRecord.sanitize_sql([<<~SQL, @package_version.id])
+    sql = ApplicationRecord.sanitize_sql([ <<~SQL, @package_version.id ])
       INSERT INTO inheritance_closures
         (package_version_id, descendant_identity_id, ancestor_identity_id, depth, via_relation)
       WITH RECURSIVE closure AS (

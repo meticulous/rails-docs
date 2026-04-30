@@ -52,7 +52,7 @@ class LegacyRedirectsController < ApplicationController
   def current_stable
     @current_stable ||= PackageVersion
       .where.not(ingested_at: nil)
-      .where(prerelease: [nil, ""])
+      .where(prerelease: [ nil, "" ])
       .order(ord: :desc)
       .first
   end

@@ -54,7 +54,7 @@ class DiffPresenter
     from_lines = (from_text || "").lines
     to_lines = (to_text || "").lines
     Diff::LCS.sdiff(from_lines, to_lines).map do |change|
-      [change.action, change.old_element&.chomp, change.new_element&.chomp]
+      [ change.action, change.old_element&.chomp, change.new_element&.chomp ]
     end
   end
 

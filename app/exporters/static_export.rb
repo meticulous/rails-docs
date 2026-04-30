@@ -50,8 +50,8 @@ class StaticExport
   def render_entity(entity_version)
     identity = entity_version.entity_identity
     template, presenter_class = case identity.kind
-    when "method" then ["entities/method", MethodPresenter]
-    else ["entities/class", ClassPresenter]
+    when "method" then [ "entities/method", MethodPresenter ]
+    else [ "entities/class", ClassPresenter ]
     end
 
     renderer.render(

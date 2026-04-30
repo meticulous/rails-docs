@@ -32,7 +32,7 @@ class DocHtmlHelperTest < ActionView::TestCase
   end
 
   test "strips disallowed tags" do
-    html = '<p>safe</p><script>alert(1)</script>'
+    html = "<p>safe</p><script>alert(1)</script>"
     result = sanitize_doc_html(html)
     assert_not_includes result, "<script>"
   end

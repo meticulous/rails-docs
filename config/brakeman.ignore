@@ -1,0 +1,26 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "5198ddae18259e345ef4e1d04e79d69e435150298436fc47486eb3423049e48a",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/loader.rb",
+      "line": 266,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": null,
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Loader",
+        "method": "refresh_first_last_seen_versions"
+      },
+      "user_input": null,
+      "confidence": "Medium",
+      "cwe_id": [89],
+      "note": "False positive. Each value in the VALUES clause is wrapped in Integer() (raises on non-numeric) or quote_nullable_int (which calls Integer(value).to_s). The dynamic SQL only ever interpolates integers or the literal string 'NULL'."
+    }
+  ],
+  "brakeman_version": "7.0.0"
+}

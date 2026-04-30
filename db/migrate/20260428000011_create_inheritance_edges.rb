@@ -11,7 +11,7 @@ class CreateInheritanceEdges < ActiveRecord::Migration[8.1]
     end
 
     add_index :inheritance_edges,
-              [:package_version_id, :child_identity_id, :ancestor_identity_id, :relation],
+              [ :package_version_id, :child_identity_id, :ancestor_identity_id, :relation ],
               unique: true,
               name: "idx_inheritance_edges_unique"
   end

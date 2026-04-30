@@ -77,7 +77,7 @@ class IngestPackageVersionJob < ApplicationJob
   end
 
   def run_git(*args, cwd:)
-    capture!(["git", "-C", cwd, *args], label: "git #{args.first} in #{cwd}")
+    capture!([ "git", "-C", cwd, *args ], label: "git #{args.first} in #{cwd}")
   end
 
   # Subprocess runner that captures stderr and surfaces it on failure.

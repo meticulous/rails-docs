@@ -9,7 +9,7 @@ class OgImagesController < ApplicationController
     @entity_version = @identity.entity_versions.find_by(package_version: @package_version)
 
     response.headers["Cache-Control"] = "public, max-age=86400"
-    render template: "og_images/show", formats: [:svg]
+    render template: "og_images/show", formats: [ :svg ]
   end
 
   private
@@ -29,7 +29,7 @@ class OgImagesController < ApplicationController
     if parts.size >= 2
       parent_fqn = parts[0..-2].map(&:camelize).join("::")
       last = parts.last
-      scope, slug = last.end_with?(".class") ? ["singleton", last.sub(/\.class\z/, "")] : ["instance", last]
+      scope, slug = last.end_with?(".class") ? [ "singleton", last.sub(/\.class\z/, "") ] : [ "instance", last ]
       separator = scope == "singleton" ? "." : "#"
       identity = source.entity_identities
                        .where(kind: "method", scope: scope)

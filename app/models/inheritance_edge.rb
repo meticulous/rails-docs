@@ -7,5 +7,5 @@ class InheritanceEdge < ApplicationRecord
 
   validates :relation, inclusion: { in: RELATIONS }
   validates :child_identity_id,
-            uniqueness: { scope: [:package_version_id, :ancestor_identity_id, :relation] }
+            uniqueness: { scope: [ :package_version_id, :ancestor_identity_id, :relation ] }
 end

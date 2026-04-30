@@ -106,7 +106,7 @@ class SearchAdapter::Postgres
     if version
       scope = scope.where(id: EntityVersion.where(package_version: version).select(:entity_identity_id))
     end
-    scope.order(Arel.sql(ApplicationRecord.sanitize_sql(["similarity(name, ?) DESC", query])))
+    scope.order(Arel.sql(ApplicationRecord.sanitize_sql([ "similarity(name, ?) DESC", query ])))
          .limit(8)
          .to_a
   end

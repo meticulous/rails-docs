@@ -19,7 +19,7 @@ class EntityIdentity < ApplicationRecord
   validates :fqn, :name, presence: true
   validates :kind, inclusion: { in: KINDS }
   validates :scope, inclusion: { in: SCOPES }, allow_nil: true
-  validates :fqn, uniqueness: { scope: [:source_id, :kind, :scope] }
+  validates :fqn, uniqueness: { scope: [ :source_id, :kind, :scope ] }
 
   def url_path
     self.class.fqn_to_url_path(fqn)
@@ -37,7 +37,7 @@ class EntityIdentity < ApplicationRecord
   def self.breadcrumb_segments_for(fqn)
     parts = fqn.to_s.split("::")
     parts.each_with_index.map do |part, i|
-      [part, parts[0..i].map(&:underscore).join("/")]
+      [ part, parts[0..i].map(&:underscore).join("/") ]
     end
   end
 end

@@ -12,7 +12,7 @@ class Source < ApplicationRecord
   def current_stable
     package_versions
       .where.not(ingested_at: nil)
-      .where(prerelease: [nil, ""])
+      .where(prerelease: [ nil, "" ])
       .order(ord: :desc)
       .first
   end

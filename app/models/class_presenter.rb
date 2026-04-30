@@ -27,7 +27,7 @@ class ClassPresenter
   end
 
   def own_methods
-    @own_methods ||= methods_for([identity.fqn]).order(:scope, :name).to_a
+    @own_methods ||= methods_for([ identity.fqn ]).order(:scope, :name).to_a
   end
 
   def inherited_methods_grouped
@@ -40,7 +40,7 @@ class ClassPresenter
     @inherited_methods_grouped = ancestor_fqns.filter_map { |fqn|
       rows = grouped[fqn]
       next unless rows
-      [fqn, rows.sort_by { |r| [r.scope.to_s, r.name] }]
+      [ fqn, rows.sort_by { |r| [ r.scope.to_s, r.name ] } ]
     }
   end
 
@@ -62,11 +62,11 @@ class ClassPresenter
   end
 
   def constants
-    @constants ||= methods_for([identity.fqn], kind: "constant").order(:name).to_a
+    @constants ||= methods_for([ identity.fqn ], kind: "constant").order(:name).to_a
   end
 
   def attributes
-    @attributes ||= methods_for([identity.fqn], kind: "attribute").order(:name).to_a
+    @attributes ||= methods_for([ identity.fqn ], kind: "attribute").order(:name).to_a
   end
 
   # Classes / modules that include, extend, prepend, or inherit from this

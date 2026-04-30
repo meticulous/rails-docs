@@ -39,7 +39,7 @@ class DiffsController < ApplicationController
     return nil if parts.size < 2
     parent_fqn = parts[0..-2].map(&:camelize).join("::")
     last = parts.last
-    scope, slug = last.end_with?(".class") ? ["singleton", last.sub(/\.class\z/, "")] : ["instance", last]
+    scope, slug = last.end_with?(".class") ? [ "singleton", last.sub(/\.class\z/, "") ] : [ "instance", last ]
     separator = scope == "singleton" ? "." : "#"
     name = MethodSlug.decode(slug)
     source.entity_identities

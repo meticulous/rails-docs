@@ -8,6 +8,6 @@ class CreateLegacyRedirects < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :legacy_redirects, [:package_version_id, :old_path], unique: true
+    add_index :legacy_redirects, [ :package_version_id, :old_path ], unique: true
   end
 end

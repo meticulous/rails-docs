@@ -19,7 +19,7 @@ class CreatePackageVersions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :package_versions, [:source_id, :channel], unique: true
-    add_index :package_versions, [:release_series, :ord]
+    add_index :package_versions, [ :source_id, :channel ], unique: true
+    add_index :package_versions, [ :release_series, :ord ]
   end
 end

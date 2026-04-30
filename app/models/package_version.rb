@@ -34,7 +34,7 @@ class PackageVersion < ApplicationRecord
   # the wrong default for cross-source search; use Source#current_stable
   # per-source.
   def self.current_stable
-    where.not(ingested_at: nil).where(prerelease: [nil, ""]).order(ord: :desc).first
+    where.not(ingested_at: nil).where(prerelease: [ nil, "" ]).order(ord: :desc).first
   end
 
   # The current_stable PackageVersion for each Source — returned as an
@@ -44,7 +44,7 @@ class PackageVersion < ApplicationRecord
   # round-tripping every stable row to Ruby.
   def self.current_stable_for_each_source
     where.not(ingested_at: nil)
-         .where(prerelease: [nil, ""])
+         .where(prerelease: [ nil, "" ])
          .select("DISTINCT ON (source_id) package_versions.*")
          .order(:source_id, ord: :desc)
   end

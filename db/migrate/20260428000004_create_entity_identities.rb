@@ -15,9 +15,9 @@ class CreateEntityIdentities < ActiveRecord::Migration[8.1]
     end
 
     add_index :entity_identities,
-              [:source_id, :fqn, :kind, :scope],
+              [ :source_id, :fqn, :kind, :scope ],
               unique: true,
               name: "idx_entity_identities_unique"
-    add_index :entity_identities, [:source_id, :parent_fqn]
+    add_index :entity_identities, [ :source_id, :parent_fqn ]
   end
 end

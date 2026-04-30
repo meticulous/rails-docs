@@ -57,7 +57,7 @@ namespace :bench do
   end
 
   desc "Benchmark search on a typical query"
-  task :search, [:query] => :environment do |_, args|
+  task :search, [ :query ] => :environment do |_, args|
     query = args[:query] || ENV.fetch("QUERY", "has_many")
     runs = Integer(ENV.fetch("RUNS", "20"))
 
@@ -66,7 +66,7 @@ namespace :bench do
     samples = Array.new(runs) do
       response = nil
       ms = Benchmark.realtime { response = SearchAdapter.current.search(query: query, limit: 25) } * 1000
-      [ms, response]
+      [ ms, response ]
     end
 
     times = samples.map(&:first).sort

@@ -105,7 +105,7 @@ class DashExport
         begin
           db.execute(
             "INSERT INTO searchIndex(name, type, path) VALUES (?, ?, ?)",
-            [identity.fqn, self.class.dash_type(identity.kind), path]
+            [ identity.fqn, self.class.dash_type(identity.kind), path ]
           )
         rescue SQLite3::ConstraintException
           # Skip duplicates (rare; same name/type/path collision)
