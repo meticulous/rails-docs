@@ -45,7 +45,7 @@
       <% end %>
 
       <% if @presenter.included_modules.any? %>
-        <section class="entity__includes">
+        <section class="entity__includes" id="section-includes">
           <h2 id="section-includes">Includes</h2>
           <ul class="entity__module-list">
             <% @presenter.included_modules.each do |mod| %>
@@ -125,7 +125,7 @@
       <% end %>
     </div>
 
-    <aside class="entity__outline">
+    <aside class="entity__outline" data-controller="outline">
       <%= render "entities/outline", presenter: @presenter %>
     </aside>
   </div>

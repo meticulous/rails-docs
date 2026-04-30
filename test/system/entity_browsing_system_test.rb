@@ -34,4 +34,11 @@ class EntityBrowsingSystemTest < ApplicationSystemTestCase
     assert_selector "h1", text: "Search"
     assert_current_path(/\/search/)
   end
+
+  test "cmd-K focuses the header search box" do
+    visit root_path
+    page.send_keys [:meta, "k"]
+    active_id = evaluate_script("document.activeElement.name")
+    assert_equal "q", active_id, "Expected the q input to receive focus on cmd-K"
+  end
 end
