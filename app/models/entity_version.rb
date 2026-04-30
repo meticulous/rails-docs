@@ -29,4 +29,15 @@ class EntityVersion < ApplicationRecord
     return nil unless source_path.present?
     "https://github.com/#{entity_identity.source.github_repo}/edit/#{package_version.git_ref}/#{source_path}"
   end
+
+  # GitHub code-search URL scoped to the source's owning org. Useful as a
+  # "find usages" link for methods — clicking lands on real call sites in
+  # the broader codebase. Static analysis would do better, but this is
+  # cheap and works today.
+  def github_search_url
+    return nil if entity_identity.kind == "module" || entity_identity.kind == "class"
+    org = entity_identity.source.github_repo.split("/").first
+    query = "org:#{org} #{name}"
+    "https://github.com/search?q=#{URI.encode_www_form_component(query)}&type=code"
+  end
 end
