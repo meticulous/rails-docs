@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_28_000014) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_30_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
 
   create_table "attribute_versions", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -54,6 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_000014) do
     t.index ["first_seen_version_id"], name: "index_entity_identities_on_first_seen_version_id"
     t.index ["framework_id"], name: "index_entity_identities_on_framework_id"
     t.index ["last_seen_version_id"], name: "index_entity_identities_on_last_seen_version_id"
+    t.index ["name"], name: "idx_entity_identities_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["source_id", "fqn", "kind", "scope"], name: "idx_entity_identities_unique", unique: true, nulls_not_distinct: true
     t.index ["source_id", "parent_fqn"], name: "index_entity_identities_on_source_id_and_parent_fqn"
   end

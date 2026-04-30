@@ -27,6 +27,7 @@ class SearchAdapter::Postgres
       results: rows.map { |ev| SearchAdapter::Result.new(entity_version: ev) },
       total: total,
       facets: compute_facets(matched, filters),
+      suggestions: total < 3 ? fuzzy_suggestions(query, effective_version) : [],
       took_ms: ((Time.now - started_at) * 1000).round
     )
   end
@@ -81,6 +82,20 @@ class SearchAdapter::Postgres
         query
       ])
     )
+  end
+
+  # Trigram-similarity suggestions used when FTS returns < 3 hits. Ranks
+  # entity_identities by similarity(name, query) above pg_trgm's default
+  # threshold (0.3); typically catches "sav" → "save", "save" → "save!",
+  # "wjere" → "where". Limited to 8 to avoid drowning the page.
+  def fuzzy_suggestions(query, version)
+    scope = EntityIdentity.where("name % ?", query)
+    if version
+      scope = scope.where(id: EntityVersion.where(package_version: version).select(:entity_identity_id))
+    end
+    scope.order(Arel.sql(ApplicationRecord.send(:sanitize_sql_array, ["similarity(name, ?) DESC", query])))
+         .limit(8)
+         .to_a
   end
 
   def empty_response(started_at)
