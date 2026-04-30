@@ -1,0 +1,18 @@
+<nav class="outline" aria-label="On this page">
+  <h2 class="outline__title">On this page</h2>
+  <ul>
+    <% if presenter.signature_text.present? || presenter.call_seq.present? %>
+      <li><a href="#section-signature">Signature</a></li>
+    <% end %>
+    <li><a href="#section-doc">Documentation</a></li>
+    <% if presenter.method_params.any? %>
+      <li><a href="#section-params">Parameters (<%= presenter.method_params.size %>)</a></li>
+    <% end %>
+    <% if presenter.aliased %>
+      <li><a href="#section-alias">Alias</a></li>
+    <% end %>
+    <% if presenter.source_code.present? %>
+      <li><a href="#section-source">Source</a></li>
+    <% end %>
+  </ul>
+</nav>
