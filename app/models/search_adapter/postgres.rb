@@ -83,7 +83,7 @@ class SearchAdapter::Postgres
 
   def rank_expression(query)
     Arel.sql(
-      ApplicationRecord.send(:sanitize_sql_array, [
+      ApplicationRecord.sanitize_sql([
         "ts_rank_cd(entity_versions.search_vector, websearch_to_tsquery('english', ?), 32) * " \
           "CASE WHEN entity_versions.deprecated THEN 0.4 ELSE 1.0 END * " \
           "CASE entity_identities.kind " \
@@ -106,7 +106,7 @@ class SearchAdapter::Postgres
     if version
       scope = scope.where(id: EntityVersion.where(package_version: version).select(:entity_identity_id))
     end
-    scope.order(Arel.sql(ApplicationRecord.send(:sanitize_sql_array, ["similarity(name, ?) DESC", query])))
+    scope.order(Arel.sql(ApplicationRecord.sanitize_sql(["similarity(name, ?) DESC", query])))
          .limit(8)
          .to_a
   end
