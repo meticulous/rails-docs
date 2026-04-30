@@ -1,1 +1,18 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+# Ruby on Rails API documentation
+# See https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+Allow: /
+
+# Don't crawl legacy redirect endpoints — they're for inbound links from
+# old api.rubyonrails.org URLs, not content to index.
+Disallow: /classes/
+Disallow: /files/
+Disallow: /_legacy_method
+
+# Search results pages aren't useful as crawl targets; the entity pages
+# they link to are.
+Disallow: /search
+
+# Sitemap index — points to per-source-and-version partitions.
+Sitemap: https://api.rubyonrails.org/sitemap.xml
