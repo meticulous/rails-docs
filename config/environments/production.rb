@@ -12,6 +12,12 @@ Rails.application.configure do
   # Full error reports are disabled.
   config.consider_all_requests_local = false
 
+  # Re-dispatch raised exceptions back through the router so they hit
+  # ErrorsController#not_found / #internal_server_error / etc. The user
+  # gets a branded page (header, search, theme toggle) instead of a
+  # vintage public/500.html.
+  config.exceptions_app = ->(env) { Rails.application.routes.call(env) }
+
   # Turn on fragment caching in view templates.
   config.action_controller.perform_caching = true
 

@@ -1,0 +1,28 @@
+<% content_for :title, "Page not found" %>
+
+<article class="error-page">
+  <header class="error-page__header">
+    <p class="error-page__status">404</p>
+    <h1>We couldn't find that page.</h1>
+    <p class="error-page__lede">
+      The URL might be from an older Rails release, or the entity might
+      have been renamed. A few suggestions:
+    </p>
+  </header>
+
+  <section class="error-page__suggestions">
+    <ul>
+      <li>Search the docs: <%= link_to "open search", search_path %></li>
+      <li>Browse the latest stable: <%= link_to "frameworks overview", root_path %></li>
+      <% if @available_versions&.any? %>
+        <li>
+          Try another version:
+          <% @available_versions.first(6).each_with_index do |pv, i| %>
+            <% if i > 0 %>·<% end %>
+            <%= link_to version_label(pv), version_path(version: version_url_segment(pv)) %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+</article>

@@ -1,0 +1,14 @@
+<% content_for :title, "Server error" %>
+
+<article class="error-page">
+  <header class="error-page__header">
+    <p class="error-page__status">500</p>
+    <h1>Something went wrong on our end.</h1>
+    <p class="error-page__lede">
+      The error has been logged. If the page keeps failing, please
+      <%= link_to "open an issue", "https://github.com/rails/rails-docs/issues/new", target: "_blank", rel: "noopener noreferrer" %>.
+    </p>
+  </header>
+
+  <p><%= link_to "Return home", root_path %></p>
+</article>

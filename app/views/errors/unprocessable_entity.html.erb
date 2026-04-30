@@ -1,0 +1,15 @@
+<% content_for :title, "Bad request" %>
+
+<article class="error-page">
+  <header class="error-page__header">
+    <p class="error-page__status">422</p>
+    <h1>That request couldn't be processed.</h1>
+    <p class="error-page__lede">
+      Usually this means a required parameter was missing or
+      malformed. If you reached this page from a link inside the
+      docs, please <%= link_to "open an issue", "https://github.com/rails/rails-docs/issues/new", target: "_blank", rel: "noopener noreferrer" %>.
+    </p>
+  </header>
+
+  <p><%= link_to "Return home", root_path %></p>
+</article>

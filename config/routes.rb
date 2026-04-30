@@ -8,6 +8,13 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
   get "health" => "health#show", as: :health_check
 
+  # In-app branded error pages. Wired via `config.exceptions_app = routes`
+  # in production so a raised ActiveRecord::RecordNotFound (or anything
+  # else) re-dispatches here instead of serving the static public/*.html.
+  match "/404", to: "errors#not_found",            via: :all
+  match "/422", to: "errors#unprocessable_entity", via: :all
+  match "/500", to: "errors#internal_server_error", via: :all
+
   root "home#index"
 
   get "/search", to: "search#index", as: :search
