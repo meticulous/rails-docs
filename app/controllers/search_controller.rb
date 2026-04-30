@@ -5,8 +5,14 @@ class SearchController < ApplicationController
   def index
     @query = params[:q].to_s.strip
     @version = resolve_version
+    @filters = filters_from_params
     @response = if @query.present?
-      SearchAdapter.current.search(query: @query, version: @version, limit: RESULTS_PER_PAGE)
+      SearchAdapter.current.search(
+        query: @query,
+        version: @version,
+        filters: @filters,
+        limit: RESULTS_PER_PAGE
+      )
     end
   end
 
@@ -38,6 +44,13 @@ class SearchController < ApplicationController
     return nil if params[:version].blank?
     channel = params[:version] == "edge" ? "edge" : params[:version].sub(/\Av/, "")
     PackageVersion.find_by(channel: channel)
+  end
+
+  def filters_from_params
+    {
+      kind: params[:kind].presence,
+      framework: params[:framework].presence
+    }.compact
   end
 
   def serialize(entity_version)

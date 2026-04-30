@@ -8,41 +8,94 @@
                           placeholder: "method, class, or doc text", class: "search-page__input" %>
     <% if @version %>
       <%= f.hidden_field :version, value: version_url_segment(@version) %>
-      <p class="muted">Restricted to <%= version_label(@version) %></p>
+    <% end %>
+    <% @filters.each do |key, value| %>
+      <%= f.hidden_field key, value: value %>
     <% end %>
     <%= f.submit "Search", class: "search-page__submit" %>
   <% end %>
 
   <% if @response.nil? %>
     <p class="muted">Type a query and hit Enter to search.</p>
-  <% elsif @response.results.empty? %>
-    <p class="muted">No results for <strong><%= @query %></strong>.</p>
   <% else %>
-    <p class="search-page__count">
-      <%= pluralize(@response.total, "result") %>
-      <span class="muted">(<%= @response.took_ms %>ms)</span>
-    </p>
-    <ol class="search-results">
-      <% @response.results.each do |result| %>
-        <% ev = result.entity_version %>
-        <% identity = ev.entity_identity %>
-        <li class="search-result">
-          <p class="search-result__breadcrumb"><%= identity.parent_fqn %></p>
-          <h2 class="search-result__name">
-            <%= entity_link(identity, ev.package_version, label: identity.fqn) %>
-            <span class="search-result__kind"><%= identity.kind %></span>
-          </h2>
-          <% if ev.doc_summary.present? %>
-            <p class="search-result__summary"><%= truncate(ev.doc_summary, length: 240) %></p>
-          <% end %>
-          <p class="search-result__meta">
-            <span class="muted">
-              v<%= ev.package_version.channel %>
-              <% if ev.framework %> · <%= ev.framework.display_name %><% end %>
-            </span>
+    <div class="search-layout">
+      <aside class="search-facets">
+        <% if @filters.any? || @version %>
+          <p class="search-facets__active">
+            <% if @version %>
+              <span class="search-facets__chip">version: <%= version_label(@version) %></span>
+            <% end %>
+            <% @filters.each do |key, value| %>
+              <%= link_to "✕ #{key}: #{value}",
+                          search_path(@filters.except(key).merge(q: @query)),
+                          class: "search-facets__chip search-facets__chip--remove" %>
+            <% end %>
           </p>
-        </li>
-      <% end %>
-    </ol>
+        <% end %>
+
+        <% if @response.facets[:kind].any? %>
+          <h2>Kind</h2>
+          <ul>
+            <% @response.facets[:kind].sort_by { |_, n| -n }.each do |kind, count| %>
+              <% next if kind.blank? %>
+              <li>
+                <%= link_to search_path(@filters.merge(q: @query, kind: kind)),
+                            class: ("active" if @filters[:kind] == kind) do %>
+                  <%= kind %> <span class="muted">(<%= count %>)</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+
+        <% if @response.facets[:framework].compact.any? %>
+          <h2>Framework</h2>
+          <ul>
+            <% @response.facets[:framework].sort_by { |_, n| -n }.each do |slug, count| %>
+              <% next if slug.blank? %>
+              <li>
+                <%= link_to search_path(@filters.merge(q: @query, framework: slug)),
+                            class: ("active" if @filters[:framework] == slug) do %>
+                  <%= slug %> <span class="muted">(<%= count %>)</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </aside>
+
+      <div class="search-results-column">
+        <% if @response.results.empty? %>
+          <p class="muted">No results for <strong><%= @query %></strong>.</p>
+        <% else %>
+          <p class="search-page__count">
+            <%= pluralize(@response.total, "result") %>
+            <span class="muted">(<%= @response.took_ms %>ms)</span>
+          </p>
+          <ol class="search-results">
+            <% @response.results.each do |result| %>
+              <% ev = result.entity_version %>
+              <% identity = ev.entity_identity %>
+              <li class="search-result">
+                <p class="search-result__breadcrumb"><%= identity.parent_fqn %></p>
+                <h2 class="search-result__name">
+                  <%= entity_link(identity, ev.package_version, label: identity.fqn) %>
+                  <span class="search-result__kind"><%= identity.kind %></span>
+                </h2>
+                <% if ev.doc_summary.present? %>
+                  <p class="search-result__summary"><%= truncate(ev.doc_summary, length: 240) %></p>
+                <% end %>
+                <p class="search-result__meta">
+                  <span class="muted">
+                    v<%= ev.package_version.channel %>
+                    <% if ev.framework %> · <%= ev.framework.display_name %><% end %>
+                  </span>
+                </p>
+              </li>
+            <% end %>
+          </ol>
+        <% end %>
+      </div>
+    </div>
   <% end %>
 </div>

@@ -5,7 +5,11 @@
 # initializer — no controller or view edits needed.
 module SearchAdapter
   Result = Struct.new(:entity_version, :score, :highlights, keyword_init: true)
-  Response = Struct.new(:results, :total, :took_ms, keyword_init: true)
+  Response = Struct.new(:results, :total, :facets, :took_ms, keyword_init: true) do
+    def initialize(results: [], total: 0, facets: { kind: {}, framework: {} }, took_ms: 0)
+      super
+    end
+  end
 
   class << self
     attr_writer :current
