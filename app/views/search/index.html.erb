@@ -33,6 +33,21 @@
           </p>
         <% end %>
 
+        <% if @response.facets[:source].compact.any? %>
+          <h2>Source</h2>
+          <ul>
+            <% @response.facets[:source].sort_by { |_, n| -n }.each do |slug, count| %>
+              <% next if slug.blank? %>
+              <li>
+                <%= link_to search_path(@filters.merge(q: @query, source: slug)),
+                            class: ("active" if @filters[:source] == slug) do %>
+                  <%= slug %> <span class="muted">(<%= count %>)</span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+
         <% if @response.facets[:kind].any? %>
           <h2>Kind</h2>
           <ul>

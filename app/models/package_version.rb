@@ -28,8 +28,24 @@ class PackageVersion < ApplicationRecord
   validates :git_ref, :git_sha, :ord, presence: true
 
   # Highest-ord ingested release that isn't a prerelease. Used as the
-  # default "current" view for canonical URLs and unscoped search.
+  # default "current" view for canonical URLs and unscoped search. With
+  # multiple Source rows ingested, this returns the highest-ord stable
+  # across ALL sources — useful for "the most recent thing we know" but
+  # the wrong default for cross-source search; use Source#current_stable
+  # per-source.
   def self.current_stable
     where.not(ingested_at: nil).where(prerelease: [nil, ""]).order(ord: :desc).first
+  end
+
+  # The current_stable PackageVersion for each Source — returned as an
+  # array. Search uses this to scope cross-source queries to "the latest
+  # of every gem" without surfacing duplicates from older versions.
+  def self.current_stable_for_each_source
+    where.not(ingested_at: nil)
+         .where(prerelease: [nil, ""])
+         .order(ord: :desc)
+         .group_by(&:source_id)
+         .values
+         .map(&:first)
   end
 end

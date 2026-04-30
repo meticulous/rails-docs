@@ -49,7 +49,8 @@ class SearchController < ApplicationController
   def filters_from_params
     {
       kind: params[:kind].presence,
-      framework: params[:framework].presence
+      framework: params[:framework].presence,
+      source: params[:source].presence
     }.compact
   end
 

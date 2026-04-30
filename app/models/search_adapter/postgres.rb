@@ -9,9 +9,14 @@ class SearchAdapter::Postgres
     started_at = Time.now
     return empty_response(started_at) if query.blank?
 
-    effective_version = version || PackageVersion.current_stable
     matched = matching(query).joins(:entity_identity)
-    matched = matched.where(package_version: effective_version) if effective_version
+    matched = if version
+      matched.where(package_version: version)
+    else
+      # Default cross-source scope: current_stable for every source so
+      # we don't double-count entities across older Rails versions.
+      matched.where(package_version_id: PackageVersion.current_stable_for_each_source.map(&:id))
+    end
 
     filtered = apply_filters(matched, filters)
 
@@ -27,7 +32,7 @@ class SearchAdapter::Postgres
       results: rows.map { |ev| SearchAdapter::Result.new(entity_version: ev) },
       total: total,
       facets: compute_facets(matched, filters),
-      suggestions: total < 3 ? fuzzy_suggestions(query, effective_version) : [],
+      suggestions: total < 3 ? fuzzy_suggestions(query, version) : [],
       took_ms: ((Time.now - started_at) * 1000).round
     )
   end
@@ -45,6 +50,10 @@ class SearchAdapter::Postgres
   def apply_filters(scope, filters)
     scope = scope.where(entity_identities: { kind: filters[:kind] }) if filters[:kind].present?
     scope = scope.where(framework: { slug: filters[:framework] }) if filters[:framework].present?
+    if filters[:source].present?
+      source_id = Source.where(slug: filters[:source]).limit(1).pick(:id)
+      scope = scope.where(entity_identities: { source_id: source_id }) if source_id
+    end
     scope
   end
 
@@ -54,7 +63,8 @@ class SearchAdapter::Postgres
   def compute_facets(matched_scope, filters)
     {
       kind: facet_counts(matched_scope, filters.except(:kind), :kind),
-      framework: facet_counts(matched_scope, filters.except(:framework), :framework)
+      framework: facet_counts(matched_scope, filters.except(:framework), :framework),
+      source: facet_counts(matched_scope, filters.except(:source), :source)
     }
   end
 
@@ -65,6 +75,9 @@ class SearchAdapter::Postgres
       scope.group("entity_identities.kind").count
     when :framework
       scope.left_joins(:framework).group("frameworks.slug").count
+    when :source
+      scope.joins("JOIN sources ON sources.id = entity_identities.source_id")
+           .group("sources.slug").count
     end
   end
 
