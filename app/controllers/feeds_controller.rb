@@ -10,7 +10,7 @@ class FeedsController < ApplicationController
     @source = Source.find_by!(slug: "rails")
     @framework = @source.frameworks.find_by!(slug: params[:framework_slug])
     @scope_label = @framework.display_name
-    @latest_version = source_current_stable(@source)
+    @latest_version = @source.current_stable
 
     return head :not_found unless @latest_version
 
@@ -25,7 +25,7 @@ class FeedsController < ApplicationController
   def source
     @source = Source.find_by!(slug: params[:source_slug])
     @scope_label = @source.display_name
-    @latest_version = source_current_stable(@source)
+    @latest_version = @source.current_stable
 
     return head :not_found unless @latest_version
 
@@ -36,14 +36,6 @@ class FeedsController < ApplicationController
   end
 
   private
-
-  def source_current_stable(source)
-    source.package_versions
-          .where.not(ingested_at: nil)
-          .where(prerelease: [nil, ""])
-          .order(ord: :desc)
-          .first
-  end
 
   def build_changes(latest, framework: nil, source: nil)
     scope = EntityIdentity.where(first_seen_version: latest)

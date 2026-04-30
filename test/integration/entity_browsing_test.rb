@@ -26,6 +26,16 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".version-list a", text: "v8.1.3"
   end
 
+  test "home page surfaces frameworks for the current stable" do
+    get root_path
+    assert_response :success
+    assert_select ".home__frameworks h2", "Frameworks"
+    # ActiveRecord top module isn't ingested in fixtures, so the card title
+    # falls back to plain display_name text rather than an entity link.
+    assert_select ".framework-grid .framework-card h3", text: "Active Record"
+    assert_select ".framework-grid .framework-card", minimum: 1
+  end
+
   test "renders an Active Record class page" do
     get entity_path(version: "v8.1.3", path: "active_record/base")
     assert_response :success

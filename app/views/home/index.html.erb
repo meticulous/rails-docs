@@ -6,43 +6,67 @@
     Reference documentation for the Ruby on Rails framework, browsable per release.
   </p>
 
-  <% if @package_versions.any? %>
-    <% current = @package_versions.first %>
+  <% if @current_stable %>
     <p class="home__lede">
-      Latest:
-      <%= link_to version_label(current), version_path(version: version_url_segment(current)),
+      Showing
+      <%= link_to version_label(@current_stable),
+                  version_path(version: version_url_segment(@current_stable)),
                   class: "version-list__link" %>
       —
-      <%= link_to "browse frameworks",
-                  version_path(version: version_url_segment(current)) %>
-      ·
       <%= link_to "search docs", search_path %>
     </p>
+  <% end %>
 
-    <% if Source.where.not(slug: "rails").exists? %>
+  <% if @frameworks.any? %>
+    <section class="home__frameworks">
+      <h2>Frameworks</h2>
+      <div class="framework-grid">
+        <% @frameworks.each do |framework| %>
+          <% top_module = @top_modules_by_fqn[framework.top_module_fqn] %>
+          <article class="framework-card">
+            <h3>
+              <% if top_module %>
+                <%= entity_link(top_module, @current_stable, label: framework.display_name) %>
+              <% else %>
+                <%= framework.display_name %>
+              <% end %>
+            </h3>
+            <p class="muted"><%= number_with_delimiter(framework.entity_count) %> documented entities</p>
+          </article>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <% if Source.where.not(slug: "rails").exists? %>
+    <section class="home__ecosystem">
       <h2>Ecosystem</h2>
       <p>
         Documentation for the rest of the Rails stack:
         <%= link_to "Ruby on Rails Ecosystem", ecosystem_path %>.
       </p>
-    <% end %>
+    </section>
+  <% end %>
 
-    <h2>All ingested Rails versions</h2>
-    <ul class="version-list">
-      <% @package_versions.each do |pv| %>
-        <li>
-          <%= link_to version_label(pv),
-                      version_path(version: version_url_segment(pv)),
-                      class: "version-list__link" %>
-          <span class="version-list__meta">
-            <% if pv.released_on %>
-              released <%= pv.released_on.to_fs(:long) %> ·
-            <% end %>
-            ingested <%= time_ago_in_words(pv.ingested_at) %> ago
-          </span>
-        </li>
-      <% end %>
-    </ul>
+  <% if @package_versions.any? %>
+    <section class="home__versions">
+      <h2>All ingested Rails versions</h2>
+      <ul class="version-list">
+        <% @package_versions.each do |pv| %>
+          <li>
+            <%= link_to version_label(pv),
+                        version_path(version: version_url_segment(pv)),
+                        class: "version-list__link" %>
+            <span class="version-list__meta">
+              <% if pv.released_on %>
+                released <%= pv.released_on.to_fs(:long) %> ·
+              <% end %>
+              ingested <%= time_ago_in_words(pv.ingested_at) %> ago
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </section>
   <% else %>
     <p class="muted">No versions ingested yet. Run <code>bin/load</code> to import a JSONL dump.</p>
   <% end %>
