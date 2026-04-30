@@ -2,6 +2,15 @@ class SearchController < ApplicationController
   RESULTS_PER_PAGE = 30
   SUGGEST_LIMIT = 8
 
+  # The typeahead endpoint hits Postgres FTS on every keystroke. A
+  # cheap budget keeps a runaway client (or a misbehaving bot) from
+  # turning the suggest endpoint into a denial-of-service vector.
+  # Falls through to a 429 with a `Retry-After`. The full search page
+  # has its own (more generous) budget — it's slower per request, so
+  # it gets fewer requests.
+  rate_limit to: 60, within: 1.minute, only: :suggest, with: -> { head :too_many_requests }
+  rate_limit to: 30, within: 1.minute, only: :index,   with: -> { head :too_many_requests }
+
   def index
     @query = params[:q].to_s.strip
     @version = resolve_version

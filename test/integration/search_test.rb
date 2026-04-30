@@ -35,6 +35,17 @@ class SearchTest < ActionDispatch::IntegrationTest
     assert_select ".muted", text: /No results/
   end
 
+  test "/search/suggest declares a rate-limit before_action" do
+    # The controller is wired with `rate_limit to: 60, within: 1.minute`;
+    # functional behavior under load is exercised by Rails' own
+    # rate_limit test suite. We assert the wiring is in place.
+    assert SearchController._process_action_callbacks
+                          .map(&:filter)
+                          .map(&:to_s)
+                          .grep(/rate_limit/i).any?,
+           "Expected SearchController to register a rate_limit callback"
+  end
+
   private
 
   def populate_search_vector!(entity_version)

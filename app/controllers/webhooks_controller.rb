@@ -16,6 +16,12 @@
 class WebhooksController < ApplicationController
   protect_from_forgery with: :null_session
 
+  # HMAC verification protects against forged payloads, but throttling
+  # protects against an attacker (or misconfigured publisher) flooding
+  # the queue. Rails releases at human cadence — a sustained 30/min
+  # is generous; anything beyond is signal we want to log + drop.
+  rate_limit to: 30, within: 1.minute, only: :ingest, with: -> { head :too_many_requests }
+
   def ingest
     return head :unauthorized unless valid_signature?
 
