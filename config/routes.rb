@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   NON_RAILS_SOURCE_SLUGS = /turbo-rails|globalid|stimulus-rails|importmap-rails|propshaft|solid_queue|solid_cache|solid_cable|kamal|jbuilder/
 
   get "up" => "rails/health#show", as: :rails_health_check
+  get "health" => "health#show", as: :health_check
 
   root "home#index"
 
