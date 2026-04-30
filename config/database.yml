@@ -88,8 +88,10 @@ production:
   primary: &primary_production
     <<: *default
     database: rails_docs_production
-    username: rails_docs
-    password: <%= ENV["RAILS_DOCS_DATABASE_PASSWORD"] %>
+    username: <%= ENV.fetch("DB_USER", "rails_docs") %>
+    password: <%= ENV["POSTGRES_PASSWORD"] || ENV["RAILS_DOCS_DATABASE_PASSWORD"] %>
+    host: <%= ENV.fetch("DB_HOST", "localhost") %>
+    port: <%= ENV.fetch("DB_PORT", 5432) %>
   cache:
     <<: *primary_production
     database: rails_docs_production_cache

@@ -1,119 +1,116 @@
-# Name of your application. Used to uniquely configure containers.
-service: rails_docs
+# Kamal deployment for api.rubyonrails.org. Real values for the
+# Foundation deploy live in `.kamal/secrets` and are wired through
+# the placeholders below — search for `# TODO(deploy):` and fill in.
+#
+# Architecture:
+#
+#   ┌──────────────────────────────┐
+#   │ Kamal proxy (Let's Encrypt)  │  443 → app:3000
+#   ├──────────────────────────────┤
+#   │ web container (Puma + SQ)    │  Solid Queue runs in-process
+#   ├──────────────────────────────┤
+#   │ postgres accessory           │  16432 ← app over local docker net
+#   └──────────────────────────────┘
+#
+# Solid Cache + Solid Queue both live in their own Postgres database
+# files (config/database.yml), separate from the primary documentation
+# database — keeps high-write tables out of replicas.
 
-# Name of the container image (use your-user/app-name on external registries).
-image: rails_docs
+service: rails-docs
 
-# Deploy to these servers.
+# Container image. Foundation pipeline pushes to GitHub Container
+# Registry; bin/kamal deploy will pull this tag.
+image: rails-foundation/rails-docs
+
 servers:
   web:
+    # TODO(deploy): replace with the real production host(s).
     - 192.168.0.1
-  # job:
-  #   hosts:
-  #     - 192.168.0.1
-  #   cmd: bin/jobs
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
-#
-# Using an SSL proxy like this requires turning on config.assume_ssl and config.force_ssl in production.rb!
-#
-# Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
-#
-# proxy:
-#   ssl: true
-#   host: app.example.com
+# Kamal proxy terminates SSL with Let's Encrypt and forwards to Puma.
+# Pairs with `assume_ssl = true` and `force_ssl = true` in production.rb.
+proxy:
+  ssl: true
+  host: api.rubyonrails.org
+  app_port: 3000
+  healthcheck:
+    path: /up
+    interval: 5
 
-# Where you keep your container images.
+# Container registry — Foundation uses ghcr.io.
 registry:
-  # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
-  server: localhost:5555
+  server: ghcr.io
+  username: rails-foundation
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
-  # Needed for authenticated registries.
-  # username: your-user
-
-  # Always use an access token rather than real password when possible.
-  # password:
-  #   - KAMAL_REGISTRY_PASSWORD
-
-# Inject ENV variables into containers (secrets come from .kamal/secrets).
 env:
   secret:
     - RAILS_MASTER_KEY
+    - POSTGRES_PASSWORD
+    - INGEST_WEBHOOK_SECRET
   clear:
-    # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
-    # When you start using multiple servers, you should split out job processing to a dedicated machine.
+    # Solid Queue runs inside Puma. If/when ingest gets heavy enough
+    # to need its own host, split into a separate `job` server group
+    # and unset SOLID_QUEUE_IN_PUMA.
     SOLID_QUEUE_IN_PUMA: true
+    JOB_CONCURRENCY: 2
 
-    # Set number of processes dedicated to Solid Queue (default: 1)
-    # JOB_CONCURRENCY: 3
+    # WEB_CONCURRENCY = number of Puma workers. Tune per host CPU.
+    WEB_CONCURRENCY: 2
 
-    # Set number of cores available to the application on each server (default: 1).
-    # WEB_CONCURRENCY: 2
+    # Hostname allowlist consumed by config/environments/production.rb.
+    RAILS_ALLOWED_HOSTS: api.rubyonrails.org
 
-    # Match this to any external database server to configure Active Record correctly
-    # Use rails_docs-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 192.168.0.2
+    # Primary DB lives in the postgres accessory below.
+    DB_HOST: rails-docs-db
+    DB_PORT: "5432"
 
-    # Log everything from Rails
-    # RAILS_LOG_LEVEL: debug
+    # Path to the rails_docs_ingester binary inside the container —
+    # baked in via Dockerfile copy. IngestPackageVersionJob requires
+    # this; no laptop-path fallback.
+    INGESTER_BIN: /rails/bin/rails_docs_ingester
 
-# Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
-# "bin/kamal logs -r job" will tail logs from the first server in the job section.
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
-  shell: app exec --interactive --reuse "bash"
-  logs: app logs -f
-  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+  shell:   app exec --interactive --reuse "bash"
+  logs:    app logs -f
+  dbc:     app exec --interactive --reuse "bin/rails dbconsole --include-password"
+  # Backfill a single Rails version on the production box. Pass the
+  # version through `args:`. Example:
+  #   bin/kamal app exec "bin/rails ingest:rails VERSION=8.1.3"
+  ingest:  app exec --interactive --reuse "bin/rails ingest:rails"
 
-# Use a persistent storage volume for sqlite database files and local Active Storage files.
-# Recommended to change this to a mounted volume path that is backed up off server.
+# Persistent volumes — postgres data lives in the accessory volume; the
+# app container only needs `storage/` for transient artifacts (ingest
+# JSONL output, generated static-export bundles).
 volumes:
   - "rails_docs_storage:/rails/storage"
 
-# Bridge fingerprinted assets, like JS and CSS, between versions to avoid
-# hitting 404 on in-flight requests. Combines all files from new and old
-# version inside the asset_path.
+# Bridge fingerprinted assets between versions so in-flight requests
+# don't 404 during a deploy.
 asset_path: /rails/public/assets
 
-# Configure the image builder.
 builder:
   arch: amd64
-
-  # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
+  # If/when CI runs on arm64 boxes, point this at a remote amd64
+  # builder rather than emulating.
   # remote: ssh://docker@docker-builder-server
-  #
-  # # Pass arguments and secrets to the Docker build process
-  # args:
-  #   RUBY_VERSION: ruby-3.4.9
-  # secrets:
-  #   - GITHUB_TOKEN
-  #   - RAILS_MASTER_KEY
 
-# Use a different ssh user than root
-# ssh:
-#   user: app
+# Deploy as a non-root user. The Dockerfile creates `rails:rails`.
+ssh:
+  user: deploy
 
-# Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: valkey/valkey:8
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+accessories:
+  db:
+    image: postgres:16
+    host: 192.168.0.1   # TODO(deploy): same as web for single-host; split for HA
+    port: "127.0.0.1:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: rails_docs
+        POSTGRES_DB: rails_docs_production
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data
