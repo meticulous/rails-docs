@@ -35,10 +35,23 @@ class EntityBrowsingSystemTest < ApplicationSystemTestCase
     assert_current_path(/\/search/)
   end
 
-  test "cmd-K focuses the header search box" do
+  test "cmd-K opens the search palette" do
     visit root_path
-    page.send_keys [:meta, "k"]
-    active_id = evaluate_script("document.activeElement.name")
-    assert_equal "q", active_id, "Expected the q input to receive focus on cmd-K"
+    # Selenium's send_keys handles meta+k as a chord at the OS level —
+    # which doesn't reach the page in headless Chrome. Dispatching the
+    # KeyboardEvent directly proves the wiring (Stimulus action ->
+    # search-palette#open) without depending on the OS-level chord.
+    evaluate_script(
+      "document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }));" \
+      "window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }));"
+    )
+    assert_selector "dialog.palette[open]", visible: :all
+  end
+
+  test '"/" focuses the inline header search box' do
+    visit root_path
+    page.send_keys "/"
+    active_name = evaluate_script("document.activeElement.name")
+    assert_equal "q", active_name, "Expected the q input to receive focus on /"
   end
 end

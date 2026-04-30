@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Global "/" shortcut to focus the inline header search box. ⌘/Ctrl-K
-// is owned by search_palette_controller (it opens the modal palette).
+// is bound by the layout's data-action to search-palette#open (the
+// modal command palette).
 //
 // The controller is attached to <body>; the search input is found by
 // selector so it doesn't need data-keyboard-target wiring.
