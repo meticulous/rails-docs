@@ -22,6 +22,8 @@ Rails.application.routes.draw do
   get "/files/*sdoc_path", to: "legacy_redirects#file_show", format: false
   get "/_legacy_method", to: "legacy_redirects#method_redirect"
 
+  post "/webhooks/ingest", to: "webhooks#ingest"
+
   scope "(/:source_slug)", constraints: { source_slug: NON_RAILS_SOURCE_SLUGS } do
     scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
       get "/", to: "versions#show", as: :version
