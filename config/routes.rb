@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   get "/search/suggest", to: "search#suggest", as: :search_suggest, defaults: { format: :json }
   get "/sitemap.xml", to: "sitemaps#index", as: :sitemap, defaults: { format: :xml }
   get "/feeds/:framework_slug", to: "feeds#framework", as: :framework_feed, defaults: { format: :atom }
+  get "/feeds/sources/:source_slug", to: "feeds#source", as: :source_feed, defaults: { format: :atom }
 
   get "/ecosystem", to: "ecosystem#index", as: :ecosystem
 
