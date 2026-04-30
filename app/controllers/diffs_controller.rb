@@ -1,7 +1,7 @@
 class DiffsController < ApplicationController
   def show
-    @from_version = PackageVersion.find_by!(channel: channel(params[:version]))
-    @to_version = PackageVersion.find_by!(channel: channel(params[:other_version]))
+    @from_version = current_source.package_versions.find_by!(channel: channel(params[:version]))
+    @to_version = current_source.package_versions.find_by!(channel: channel(params[:other_version]))
     @identity = resolve_entity!(params[:entity_path])
     @diff = DiffPresenter.new(
       identity: @identity,
@@ -64,6 +64,6 @@ class DiffsController < ApplicationController
   end
 
   def source
-    @source ||= Source.find_by!(slug: "rails")
+    current_source
   end
 end

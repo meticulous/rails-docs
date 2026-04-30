@@ -5,8 +5,7 @@
 # signatures, etc.
 class FeedsController < ApplicationController
   def framework
-    source = Source.find_by!(slug: "rails")
-    @framework = source.frameworks.find_by!(slug: params[:framework_slug])
+    @framework = current_source.frameworks.find_by!(slug: params[:framework_slug])
     @latest_version = PackageVersion.current_stable
 
     return head :not_found unless @latest_version

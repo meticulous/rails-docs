@@ -1,6 +1,6 @@
 class VersionsController < ApplicationController
   def show
-    @package_version = PackageVersion.find_by!(channel: channel_from_param)
+    @package_version = current_source.package_versions.find_by!(channel: channel_from_param)
     @available_versions = PackageVersion.where.not(ingested_at: nil).order(ord: :desc)
     @frameworks = @package_version.entity_versions
                                    .joins(:framework)

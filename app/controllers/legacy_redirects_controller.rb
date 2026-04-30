@@ -12,10 +12,9 @@
 class LegacyRedirectsController < ApplicationController
   def class_show
     fqn = sdoc_path_to_fqn(params[:sdoc_path])
-    identity = Source.find_by!(slug: "rails")
-                     .entity_identities
-                     .where(kind: %w[class module])
-                     .find_by(fqn: fqn)
+    identity = current_source.entity_identities
+                             .where(kind: %w[class module])
+                             .find_by(fqn: fqn)
 
     return head :not_found unless identity && current_stable
 

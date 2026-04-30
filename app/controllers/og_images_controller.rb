@@ -4,7 +4,7 @@
 # Discord all render SVG).
 class OgImagesController < ApplicationController
   def show
-    @package_version = PackageVersion.find_by!(channel: channel_from_param)
+    @package_version = current_source.package_versions.find_by!(channel: channel_from_param)
     @identity = resolve_entity!(params[:path])
     @entity_version = @identity.entity_versions.find_by(package_version: @package_version)
 
@@ -46,6 +46,6 @@ class OgImagesController < ApplicationController
   end
 
   def source
-    @source ||= Source.find_by!(slug: "rails")
+    current_source
   end
 end

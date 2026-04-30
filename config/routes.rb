@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  # Source slugs other than the default `rails`. The route table accepts
+  # them as an optional first segment so /v8.1.2/... continues to mean
+  # rails (no canonical break) while /turbo-rails/v2.0.16/... routes
+  # to the same controllers with current_source flipped.
+  NON_RAILS_SOURCE_SLUGS = /turbo-rails|globalid|stimulus-rails|importmap-rails|propshaft|solid_queue|solid_cache|solid_cable|kamal|jbuilder/
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "home#index"
@@ -8,24 +14,28 @@ Rails.application.routes.draw do
   get "/sitemap.xml", to: "sitemaps#index", as: :sitemap, defaults: { format: :xml }
   get "/feeds/:framework_slug", to: "feeds#framework", as: :framework_feed, defaults: { format: :atom }
 
+  get "/ecosystem", to: "ecosystem#index", as: :ecosystem
+
   # Legacy sdoc URL shapes — 301 to the current stable equivalent.
   get "/classes/*sdoc_path", to: "legacy_redirects#class_show", format: false
   get "/files/*sdoc_path", to: "legacy_redirects#file_show", format: false
   get "/_legacy_method", to: "legacy_redirects#method_redirect"
 
-  scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
-    get "/", to: "versions#show", as: :version
-    get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
-    get "/og/*path", to: "og_images#show", as: :og_image, defaults: { format: :svg }, constraints: { path: %r{[^?]+} }
-    get "*entity_path/-/diff/:other_version",
-        to: "diffs#show",
-        as: :diff,
-        format: false,
-        constraints: { entity_path: %r{[^?]+}, other_version: /v[\d\.]+|edge/ }
-    get "*path",
-        to: "entities#show",
-        as: :entity,
-        format: false,
-        constraints: { path: %r{[^?]+} }
+  scope "(/:source_slug)", constraints: { source_slug: NON_RAILS_SOURCE_SLUGS } do
+    scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
+      get "/", to: "versions#show", as: :version
+      get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
+      get "/og/*path", to: "og_images#show", as: :og_image, defaults: { format: :svg }, constraints: { path: %r{[^?]+} }
+      get "*entity_path/-/diff/:other_version",
+          to: "diffs#show",
+          as: :diff,
+          format: false,
+          constraints: { entity_path: %r{[^?]+}, other_version: /v[\d\.]+|edge/ }
+      get "*path",
+          to: "entities#show",
+          as: :entity,
+          format: false,
+          constraints: { path: %r{[^?]+} }
+    end
   end
 end

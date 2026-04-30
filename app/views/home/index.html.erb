@@ -19,7 +19,15 @@
       <%= link_to "search docs", search_path %>
     </p>
 
-    <h2>All ingested versions</h2>
+    <% if Source.where.not(slug: "rails").exists? %>
+      <h2>Ecosystem</h2>
+      <p>
+        Documentation for the rest of the Rails stack:
+        <%= link_to "Ruby on Rails Ecosystem", ecosystem_path %>.
+      </p>
+    <% end %>
+
+    <h2>All ingested Rails versions</h2>
     <ul class="version-list">
       <% @package_versions.each do |pv| %>
         <li>
