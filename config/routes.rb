@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "/search", to: "search#index", as: :search
   get "/search/suggest", to: "search#suggest", as: :search_suggest, defaults: { format: :json }
   get "/sitemap.xml", to: "sitemaps#index", as: :sitemap, defaults: { format: :xml }
+  get "/feeds/:framework_slug", to: "feeds#framework", as: :framework_feed, defaults: { format: :atom }
 
   # Legacy sdoc URL shapes — 301 to the current stable equivalent.
   get "/classes/*sdoc_path", to: "legacy_redirects#class_show", format: false
