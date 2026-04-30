@@ -3,6 +3,8 @@ Rails.application.routes.draw do
 
   root "home#index"
 
+  get "/search", to: "search#index", as: :search
+
   scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
     get "*path",
         to: "entities#show",

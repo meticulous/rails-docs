@@ -215,7 +215,26 @@ class Loader
     cleanup_stale_entity_versions
     refresh_first_last_seen_versions
     refresh_inheritance_closure
+    refresh_search_vectors
     @package_version.update!(ingest_status: "ok", ingested_at: Time.current)
+  end
+
+  # Populates entity_versions.search_vector for this package_version using
+  # the four-weight scheme (name=A, signature/params=B, summary=C, body=D).
+  # Postgres FTS ranks accordingly when ts_rank_cd is applied.
+  def refresh_search_vectors
+    sql = ApplicationRecord.send(:sanitize_sql_array, [<<~SQL, @package_version.id])
+      UPDATE entity_versions ev
+      SET search_vector =
+        setweight(to_tsvector('english', COALESCE(ei.name, '')), 'A') ||
+        setweight(to_tsvector('english', COALESCE(ev.signature_text, '')), 'B') ||
+        setweight(to_tsvector('english', COALESCE(ev.doc_summary, '')), 'C') ||
+        setweight(to_tsvector('english', COALESCE(ev.doc_markdown, '')), 'D')
+      FROM entity_identities ei
+      WHERE ev.entity_identity_id = ei.id
+        AND ev.package_version_id = ?
+    SQL
+    ApplicationRecord.connection.execute(sql)
   end
 
   def cleanup_stale_entity_versions
