@@ -15,7 +15,7 @@
     author: { "@type": "Organization", name: "Rails Foundation" },
     publisher: { "@type": "Organization", name: "Rails Foundation" },
     datePublished: package_version.released_on || package_version.ingested_at&.to_date,
-    url: url_for(only_path: false)
+    url: entity_url(version: version_url_segment(package_version), path: entity_url_path(presenter.identity))
   }
   data[:description] = presenter.doc_summary if presenter.respond_to?(:doc_summary) && presenter.doc_summary.present?
   data.compact!
