@@ -4,11 +4,101 @@
  */
 
 /*
- * Color palette mirrors guides.rubyonrails.org (rails/guides). Brand red
- * #C81418 is the Foundation token; gray scale and dark-mode tokens come
- * from rails/guides/assets/stylesrc/style.scss + _dark.scss so the API
- * site and the guides site read as one product.
+ * Color palette + type scale mirror guides.rubyonrails.org. Brand red
+ * #C81418, gray scale, dark-mode tokens, fonts (InterVariable for body,
+ * Calibre for display headings, IBM Plex Mono for code), and the
+ * heading sizes all come from rails/guides/assets/stylesrc/style.scss
+ * + _main.scss so the API site and the guides site read as one product.
+ *
+ * Font binaries copied from rails-website/assets/fonts (the canonical
+ * source rubyonrails.org serves) into app/assets/fonts/. Propshaft
+ * fingerprints them at build time; @font-face URLs use plain filenames
+ * and propshaft rewrites to the digested asset path.
  */
+
+/* --------------------------------------------------------------------------
+ * Fonts
+ * -------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: InterVariable;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("InterVariable.woff2") format("woff2");
+}
+@font-face {
+  font-family: InterVariable;
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("InterVariable-Italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("IBMPlexMono-Text.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("IBMPlexMono-TextItalic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("IBMPlexMono-Medium.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("IBMPlexMono-MediumItalic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Calibre;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("calibre-regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: Calibre;
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("calibre-regular-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: Calibre;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("calibre-semibold.woff2") format("woff2");
+}
+@font-face {
+  font-family: Calibre;
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url("calibre-semibold-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: Calibre;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("calibre-bold.woff2") format("woff2");
+}
 
 :root {
   --rf-brand: #C81418;
@@ -39,8 +129,12 @@
   --color-bg-soft: var(--gray-100);
   --color-code-bg: var(--gray-200);
 
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  /* Type stack — InterVariable for prose, Calibre for display headings,
+   * IBM Plex Mono for code, all matching rails/guides. System-font
+   * fallbacks cover the brief window before the webfonts swap in. */
+  --font-body: InterVariable, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: Calibre, InterVariable, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --max-width: 64rem;
   --radius: 8px;
 }
@@ -308,12 +402,110 @@
 
 * { box-sizing: border-box; }
 
+/* Body type scale matches guides.rubyonrails.org: 16px Inter at
+ * line-height 1.4, with common ligatures and oldstyle figures for
+ * prose, and the variable font when the browser supports it. */
 body {
   margin: 0;
   font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
   color: var(--color-text);
   background: var(--color-bg);
-  line-height: 1.6;
+  font-feature-settings: "liga" 1;
+}
+
+@supports (font-variant-ligatures: common-ligatures) {
+  body {
+    font-feature-settings: normal;
+    font-variant-ligatures: common-ligatures;
+  }
+}
+
+@supports (font-variant-numeric: oldstyle-nums) {
+  body {
+    font-variant-numeric: oldstyle-nums;
+  }
+}
+
+/* Heading type scale (guides _main.scss). h1/h2 use Calibre; h3-h5
+ * stay on the body face but step down in size and weight. Headings
+ * always use lining figures + kerning so numerals don't sit lower
+ * than caps in the visual rhythm. */
+h1, h2, h3, h4, h5, h6 {
+  font-feature-settings: "kern" 1, "lnum" 1;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+@supports (font-variant-numeric: lining-nums) {
+  h1, h2, h3, h4, h5, h6, ol, ol > li {
+    font-feature-settings: normal;
+    font-variant-numeric: lining-nums;
+  }
+}
+
+h1 {
+  color: var(--rf-brand);
+  font-family: var(--font-display);
+  font-size: 3rem;       /* 48px */
+  font-weight: 700;
+  line-height: 1;
+  margin-top: 0;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: 2.25rem;    /* Calibre runs smaller than Inter at the same px */
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+h2 a, h2 a:link, h2 a:visited { color: var(--rf-brand); }
+
+h2 code {
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+h3 {
+  font-size: 1.5rem;     /* 24px */
+  font-weight: 600;
+}
+
+h3 code {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+h4 code {
+  font-size: 1.125rem;
+  font-weight: 400;
+}
+
+h5 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+h5 code {
+  font-size: 0.9375rem;
+  font-weight: 400;
+}
+
+h1 a, h1 a:link, h2 a, h2 a:link, h3 a, h3 a:link,
+h4 a, h4 a:link, h5 a, h5 a:link {
+  text-decoration: none;
+}
+
+h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover {
+  text-decoration: underline;
 }
 
 a {
