@@ -69,6 +69,22 @@ class ClassPresenter
     @attributes ||= methods_for([identity.fqn], kind: "attribute").order(:name).to_a
   end
 
+  # Classes / modules that include, extend, prepend, or inherit from this
+  # one in the current package_version. Useful for modules like
+  # ActiveRecord::Persistence ("included by ActiveRecord::Base, ...").
+  def inheritors
+    return @inheritors if defined?(@inheritors)
+
+    edges = InheritanceEdge
+      .where(ancestor_identity_id: identity.id, package_version_id: package_version.id)
+      .includes(:child_identity)
+      .order(:relation, "entity_identities.fqn")
+
+    @inheritors = edges.group_by(&:relation).transform_values do |group|
+      group.map(&:child_identity).uniq
+    end
+  end
+
   private
 
   def methods_for(parent_fqns, kind: "method")

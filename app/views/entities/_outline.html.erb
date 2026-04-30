@@ -16,6 +16,9 @@
     <% if presenter.own_methods.any? %>
       <li><a href="#section-methods">Methods</a></li>
     <% end %>
+    <% if presenter.inheritors.any? %>
+      <li><a href="#section-inheritors">Used by (<%= presenter.inheritors.sum { |_, ids| ids.size } %>)</a></li>
+    <% end %>
     <% if presenter.inherited_methods_grouped.any? %>
       <li><a href="#section-inherited">Inherited methods (<%= presenter.inherited_methods_grouped.sum { |_, m| m.size } %>)</a></li>
     <% end %>

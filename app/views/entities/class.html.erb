@@ -103,6 +103,23 @@
         </section>
       <% end %>
 
+      <% if @presenter.inheritors.any? %>
+        <section class="entity__inheritors" id="section-inheritors">
+          <h2>Used by</h2>
+          <% @presenter.inheritors.each do |relation, identities| %>
+            <h3 class="entity__inheritors-relation">
+              <%= relation == "superclass" ? "Subclasses" : "#{relation.to_s.titleize}d by" %>
+              <span class="muted">(<%= identities.size %>)</span>
+            </h3>
+            <ul class="entity__module-list">
+              <% identities.each do |inheritor| %>
+                <li><%= entity_link(inheritor, @package_version) %></li>
+              <% end %>
+            </ul>
+          <% end %>
+        </section>
+      <% end %>
+
       <% if @presenter.inherited_methods_grouped.any? %>
         <section class="entity__inherited-methods">
           <h2 id="section-inherited">Methods (inherited)</h2>
