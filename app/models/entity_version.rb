@@ -15,4 +15,18 @@ class EntityVersion < ApplicationRecord
   validates :entity_identity_id, uniqueness: { scope: :package_version_id }
 
   delegate :name, :fqn, :kind, :scope, to: :entity_identity
+
+  # GitHub permalink to the source span. Returns nil if RDoc didn't capture
+  # a file/line for this entity (rare but happens for some ghost methods).
+  def github_source_url
+    return nil unless source_path.present? && source_line_start.present?
+    line = "#L#{source_line_start}"
+    line += "-L#{source_line_end}" if source_line_end.present?
+    "https://github.com/#{entity_identity.source.github_repo}/blob/#{package_version.git_ref}/#{source_path}#{line}"
+  end
+
+  def github_edit_url
+    return nil unless source_path.present?
+    "https://github.com/#{entity_identity.source.github_repo}/edit/#{package_version.git_ref}/#{source_path}"
+  end
 end

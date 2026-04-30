@@ -14,50 +14,27 @@ module EntityPathHelper
 
   def entity_url_path(identity)
     case identity.kind
-    when "class", "module"
-      fqn_to_path(identity.fqn)
-    when "constant"
-      fqn_to_path(identity.fqn)
+    when "class", "module", "constant"
+      identity.url_path
     when "method"
-      parent_path = fqn_to_path(identity.parent_fqn)
       slug = MethodSlug.encode(identity.name)
       slug = "#{slug}.class" if identity.scope == "singleton"
-      "#{parent_path}/#{slug}"
+      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{slug}"
     when "attribute"
-      "#{fqn_to_path(identity.parent_fqn)}/#{identity.name}"
+      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{identity.name}"
     else
-      fqn_to_path(identity.fqn)
+      identity.url_path
     end
   end
 
-  # ActiveRecord::Persistence::ClassMethods -> active_record/persistence/class_methods
+  # Path-from-FQN for ad-hoc cases (inherited methods rendered from raw FQN
+  # strings, breadcrumb intermediate segments). Delegates to EntityIdentity's
+  # canonical impl.
   def fqn_to_path(fqn)
-    fqn.to_s.split("::").map(&:underscore).join("/")
+    EntityIdentity.fqn_to_url_path(fqn)
   end
 
-  def github_source_url(entity_version)
-    return nil unless entity_version.source_path.present? && entity_version.source_line_start.present?
-    repo = entity_version.entity_identity.source.github_repo
-    ref = entity_version.package_version.git_ref
-    line = "#L#{entity_version.source_line_start}"
-    line += "-L#{entity_version.source_line_end}" if entity_version.source_line_end.present?
-    "https://github.com/#{repo}/blob/#{ref}/#{entity_version.source_path}#{line}"
-  end
-
-  def github_edit_url(entity_version)
-    return nil unless entity_version.source_path.present?
-    repo = entity_version.entity_identity.source.github_repo
-    ref = entity_version.package_version.git_ref
-    "https://github.com/#{repo}/edit/#{ref}/#{entity_version.source_path}"
-  end
-
-  # FQN -> array of [name_part, partial_path] for breadcrumb rendering.
-  # ActiveRecord::Persistence::ClassMethods becomes
-  # [["ActiveRecord", "active_record"], ["Persistence", "active_record/persistence"], ...]
   def breadcrumb_segments(fqn)
-    parts = fqn.to_s.split("::")
-    parts.each_with_index.map do |part, i|
-      [part, parts[0..i].map(&:underscore).join("/")]
-    end
+    EntityIdentity.breadcrumb_segments_for(fqn)
   end
 end

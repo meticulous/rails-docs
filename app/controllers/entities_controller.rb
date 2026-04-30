@@ -19,45 +19,48 @@ class EntitiesController < ApplicationController
     params[:version] == "edge" ? "edge" : params[:version].sub(/\Av/, "")
   end
 
-  # Resolves the URL path to an entity_identity.
-  # Tries class/module first, then method (instance + singleton), then
-  # constant, then attribute. The first match wins.
   def resolve_entity!
     parts = params[:path].split("/")
-    candidate_lookups(parts).each do |candidate|
-      identity = source.entity_identities
-                       .where(kind: candidate[:kind], scope: candidate[:scope])
-                       .find_by(fqn: candidate[:fqn])
-      return identity if identity
-    end
-    raise ActiveRecord::RecordNotFound, "No entity for path: #{params[:path].inspect}"
+    raise ActiveRecord::RecordNotFound if parts.empty?
+
+    identity = resolve_class_or_module(parts) ||
+               resolve_method(parts) ||
+               resolve_attribute(parts) ||
+               resolve_constant(parts)
+    identity || raise(ActiveRecord::RecordNotFound, "No entity for path: #{params[:path].inspect}")
   end
 
-  def candidate_lookups(parts)
-    return [] if parts.empty?
+  def resolve_class_or_module(parts)
+    fqn = parts.map(&:camelize).join("::")
+    source.entity_identities.where(kind: %w[class module]).find_by(fqn: fqn)
+  end
 
-    namespace_fqn = parts.map(&:camelize).join("::")
-    parent_fqn = parts[0..-2].map(&:camelize).join("::") if parts.size >= 2
+  def resolve_method(parts)
+    return nil if parts.size < 2
+    parent_fqn = parts[0..-2].map(&:camelize).join("::")
     last = parts.last
+    scope, slug = last.end_with?(".class") ? ["singleton", last.sub(/\.class\z/, "")] : ["instance", last]
+    separator = scope == "singleton" ? "." : "#"
+    name = MethodSlug.decode(slug)
+    source.entity_identities
+          .where(kind: "method", scope: scope)
+          .find_by(fqn: "#{parent_fqn}#{separator}#{name}")
+  end
 
-    candidates = [
-      { kind: %w[class module], fqn: namespace_fqn }
-    ]
+  def resolve_attribute(parts)
+    return nil if parts.size < 2
+    parent_fqn = parts[0..-2].map(&:camelize).join("::")
+    source.entity_identities
+          .where(kind: "attribute", scope: "instance")
+          .find_by(fqn: "#{parent_fqn}##{parts.last}")
+  end
 
-    if parent_fqn
-      method_scope, method_slug = if last.end_with?(".class")
-        ["singleton", last.sub(/\.class\z/, "")]
-      else
-        ["instance", last]
-      end
-      method_name = MethodSlug.decode(method_slug)
-      separator = method_scope == "singleton" ? "." : "#"
-      candidates << { kind: "method", fqn: "#{parent_fqn}#{separator}#{method_name}", scope: method_scope }
-      candidates << { kind: "attribute", fqn: "#{parent_fqn}##{last}", scope: "instance" }
-      candidates << { kind: "constant", fqn: "#{parent_fqn}::#{last}" }
-    end
-
-    candidates
+  def resolve_constant(parts)
+    return nil if parts.size < 2
+    parent_fqn = parts[0..-2].map(&:camelize).join("::")
+    source.entity_identities
+          .where(kind: "constant")
+          .find_by(fqn: "#{parent_fqn}::#{parts.last}")
   end
 
   def build_presenter

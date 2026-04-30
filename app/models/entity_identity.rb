@@ -13,4 +13,24 @@ class EntityIdentity < ApplicationRecord
   validates :kind, inclusion: { in: KINDS }
   validates :scope, inclusion: { in: SCOPES }, allow_nil: true
   validates :fqn, uniqueness: { scope: [:source_id, :kind, :scope] }
+
+  def url_path
+    self.class.fqn_to_url_path(fqn)
+  end
+
+  # ActiveRecord::Persistence -> [["ActiveRecord", "active_record"], ["Persistence", "active_record/persistence"]]
+  def breadcrumb_segments
+    self.class.breadcrumb_segments_for(fqn)
+  end
+
+  def self.fqn_to_url_path(fqn)
+    fqn.to_s.split("::").map(&:underscore).join("/")
+  end
+
+  def self.breadcrumb_segments_for(fqn)
+    parts = fqn.to_s.split("::")
+    parts.each_with_index.map do |part, i|
+      [part, parts[0..i].map(&:underscore).join("/")]
+    end
+  end
 end
