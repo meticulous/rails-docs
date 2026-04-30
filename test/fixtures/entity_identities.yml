@@ -23,6 +23,15 @@ ar_persistence_save:
   parent_fqn: "ActiveRecord::Persistence"
   framework: activerecord
 
+# Top-level Foo class exists so the URL resolver can walk /foo/* and
+# find Foo's children. Real RDoc-ingested data always has every
+# namespace as its own identity.
+foo:
+  source: rails
+  fqn: Foo
+  kind: class
+  name: Foo
+
 foo_name:
   source: rails
   fqn: "Foo#name"

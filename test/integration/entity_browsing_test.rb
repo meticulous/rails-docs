@@ -123,7 +123,54 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".entity__kind", "attribute"
   end
 
+  test "all-caps constant slug round-trips through .underscore" do
+    # ActionCable::INTERNAL — `.underscore` lowercases the constant
+    # name to "internal" in the URL. The resolver has to undo that.
+    constant = sources(:rails).entity_identities.create!(
+      fqn: "Foo::INTERNAL",
+      kind: "constant",
+      name: "INTERNAL",
+      parent_fqn: "Foo"
+    )
+    EntityVersion.create!(entity_identity: constant, package_version: package_versions(:v8_1_3))
+
+    get entity_path(version: "v8.1.3", path: "foo/internal")
+    assert_response :success
+    assert_select "h1", text: /INTERNAL/
+    assert_select ".entity__kind", "constant"
+  end
+
+  test "namespace with embedded acronym resolves through hierarchical walk" do
+    # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter::SOMETHING —
+    # `.camelize` of "postgre_sql_adapter" gives "PostgreSqlAdapter",
+    # not "PostgreSQLAdapter", so the FQN-rebuild fast path misses
+    # and the walker has to step through `name.underscore` matches.
+    sources(:rails).entity_identities.create!(
+      fqn: "Foo::HTTPAdapter",
+      kind: "class",
+      name: "HTTPAdapter",
+      parent_fqn: "Foo"
+    )
+    constant = sources(:rails).entity_identities.create!(
+      fqn: "Foo::HTTPAdapter::TIMEOUT",
+      kind: "constant",
+      name: "TIMEOUT",
+      parent_fqn: "Foo::HTTPAdapter"
+    )
+    EntityVersion.create!(entity_identity: constant, package_version: package_versions(:v8_1_3))
+
+    get entity_path(version: "v8.1.3", path: "foo/http_adapter/timeout")
+    assert_response :success
+    assert_select "h1", text: /TIMEOUT/
+  end
+
   test "operator method slug round-trips through the URL" do
+    sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::AttributeMethods",
+      kind: "module",
+      name: "AttributeMethods",
+      parent_fqn: "ActiveRecord"
+    )
     bracket = sources(:rails).entity_identities.create!(
       fqn: "ActiveRecord::AttributeMethods#[]",
       kind: "method",
