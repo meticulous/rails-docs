@@ -1,0 +1,28 @@
+<%
+  # Renders since/removed/deprecated badges. `presenter` is a ClassPresenter
+  # or MethodPresenter; `available_versions` comes from the controller's
+  # before_action and is ordered newest-first.
+  oldest = available_versions&.last
+  newest = available_versions&.first
+  first_seen = presenter.first_seen_version
+  last_seen = presenter.last_seen_version
+%>
+
+<% if first_seen && oldest && first_seen.id != oldest.id %>
+  <span class="badge badge--since">
+    Since <%= link_to version_label(first_seen), entity_path(version: version_url_segment(first_seen), path: entity_url_path(presenter.identity)) %>
+  </span>
+<% end %>
+
+<% if last_seen && newest && last_seen.id != newest.id %>
+  <span class="badge badge--removed">
+    Last seen in <%= link_to version_label(last_seen), entity_path(version: version_url_segment(last_seen), path: entity_url_path(presenter.identity)) %>
+  </span>
+<% end %>
+
+<% if presenter.respond_to?(:deprecated) && presenter.deprecated %>
+  <span class="badge badge--deprecated">Deprecated</span>
+  <% if presenter.deprecation_note.present? %>
+    <p class="badge-note"><%= presenter.deprecation_note %></p>
+  <% end %>
+<% end %>

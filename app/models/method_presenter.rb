@@ -13,6 +13,14 @@ class MethodPresenter
            :visibility, :deprecated, :deprecation_note,
            to: :entity_version
 
+  def first_seen_version
+    identity.first_seen_version
+  end
+
+  def last_seen_version
+    identity.last_seen_version
+  end
+
   def title
     "#{display_signature} — #{identity.parent_fqn} — Ruby on Rails #{package_version.channel}"
   end
