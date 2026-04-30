@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Ingests one external gem (turbo-rails, solid_queue, etc.) at a tag.
+#
+#   script/ingest_gem turbo-rails 2.0.16 hotwired/turbo-rails app lib
+#
+# Args: <slug> <version-without-v> <github-repo> <source-dirs...>
+set -euo pipefail
+
+INGESTER_DIR="${INGESTER_DIR:-$HOME/Development/Rails/rails_docs_ingester}"
+RAILS_DOCS_DIR="${RAILS_DOCS_DIR:-$HOME/Development/Rails/rails-docs}"
+JSONL_OUT="${JSONL_OUT:-/tmp/rails-docs-output}"
+
+slug="${1:?slug required}"
+version="${2:?version required}"
+repo="${3:?repo required}"
+shift 3
+sources=("$@")
+if [[ ${#sources[@]} -eq 0 ]]; then
+  sources=("lib")
+fi
+
+worktree="/tmp/${slug}-${version}"
+jsonl="${JSONL_OUT}/${slug}-${version}.jsonl"
+mkdir -p "$JSONL_OUT"
+
+if [[ ! -d "$worktree" ]]; then
+  git clone --depth 1 --branch "v${version}" "https://github.com/${repo}.git" "$worktree" >/dev/null
+fi
+
+sha="$(git -C "$worktree" rev-parse --short=10 HEAD)"
+display_name="$(echo "$slug" | sed 's/[-_]/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')"
+ord="$(echo "$version" | awk -F. '{ printf("%d%03d%03d\n", $1, $2, $3+0) }')"
+
+echo "==> Ingesting $slug $version ($sha) → $jsonl"
+(
+  cd "$INGESTER_DIR"
+  bundle exec exe/rails_docs_ingester \
+    --output "$jsonl" \
+    --source-root "$worktree" \
+    --channel "$version" \
+    --git-ref "v${version}" \
+    --git-sha "$sha" \
+    --ord "$ord" \
+    --source-slug "$slug" \
+    --source-display-name "$display_name" \
+    --source-github-repo "$repo" \
+    --quiet \
+    "${sources[@]}"
+)
+
+echo "==> Loading $jsonl"
+(
+  cd "$RAILS_DOCS_DIR"
+  bin/load "$jsonl"
+)
+
+echo "==> Done $slug $version"
