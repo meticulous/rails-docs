@@ -1,14 +1,31 @@
 <% if presenter.available_versions.size > 1 %>
-  <p class="availability">
-    <span class="availability__label">Available in:</span>
-    <% presenter.available_versions.each do |pv| %>
-      <% if pv.id == presenter.package_version.id %>
-        <span class="availability__chip availability__chip--current"><%= version_label(pv) %></span>
-      <% else %>
-        <%= link_to version_label(pv),
-                    entity_path(version: version_url_segment(pv), path: entity_url_path(presenter.identity)),
-                    class: "availability__chip" %>
+  <div class="availability">
+    <p class="availability__row">
+      <span class="availability__label">Available in:</span>
+      <% presenter.available_versions.each do |pv| %>
+        <% if pv.id == presenter.package_version.id %>
+          <span class="availability__chip availability__chip--current"><%= version_label(pv) %></span>
+        <% else %>
+          <%= link_to version_label(pv),
+                      entity_path(version: version_url_segment(pv), path: entity_url_path(presenter.identity)),
+                      class: "availability__chip" %>
+        <% end %>
       <% end %>
-    <% end %>
-  </p>
+    </p>
+    <p class="availability__row availability__row--compare">
+      <label class="availability__label" for="diff-switcher-<%= presenter.identity.id %>">Compare with:</label>
+      <select id="diff-switcher-<%= presenter.identity.id %>"
+              data-controller="diff-switcher"
+              data-action="change->diff-switcher#go">
+        <option value="">…</option>
+        <% presenter.available_versions.reject { |v| v.id == presenter.package_version.id }.each do |pv| %>
+          <option value="<%= diff_path(version: version_url_segment(presenter.package_version),
+                                       entity_path: entity_url_path(presenter.identity),
+                                       other_version: version_url_segment(pv)) %>">
+            <%= version_label(pv) %>
+          </option>
+        <% end %>
+      </select>
+    </p>
+  </div>
 <% end %>
