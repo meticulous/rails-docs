@@ -1,10 +1,10 @@
 Rails.application.routes.draw do
-  # Source slugs other than the default `rails`. The route table accepts
-  # them as an optional first segment so /v8.1.2/... continues to mean
-  # rails (no canonical break) while /turbo-rails/v2.0.16/... routes
-  # to the same controllers with current_source flipped.
-  NON_RAILS_SOURCE_SLUGS = /turbo-rails|globalid|stimulus-rails|importmap-rails|propshaft|solid_queue|solid_cache|solid_cable|kamal|jbuilder/
-
+  # Source slugs are an optional first segment so /v8.1.2/... continues
+  # to route to rails (no canonical break) while /turbo-rails/v2.0.16/...
+  # routes to the same controllers with current_source flipped. The
+  # :version regex below is what disambiguates the two; anything else in
+  # the slug position falls through to ApplicationController#current_source
+  # and 404s if it isn't a known Source.
   get "up" => "rails/health#show", as: :rails_health_check
   get "health" => "health#show", as: :health_check
 
@@ -25,7 +25,7 @@ Rails.application.routes.draw do
 
   post "/webhooks/ingest", to: "webhooks#ingest"
 
-  scope "(/:source_slug)", constraints: { source_slug: NON_RAILS_SOURCE_SLUGS } do
+  scope "(/:source_slug)" do
     scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
       get "/", to: "versions#show", as: :version
       get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
