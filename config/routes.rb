@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   root "home#index"
 
   get "/search", to: "search#index", as: :search
+  get "/search/suggest", to: "search#suggest", as: :search_suggest, defaults: { format: :json }
   get "/sitemap.xml", to: "sitemaps#index", as: :sitemap, defaults: { format: :xml }
 
   # Legacy sdoc URL shapes — 301 to the current stable equivalent.
@@ -14,6 +15,7 @@ Rails.application.routes.draw do
   scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
     get "/", to: "versions#show", as: :version
     get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
+    get "/og/*path", to: "og_images#show", as: :og_image, defaults: { format: :svg }, constraints: { path: %r{[^?]+} }
     get "*entity_path/-/diff/:other_version",
         to: "diffs#show",
         as: :diff,

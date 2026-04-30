@@ -1,5 +1,6 @@
 <% content_for :title, @presenter.title %>
 <% content_for :canonical_url, entity_url(version: version_url_segment(@package_version), path: entity_url_path(@identity)) %>
+<% content_for :og_image, og_image_url(version: version_url_segment(@package_version), path: entity_url_path(@identity)) %>
 <% if @presenter.doc_summary.present? %>
   <% content_for :meta_description, truncate(@presenter.doc_summary, length: 160) %>
 <% end %>

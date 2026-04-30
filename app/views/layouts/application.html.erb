@@ -26,6 +26,10 @@
       <meta property="og:url" content="<%= canonical %>">
     <% end %>
     <meta property="og:site_name" content="Ruby on Rails API">
+    <% if (og_image = content_for(:og_image)).present? %>
+      <meta property="og:image" content="<%= og_image %>">
+      <meta name="twitter:image" content="<%= og_image %>">
+    <% end %>
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="<%= content_for(:title) || 'Ruby on Rails API' %>">

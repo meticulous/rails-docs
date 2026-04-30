@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#FAF9F8"/>
+  <rect width="1200" height="90" fill="#C81418"/>
+
+  <text x="60" y="60" fill="#FAF9F8" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="600">
+    Ruby on Rails API
+  </text>
+  <text x="1140" y="60" fill="#FAF9F8" font-family="ui-monospace, monospace" font-size="28" text-anchor="end">
+    v<%= @package_version.channel %>
+  </text>
+
+  <text x="60" y="220" fill="#666" font-family="ui-monospace, monospace" font-size="28">
+    <%= @identity.parent_fqn || "Ruby on Rails" %>
+  </text>
+
+  <text x="60" y="320" fill="#292929" font-family="system-ui, -apple-system, sans-serif" font-size="74" font-weight="700">
+    <%= truncate(@identity.name, length: 36) %>
+  </text>
+
+  <text x="60" y="380" fill="#666" font-family="system-ui, -apple-system, sans-serif" font-size="28">
+    <%= @identity.kind %><% if @entity_version&.framework %> · <%= @entity_version.framework.display_name %><% end %>
+  </text>
+
+  <% if @entity_version&.doc_summary.present? %>
+    <foreignObject x="60" y="430" width="1080" height="140">
+      <div xmlns="http://www.w3.org/1999/xhtml"
+           style="font-family: system-ui, -apple-system, sans-serif; font-size: 26px; line-height: 1.4; color: #292929;">
+        <%= truncate(@entity_version.doc_summary, length: 220) %>
+      </div>
+    </foreignObject>
+  <% end %>
+</svg>
