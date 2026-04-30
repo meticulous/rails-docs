@@ -9,6 +9,13 @@ class EntityIdentity < ApplicationRecord
 
   has_many :entity_versions, dependent: :destroy
 
+  # PackageVersions in which this identity has an entity_version, oldest first
+  # by package_versions.ord. Used by the "Available in" strip on entity pages.
+  has_many :available_versions,
+           through: :entity_versions,
+           source: :package_version,
+           class_name: "PackageVersion"
+
   validates :fqn, :name, presence: true
   validates :kind, inclusion: { in: KINDS }
   validates :scope, inclusion: { in: SCOPES }, allow_nil: true

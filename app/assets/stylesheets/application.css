@@ -80,6 +80,89 @@
   --color-code-bg: var(--gray-900);
 }
 
+/* Diff page */
+.diff__header {
+  margin-bottom: 1.5rem;
+}
+
+.diff__subtitle {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.diff__status {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+}
+
+.diff__status--added { border-color: #1f7a3a; }
+.diff__status--removed { border-color: var(--rf-brand); }
+
+.diff__section { margin: 2rem 0; }
+
+.diff-lines {
+  background: var(--color-code-bg);
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.diff-line {
+  display: block;
+}
+
+.diff-line--unchanged {
+  color: var(--color-text);
+}
+
+.diff-line--added {
+  background: rgba(31, 122, 58, 0.15);
+  color: var(--color-text);
+}
+
+.diff-line--removed {
+  background: rgba(200, 20, 24, 0.12);
+  color: var(--color-text);
+}
+
+/* "Available in: …" strip on entity pages */
+.availability {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.5rem 0 1rem;
+  font-size: 0.85rem;
+}
+
+.availability__label {
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+.availability__chip {
+  font-family: var(--font-mono);
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.15em 0.5em;
+  color: var(--color-link);
+}
+
+.availability__chip--current {
+  background: var(--color-link);
+  color: var(--color-bg);
+  border-color: var(--color-link);
+}
+
 .theme-toggle {
   background: transparent;
   border: 1px solid var(--color-border);

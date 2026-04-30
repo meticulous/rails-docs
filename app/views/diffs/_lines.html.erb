@@ -1,0 +1,14 @@
+<pre class="diff-lines"><%
+diff.each do |action, from_line, to_line|
+  case action
+  when "="
+    %><span class="diff-line diff-line--unchanged">  <%= from_line.to_s %></span><%
+  when "-"
+    %><span class="diff-line diff-line--removed">- <%= from_line.to_s %></span><%
+  when "+"
+    %><span class="diff-line diff-line--added">+ <%= to_line.to_s %></span><%
+  when "!"
+    %><span class="diff-line diff-line--removed">- <%= from_line.to_s %></span><span class="diff-line diff-line--added">+ <%= to_line.to_s %></span><%
+  end
+end
+%></pre>

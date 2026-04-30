@@ -1,0 +1,14 @@
+<% if presenter.available_versions.size > 1 %>
+  <p class="availability">
+    <span class="availability__label">Available in:</span>
+    <% presenter.available_versions.each do |pv| %>
+      <% if pv.id == presenter.package_version.id %>
+        <span class="availability__chip availability__chip--current"><%= version_label(pv) %></span>
+      <% else %>
+        <%= link_to version_label(pv),
+                    entity_path(version: version_url_segment(pv), path: entity_url_path(presenter.identity)),
+                    class: "availability__chip" %>
+      <% end %>
+    <% end %>
+  </p>
+<% end %>

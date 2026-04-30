@@ -10,6 +10,18 @@ class ClassPresenter
   delegate :fqn, :name, :kind, to: :identity
   delegate :doc_html, :doc_markdown, :doc_summary, :source_path, :source_line_start, to: :entity_version
 
+  def available_versions
+    @available_versions ||= identity.available_versions.distinct.order(:ord).to_a
+  end
+
+  def first_seen_version
+    identity.first_seen_version
+  end
+
+  def last_seen_version
+    identity.last_seen_version
+  end
+
   def title
     "#{fqn} — Ruby on Rails #{package_version.channel}"
   end

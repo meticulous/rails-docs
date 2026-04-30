@@ -1,0 +1,50 @@
+<% content_for :title, @diff.title %>
+
+<article class="diff">
+  <header class="diff__header">
+    <%= render "entities/breadcrumbs", fqn: @identity.fqn, package_version: @to_version %>
+    <h1 class="diff__name">
+      <span class="entity__kind">diff</span>
+      <%= @identity.fqn %>
+    </h1>
+    <p class="diff__subtitle">
+      Comparing
+      <%= link_to version_label(@from_version),
+                  entity_path(version: version_url_segment(@from_version), path: entity_url_path(@identity)) %>
+      →
+      <%= link_to version_label(@to_version),
+                  entity_path(version: version_url_segment(@to_version), path: entity_url_path(@identity)) %>
+    </p>
+  </header>
+
+  <% if @diff.added? %>
+    <p class="diff__status diff__status--added">
+      Added in <%= version_label(@to_version) %> — not present in <%= version_label(@from_version) %>.
+    </p>
+  <% elsif @diff.removed? %>
+    <p class="diff__status diff__status--removed">
+      Removed in <%= version_label(@to_version) %> — last seen in <%= version_label(@from_version) %>.
+    </p>
+  <% else %>
+    <% unless @diff.signature_changed? || @diff.doc_changed? %>
+      <p class="diff__status diff__status--unchanged">
+        Signature and documentation are identical between
+        <%= version_label(@from_version) %> and <%= version_label(@to_version) %>.
+      </p>
+    <% end %>
+
+    <% if @diff.signature_changed? %>
+      <section class="diff__section">
+        <h2>Signature</h2>
+        <%= render "diffs/lines", diff: @diff.signature_diff %>
+      </section>
+    <% end %>
+
+    <% if @diff.doc_changed? %>
+      <section class="diff__section">
+        <h2>Documentation</h2>
+        <%= render "diffs/lines", diff: @diff.doc_diff %>
+      </section>
+    <% end %>
+  <% end %>
+</article>

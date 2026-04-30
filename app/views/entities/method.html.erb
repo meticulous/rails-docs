@@ -20,6 +20,7 @@
       <code><%= @presenter.scope_prefix %><%= @presenter.name %></code>
     </h1>
     <p class="entity__version">Ruby on Rails <%= @package_version.channel %></p>
+    <%= render "entities/availability", presenter: @presenter %>
   </header>
 
   <% if @presenter.signature_text.present? || @presenter.call_seq.present? %>

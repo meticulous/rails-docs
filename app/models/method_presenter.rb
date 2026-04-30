@@ -44,4 +44,16 @@ class MethodPresenter
   def aliased
     method_version&.aliased
   end
+
+  def available_versions
+    @available_versions ||= identity.available_versions.distinct.order(:ord).to_a
+  end
+
+  def first_seen_version
+    identity.first_seen_version
+  end
+
+  def last_seen_version
+    identity.last_seen_version
+  end
 end

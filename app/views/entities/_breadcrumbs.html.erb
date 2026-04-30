@@ -1,4 +1,5 @@
 <% segments = breadcrumb_segments(fqn) %>
+<% pv = local_assigns.fetch(:package_version, @package_version) %>
 <nav class="breadcrumbs" aria-label="Namespace path">
   <ol>
     <% segments.each_with_index do |(part, partial_path), idx| %>
@@ -6,7 +7,7 @@
         <% if idx == segments.size - 1 %>
           <span aria-current="page"><%= part %></span>
         <% else %>
-          <%= link_to part, entity_path(version: version_url_segment(@package_version), path: partial_path) %>
+          <%= link_to part, entity_path(version: version_url_segment(pv), path: partial_path) %>
         <% end %>
       </li>
     <% end %>
