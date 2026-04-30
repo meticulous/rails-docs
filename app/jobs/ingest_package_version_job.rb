@@ -5,6 +5,8 @@
 #
 # Designed to run under Solid Queue in production. The shell-out matches
 # what script/backfill does manually so behavior is consistent.
+require "open3"
+
 class IngestPackageVersionJob < ApplicationJob
   queue_as :ingest
 
@@ -55,7 +57,7 @@ class IngestPackageVersionJob < ApplicationJob
     jsonl = File.join(output_dir, "#{source_slug}-#{channel}.jsonl")
 
     args = [
-      ENV.fetch("INGESTER_BIN", File.expand_path("~/Development/Rails/rails_docs_ingester/exe/rails_docs_ingester")),
+      ENV.fetch("INGESTER_BIN"),
       "--output", jsonl,
       "--source-root", worktree,
       "--channel", channel,
@@ -66,8 +68,7 @@ class IngestPackageVersionJob < ApplicationJob
       "--quiet",
       *source_dirs
     ]
-    success = system(*args)
-    raise "ingester failed for #{source_slug} #{channel}" unless success
+    capture!(args, label: "ingester #{source_slug} #{channel}")
     jsonl
   end
 
@@ -76,7 +77,17 @@ class IngestPackageVersionJob < ApplicationJob
   end
 
   def run_git(*args, cwd:)
-    success = system("git", "-C", cwd, *args)
-    raise "git #{args.first} failed in #{cwd}" unless success
+    capture!(["git", "-C", cwd, *args], label: "git #{args.first} in #{cwd}")
+  end
+
+  # Subprocess runner that captures stderr and surfaces it on failure.
+  # `system` discards stderr by default, which made debugging failed
+  # backfill runs an exercise in re-running with manual logging.
+  def capture!(argv, label:)
+    stdout, stderr, status = Open3.capture3(*argv)
+    return stdout if status.success?
+
+    Rails.logger.error("[ingest] #{label} failed (exit #{status.exitstatus})\nstderr:\n#{stderr}")
+    raise "#{label} failed (exit #{status.exitstatus}): #{stderr.strip}"
   end
 end

@@ -27,7 +27,7 @@ module DocHtmlHelper
   # produced anchor tags get through the allow-list.
   def sanitize_doc_html(html)
     return nil if html.blank?
-    expanded = expand_cross_source_tokens(expand_guide_tokens(html))
+    expanded = html.include?("{{") ? expand_cross_source_tokens(expand_guide_tokens(html)) : html
     sanitize expanded, tags: DOC_HTML_TAGS, attributes: DOC_HTML_ATTRIBUTES
   end
 
@@ -36,6 +36,7 @@ module DocHtmlHelper
   # guides.rubyonrails.org. Authors place these in RDoc comments to cross-
   # reference the prose docs without hard-coding the URL.
   def expand_guide_tokens(html)
+    return html unless html.include?("{{")
     html.gsub(GUIDE_TOKEN_REGEX) do
       slug, anchor, label = Regexp.last_match(1), Regexp.last_match(2), Regexp.last_match(3)
       href = "https://guides.rubyonrails.org/#{slug}.html"
@@ -50,6 +51,7 @@ module DocHtmlHelper
   # as the literal token) when the source isn't ingested or has no
   # stable version yet.
   def expand_cross_source_tokens(html)
+    return html unless html.include?("{{")
     html.gsub(CROSS_SOURCE_TOKEN_REGEX) do
       slug_or_alias, fqn, label = Regexp.last_match(1), Regexp.last_match(2), Regexp.last_match(3)
       source_slug = CROSS_SOURCE_ALIASES.fetch(slug_or_alias, slug_or_alias)

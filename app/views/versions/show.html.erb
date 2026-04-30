@@ -22,20 +22,17 @@
     <h2>Frameworks</h2>
     <% if @frameworks.any? %>
       <div class="framework-grid">
-        <% @frameworks.each do |slug, display_name, entity_count| %>
-          <%
-            top_module_fqn = display_name.delete(" ")
-            top_module = Source.find_by(slug: "rails")&.entity_identities&.where(kind: %w[module class])&.find_by(fqn: top_module_fqn)
-          %>
+        <% @frameworks.each do |framework| %>
+          <% top_module = @top_modules_by_fqn[framework.top_module_fqn] %>
           <article class="framework-card">
             <h3>
               <% if top_module %>
-                <%= entity_link(top_module, @package_version, label: display_name) %>
+                <%= entity_link(top_module, @package_version, label: framework.display_name) %>
               <% else %>
-                <%= display_name %>
+                <%= framework.display_name %>
               <% end %>
             </h3>
-            <p class="muted"><%= number_with_delimiter(entity_count) %> documented entities</p>
+            <p class="muted"><%= number_with_delimiter(framework.entity_count) %> documented entities</p>
           </article>
         <% end %>
       </div>

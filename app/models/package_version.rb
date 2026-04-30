@@ -40,12 +40,12 @@ class PackageVersion < ApplicationRecord
   # The current_stable PackageVersion for each Source — returned as an
   # array. Search uses this to scope cross-source queries to "the latest
   # of every gem" without surfacing duplicates from older versions.
+  # Postgres DISTINCT ON keeps the highest-ord row per source_id without
+  # round-tripping every stable row to Ruby.
   def self.current_stable_for_each_source
     where.not(ingested_at: nil)
          .where(prerelease: [nil, ""])
-         .order(ord: :desc)
-         .group_by(&:source_id)
-         .values
-         .map(&:first)
+         .select("DISTINCT ON (source_id) package_versions.*")
+         .order(:source_id, ord: :desc)
   end
 end

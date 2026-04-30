@@ -6,10 +6,10 @@
     API documentation for the Foundation-maintained gems that complete the Rails stack.
   </p>
 
-  <% if @sources.any? %>
+  <% if @entries.any? %>
     <div class="framework-grid">
-      <% @sources.each do |source| %>
-        <% latest = source.package_versions.where.not(ingested_at: nil).order(ord: :desc).first %>
+      <% @entries.each do |entry| %>
+        <% source = entry[:source]; latest = entry[:latest] %>
         <article class="framework-card">
           <h3>
             <%= link_to source.display_name,
@@ -17,7 +17,7 @@
           </h3>
           <p class="muted">
             v<%= latest.channel %> ·
-            <%= number_with_delimiter(latest.entity_versions.count) %> documented entities ·
+            <%= number_with_delimiter(entry[:entity_count]) %> documented entities ·
             <%= link_to "GitHub", "https://github.com/#{source.github_repo}", target: "_blank", rel: "noopener noreferrer" %>
           </p>
         </article>

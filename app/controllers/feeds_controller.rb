@@ -60,7 +60,7 @@ class FeedsController < ApplicationController
                            .first
     return EntityIdentity.none unless previous
 
-    scope = EntityIdentity.where(last_seen_version: previous)
+    scope = EntityIdentity.where(last_seen_version: previous).includes(:last_seen_version)
     scope = scope.where(framework: framework) if framework
     scope = scope.where(source: source) if source
     scope.order(:fqn).limit(100)
