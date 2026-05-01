@@ -61,6 +61,20 @@ class ClassPresenter
     @prepended_modules ||= edges_by_relation("prepend")
   end
 
+  # Classes and modules nested directly under this one in the current
+  # package_version. Drives the "Namespace" section on a module page —
+  # critical for namespace-y modules like ActionText that are mostly a
+  # container for child classes.
+  def nested_classes_and_modules
+    @nested_classes_and_modules ||= identity.source.entity_identities
+      .where(parent_fqn: identity.fqn, kind: %w[class module])
+      .joins(:entity_versions)
+      .where(entity_versions: { package_version_id: package_version.id })
+      .distinct
+      .order(:kind, :name)
+      .to_a
+  end
+
   def constants
     @constants ||= methods_for([ identity.fqn ], kind: "constant").order(:name).to_a
   end

@@ -1,6 +1,9 @@
 <nav class="outline" aria-label="On this page">
   <h2 class="outline__title">On this page</h2>
   <ul>
+    <% if presenter.nested_classes_and_modules.any? %>
+      <li><a href="#section-namespace">Namespace (<%= presenter.nested_classes_and_modules.size %>)</a></li>
+    <% end %>
     <% if presenter.included_modules.any? %>
       <li><a href="#section-includes">Includes</a></li>
     <% end %>

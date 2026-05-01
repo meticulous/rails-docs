@@ -185,6 +185,28 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select "h1 code", text: /\[\]/
   end
 
+  test "module page lists nested classes and modules in the Namespace section" do
+    EntityVersion.create!(entity_identity: entity_identities(:foo), package_version: package_versions(:v8_1_3))
+    nested_module = sources(:rails).entity_identities.create!(
+      fqn: "Foo::Encryption", kind: "module", name: "Encryption", parent_fqn: "Foo"
+    )
+    EntityVersion.create!(entity_identity: nested_module, package_version: package_versions(:v8_1_3))
+    nested_class = sources(:rails).entity_identities.create!(
+      fqn: "Foo::DangerousAttributeError", kind: "class", name: "DangerousAttributeError", parent_fqn: "Foo"
+    )
+    EntityVersion.create!(entity_identity: nested_class, package_version: package_versions(:v8_1_3))
+
+    get entity_path(version: "v8.1.3", path: "foo")
+    assert_response :success
+    assert_select "section.entity__namespace h2", text: "Namespace"
+    assert_select "section.entity__namespace h3", text: /Modules/
+    assert_select "section.entity__namespace h3", text: /Classes/
+    assert_select "section.entity__namespace a", text: "Foo::Encryption"
+    assert_select "section.entity__namespace a", text: "Foo::DangerousAttributeError"
+    # Outline links to the section
+    assert_select "aside.entity__outline a[href='#section-namespace']"
+  end
+
   test "Support and License sidebar block renders on entity pages" do
     get entity_path(version: "v8.1.3", path: "active_record/persistence")
     assert_response :success

@@ -45,6 +45,23 @@
         </section>
       <% end %>
 
+      <% if @presenter.nested_classes_and_modules.any? %>
+        <section class="entity__namespace" id="section-namespace">
+          <h2>Namespace</h2>
+          <% nested_grouped = @presenter.nested_classes_and_modules.group_by(&:kind) %>
+          <% %w[module class].each do |kind| %>
+            <% group = nested_grouped[kind] %>
+            <% next unless group&.any? %>
+            <h3 class="entity__namespace-kind"><%= kind.pluralize.titleize %></h3>
+            <ul class="entity__module-list">
+              <% group.each do |child| %>
+                <li><%= entity_link(child, @package_version) %></li>
+              <% end %>
+            </ul>
+          <% end %>
+        </section>
+      <% end %>
+
       <% if @presenter.included_modules.any? %>
         <section class="entity__includes" id="section-includes">
           <h2 id="section-includes">Includes</h2>
