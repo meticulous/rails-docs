@@ -86,6 +86,7 @@ class SearchAdapter::Postgres
       ApplicationRecord.sanitize_sql([
         "ts_rank_cd(entity_versions.search_vector, websearch_to_tsquery('english', ?), 32) * " \
           "CASE WHEN entity_versions.deprecated THEN 0.4 ELSE 1.0 END * " \
+          "CASE WHEN entity_versions.visibility = 'private' THEN 0.5 ELSE 1.0 END * " \
           "CASE entity_identities.kind " \
           "  WHEN 'method' THEN 1.6 " \
           "  WHEN 'attribute' THEN 1.4 " \

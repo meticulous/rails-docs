@@ -106,17 +106,37 @@
         </section>
       <% end %>
 
-      <% if @presenter.own_methods.any? %>
+      <% if @presenter.public_own_methods.any? %>
         <section class="entity__own-methods">
           <h2 id="section-methods">Methods (defined here)</h2>
           <ul class="method-list">
-            <% @presenter.own_methods.each do |method_identity| %>
+            <% @presenter.public_own_methods.each do |method_identity| %>
               <li>
                 <span class="method-list__scope"><%= method_identity.scope == "singleton" ? "self." : "#" %></span>
                 <%= entity_link(method_identity, @package_version, label: method_identity.name) %>
               </li>
             <% end %>
           </ul>
+        </section>
+      <% end %>
+
+      <% if @presenter.private_own_methods.any? %>
+        <section class="entity__private-methods">
+          <details class="method-group">
+            <summary>
+              <h2 id="section-private-methods">Private methods</h2>
+              <span class="method-group__count">(<%= @presenter.private_own_methods.size %>)</span>
+              <span class="muted method-group__hint">Implementation detail — not part of the public API.</span>
+            </summary>
+            <ul class="method-list">
+              <% @presenter.private_own_methods.each do |method_identity| %>
+                <li>
+                  <span class="method-list__scope"><%= method_identity.scope == "singleton" ? "self." : "#" %></span>
+                  <%= entity_link(method_identity, @package_version, label: method_identity.name) %>
+                </li>
+              <% end %>
+            </ul>
+          </details>
         </section>
       <% end %>
 

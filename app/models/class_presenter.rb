@@ -30,18 +30,37 @@ class ClassPresenter
     @own_methods ||= methods_for([ identity.fqn ]).order(:scope, :name).to_a
   end
 
+  def public_own_methods
+    @public_own_methods ||= own_methods.reject { |m| private_method?(m) }
+  end
+
+  def private_own_methods
+    @private_own_methods ||= own_methods.select { |m| private_method?(m) }
+  end
+
   def inherited_methods_grouped
     return @inherited_methods_grouped if defined?(@inherited_methods_grouped)
 
     ancestor_fqns = ordered_ancestor_fqns
     return @inherited_methods_grouped = [] if ancestor_fqns.empty?
 
-    grouped = methods_for(ancestor_fqns).group_by(&:parent_fqn)
+    # Inherited methods are an API affordance — privates of the ancestor
+    # aren't visible through the inheritance chain (Ruby's "private"
+    # blocks them at call time), so we filter them out of this list to
+    # avoid implying otherwise.
+    grouped = methods_for(ancestor_fqns).reject { |m| private_method?(m) }.group_by(&:parent_fqn)
     @inherited_methods_grouped = ancestor_fqns.filter_map { |fqn|
       rows = grouped[fqn]
       next unless rows
       [ fqn, rows.sort_by { |r| [ r.scope.to_s, r.name ] } ]
     }
+  end
+
+  # Returns true when this method identity is private in the current
+  # package_version. Cached per-presenter so the public/private partition
+  # of own_methods is one batched lookup rather than a per-row N+1.
+  def private_method?(method_identity)
+    private_method_ids.include?(method_identity.id)
   end
 
   def superclass_identity
@@ -100,6 +119,15 @@ class ClassPresenter
   end
 
   private
+
+  def private_method_ids
+    @private_method_ids ||= EntityVersion
+      .where(package_version_id: package_version.id, visibility: "private")
+      .joins(:entity_identity)
+      .where(entity_identities: { kind: "method" })
+      .pluck(:entity_identity_id)
+      .to_set
+  end
 
   def methods_for(parent_fqns, kind: "method")
     identity.source.entity_identities

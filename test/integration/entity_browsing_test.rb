@@ -185,6 +185,55 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select "h1 code", text: /\[\]/
   end
 
+  test "class page splits methods into public + collapsed private sections" do
+    private_meth = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::Persistence#_save_record",
+      kind: "method",
+      name: "_save_record",
+      scope: "instance",
+      parent_fqn: "ActiveRecord::Persistence",
+      framework: frameworks(:activerecord)
+    )
+    EntityVersion.create!(
+      entity_identity: private_meth,
+      package_version: package_versions(:v8_1_3),
+      visibility: "private"
+    )
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence")
+    assert_response :success
+    # Public method shows in the main list, not the collapsed group
+    assert_select ".entity__own-methods .method-list a", text: "save"
+    # Private method shows inside the <details> block
+    assert_select "details.method-group summary h2", text: "Private methods"
+    assert_select ".entity__private-methods details .method-list a", text: "_save_record"
+    # Outline link points at the private-methods anchor
+    assert_select "aside .outline a[href='#section-private-methods']"
+  end
+
+  test "private method page renders a Private badge and meta-noindex" do
+    private_meth = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::Persistence#_callback",
+      kind: "method",
+      name: "_callback",
+      scope: "instance",
+      parent_fqn: "ActiveRecord::Persistence",
+      framework: frameworks(:activerecord)
+    )
+    EntityVersion.create!(
+      entity_identity: private_meth,
+      package_version: package_versions(:v8_1_3),
+      visibility: "private"
+    )
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/_callback")
+    assert_response :success
+    assert_select ".badge.badge--private", text: "Private"
+    assert_select 'meta[name="robots"][content="noindex"]', count: 1
+    # JSON-LD TechArticle is suppressed for private methods
+    assert_select 'script[type="application/ld+json"]', count: 0
+  end
+
   test "module page lists nested classes and modules in the Namespace section" do
     EntityVersion.create!(entity_identity: entity_identities(:foo), package_version: package_versions(:v8_1_3))
     nested_module = sources(:rails).entity_identities.create!(

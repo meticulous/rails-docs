@@ -16,8 +16,11 @@
     <% if presenter.attributes.any? %>
       <li><a href="#section-attributes">Attributes</a></li>
     <% end %>
-    <% if presenter.own_methods.any? %>
+    <% if presenter.public_own_methods.any? %>
       <li><a href="#section-methods">Methods</a></li>
+    <% end %>
+    <% if presenter.private_own_methods.any? %>
+      <li><a href="#section-private-methods">Private methods (<%= presenter.private_own_methods.size %>)</a></li>
     <% end %>
     <% if presenter.inheritors.any? %>
       <li><a href="#section-inheritors">Used by (<%= presenter.inheritors.sum { |_, ids| ids.size } %>)</a></li>

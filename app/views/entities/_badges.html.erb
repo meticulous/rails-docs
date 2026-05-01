@@ -20,6 +20,10 @@
   </span>
 <% end %>
 
+<% if presenter.respond_to?(:visibility) && presenter.visibility == "private" %>
+  <span class="badge badge--private" title="Implementation detail — not part of the public API">Private</span>
+<% end %>
+
 <% if presenter.respond_to?(:deprecated) && presenter.deprecated %>
   <span class="badge badge--deprecated">Deprecated</span>
   <% if presenter.deprecation_note.present? %>

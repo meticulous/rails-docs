@@ -289,9 +289,23 @@
   border-color: rgba(200, 20, 24, 0.4);
 }
 
+.badge--private {
+  background: var(--gray-200);
+  color: var(--gray-700);
+  border-color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
 [data-theme="dark"] .badge--since { color: #cffaff; }
 [data-theme="dark"] .badge--removed { color: #fff5b3; }
 [data-theme="dark"] .badge--deprecated { color: var(--rf-brand-lightest); }
+[data-theme="dark"] .badge--private {
+  background: var(--gray-850);
+  color: var(--gray-400);
+  border-color: var(--gray-700);
+}
 
 .badge-note {
   margin: 0.25em 0 0;
@@ -709,9 +723,25 @@ h4:hover > .anchor-link,
   font-size: 0.9em;
 }
 
+.method-group__hint {
+  display: block;
+  font-size: 0.85em;
+  font-weight: normal;
+  margin-top: 0.15rem;
+}
+
+.method-group summary h2,
+.method-group summary h3 {
+  display: inline;
+  margin: 0;
+  font-size: 1rem;
+}
+
 .method-group .method-list {
   padding: 0 0.75rem 0.75rem;
 }
+
+.entity__private-methods { margin-top: 1.5rem; }
 
 /* Breadcrumbs */
 .breadcrumbs {

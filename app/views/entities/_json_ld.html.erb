@@ -1,23 +1,28 @@
-<%
-  data = {
-    "@context": "https://schema.org",
-    "@type": "TechArticle",
-    headline: presenter.fqn,
-    name: presenter.fqn,
-    inLanguage: "en",
-    isPartOf: {
-      "@type": "WebSite",
-      name: "Ruby on Rails API",
-      url: root_url
-    },
-    proficiencyLevel: "Expert",
-    articleSection: presenter.respond_to?(:entity_version) && presenter.entity_version.framework&.display_name,
-    author: { "@type": "Organization", name: "Rails Foundation" },
-    publisher: { "@type": "Organization", name: "Rails Foundation" },
-    datePublished: package_version.released_on || package_version.ingested_at&.to_date,
-    url: entity_url(version: version_url_segment(package_version), path: entity_url_path(presenter.identity))
-  }
-  data[:description] = presenter.doc_summary if presenter.respond_to?(:doc_summary) && presenter.doc_summary.present?
-  data.compact!
-%>
-<script type="application/ld+json" nonce="<%= content_security_policy_nonce %>"><%= raw JSON.generate(data) %></script>
+<%# Skip schema.org TechArticle markup for private methods. We still render
+    the page (subclassers and stack-trace lookups need it), but we don't
+    want Google indexing private methods as part of Rails' API. %>
+<% unless presenter.respond_to?(:visibility) && presenter.visibility == "private" %>
+  <%
+    data = {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      headline: presenter.fqn,
+      name: presenter.fqn,
+      inLanguage: "en",
+      isPartOf: {
+        "@type": "WebSite",
+        name: "Ruby on Rails API",
+        url: root_url
+      },
+      proficiencyLevel: "Expert",
+      articleSection: presenter.respond_to?(:entity_version) && presenter.entity_version.framework&.display_name,
+      author: { "@type": "Organization", name: "Rails Foundation" },
+      publisher: { "@type": "Organization", name: "Rails Foundation" },
+      datePublished: package_version.released_on || package_version.ingested_at&.to_date,
+      url: entity_url(version: version_url_segment(package_version), path: entity_url_path(presenter.identity))
+    }
+    data[:description] = presenter.doc_summary if presenter.respond_to?(:doc_summary) && presenter.doc_summary.present?
+    data.compact!
+  %>
+  <script type="application/ld+json" nonce="<%= content_security_policy_nonce %>"><%= raw JSON.generate(data) %></script>
+<% end %>
