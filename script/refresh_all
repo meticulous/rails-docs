@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Re-runs the backfill across every Rails version currently in the DB.
+# Designed to be invoked by an operator after an ingester change so
+# every version's data benefits from the fix.
+#
+#   ./script/refresh_all
+#
+# Logs each version's run to /tmp/refresh-all.log; tails the last
+# line per version to stdout so progress is visible.
+
+set -uo pipefail
+
+LOG=/tmp/refresh-all.log
+: > "$LOG"
+
+versions=(
+  "2.2.3       2002003"
+  "2.3.18      2003018"
+  "3.0.20      3000020"
+  "3.1.12      3001012"
+  "3.2.22.5    3002022"
+  "4.0.13      4000013"
+  "4.1.16      4001016"
+  "4.2.9       4002009"
+  "5.2.8.1     5002008"
+  "6.0.6       6000006"
+  "6.1.7.10    6001007"
+  "7.0.10      7000010"
+  "7.1.6       7001006"
+  "7.2.3       7002003"
+  "8.0.4       8000004"
+  "8.1.2       8001002"
+)
+
+start=$(date +%s)
+ok=0
+fail=0
+
+for entry in "${versions[@]}"; do
+  set -- $entry
+  channel=$1
+  ord=$2
+  tag="v$channel"
+  ts=$(date +%H:%M:%S)
+  echo "[$ts] $channel  start" | tee -a "$LOG"
+  if script/backfill "$tag" "$ord" >>"$LOG" 2>&1; then
+    ts=$(date +%H:%M:%S)
+    echo "[$ts] $channel  ok" | tee -a "$LOG"
+    ok=$((ok + 1))
+  else
+    ts=$(date +%H:%M:%S)
+    echo "[$ts] $channel  FAIL" | tee -a "$LOG"
+    fail=$((fail + 1))
+  fi
+done
+
+end=$(date +%s)
+mins=$(( (end - start) / 60 ))
+echo "----"
+echo "done in ${mins}m  ok=$ok  fail=$fail"
+echo "log: $LOG"
