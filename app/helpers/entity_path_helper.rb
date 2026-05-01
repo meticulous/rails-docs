@@ -8,8 +8,8 @@ module EntityPathHelper
   # constraint anyway). Render them as plain code instead of a link.
   def entity_link(identity, package_version, label: nil)
     text = label || identity.fqn
-    return content_tag(:code, text, class: "ghost-method") if ghost_method?(identity)
-    link_to text, entity_path_for(identity, package_version)
+    return content_tag(:code, text, class: "ghost-method", title: identity.fqn) if ghost_method?(identity)
+    link_to text, entity_path_for(identity, package_version), title: identity.fqn
   end
 
   # `*` and `**` on their own are real Ruby operator methods (multiplication,

@@ -1111,7 +1111,11 @@ h4:hover > .anchor-link,
   border-radius: 4px;
 }
 
-/* Module list (for Includes/Extends) */
+/* Module list (for Includes/Extends/Namespace). Long FQNs like
+ * ActionCable::Channel::NonInferrableChannelError would overflow the
+ * grid cell and bleed into the next column; truncate with ellipsis
+ * and rely on the link's title attribute (added in entity_link) for
+ * the full name on hover. */
 .entity__module-list,
 .entity__simple-list {
   list-style: none;
@@ -1120,6 +1124,21 @@ h4:hover > .anchor-link,
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
   gap: 0.25rem 1rem;
+}
+
+.entity__module-list > li,
+.entity__simple-list > li {
+  min-width: 0;          /* allow the cell to shrink below content width */
+}
+
+.entity__module-list > li > a,
+.entity__simple-list > li > a,
+.entity__module-list > li > code,
+.entity__simple-list > li > code {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Signature block on method pages */
