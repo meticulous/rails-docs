@@ -1,0 +1,81 @@
+<%#
+  Persistent left rail listing every class/module in the current
+  package_version, grouped by framework into expandable <details>
+  sections. The framework matching the current page is open by
+  default; the rest stay collapsed until the user expands them or
+  starts filtering.
+
+  Cached per (source, package_version, ingested_at) — invalidates
+  automatically on a re-ingest because ingested_at moves.
+%>
+<% pv = nav_package_version %>
+<% if pv %>
+  <aside class="module-nav"
+         data-controller="module-nav"
+         data-module-nav-version-value="<%= version_url_segment(pv) %>"
+         data-module-nav-active-framework-value="<%= current_framework_slug %>">
+    <div class="module-nav__header">
+      <p class="module-nav__title">
+        <%= pv.source.display_name %>
+        <span class="muted">v<%= pv.channel %></span>
+      </p>
+      <input type="search"
+             class="module-nav__filter"
+             placeholder="Filter…"
+             autocomplete="off"
+             aria-label="Filter modules and classes"
+             data-module-nav-target="filter"
+             data-action="input->module-nav#filter">
+    </div>
+
+    <div class="module-nav__body" data-module-nav-target="list">
+      <% cache [ "module-nav-grouped", pv.source.slug, pv.channel, pv.ingested_at&.to_i ] do %>
+        <%
+          # One indexed pass — only class/module entries make it into
+          # the nav, so we just need (framework, fqn) tuples; no full
+          # identity hydration required.
+          rows = pv.source.entity_identities
+            .where(kind: %w[class module])
+            .joins(:entity_versions).where(entity_versions: { package_version_id: pv.id })
+            .left_joins(:framework)
+            .distinct
+            .order("frameworks.display_name NULLS LAST", "entity_identities.fqn")
+            .pluck("frameworks.slug", "frameworks.display_name", :fqn)
+          grouped = rows.group_by { |slug, display, _| [ slug, display ] }
+          version_segment = version_url_segment(pv)
+        %>
+        <% grouped.each do |(framework_slug, framework_display), framework_rows| %>
+          <% group_label = framework_display || "Top-level" %>
+          <details class="module-nav__group"
+                   data-module-nav-target="group"
+                   data-framework-slug="<%= framework_slug %>">
+            <summary class="module-nav__group-summary">
+              <span class="module-nav__group-name"><%= group_label %></span>
+              <span class="module-nav__group-count muted"><%= framework_rows.size %></span>
+            </summary>
+            <ol class="module-nav__list">
+              <% framework_rows.each do |_, _, fqn| %>
+                <li class="module-nav__item" data-fqn="<%= fqn.downcase %>">
+                  <%= link_to fqn,
+                              entity_path(version: version_segment, path: EntityIdentity.fqn_to_url_path(fqn)),
+                              class: "module-nav__link", title: fqn %>
+                </li>
+              <% end %>
+            </ol>
+          </details>
+        <% end %>
+      <% end %>
+    </div>
+
+    <p class="module-nav__empty muted" data-module-nav-target="empty" hidden>
+      No matches.
+    </p>
+  </aside>
+
+  <button type="button"
+          class="module-nav-toggle"
+          data-controller="module-nav-toggle"
+          data-action="click->module-nav-toggle#toggle"
+          aria-label="Toggle module navigation"
+          aria-expanded="true">☰</button>
+<% end %>

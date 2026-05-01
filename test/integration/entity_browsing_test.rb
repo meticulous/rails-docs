@@ -26,6 +26,24 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".version-list a", text: "v8.1.3"
   end
 
+  test "left module-nav renders on every page, grouped by framework" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence")
+    assert_response :success
+    # The persistent left nav: filter input + at least one framework group
+    assert_select "aside.module-nav .module-nav__filter"
+    assert_select "aside.module-nav details.module-nav__group", minimum: 1
+    # Active-framework slug is wired so the controller can pre-expand
+    assert_select "aside.module-nav[data-module-nav-active-framework-value='activerecord']"
+    # The toggle button persists the user's preference
+    assert_select "button.module-nav-toggle"
+  end
+
+  test "module-nav header carries source name and version" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence")
+    assert_select ".module-nav__title", text: /Ruby on Rails/
+    assert_select ".module-nav__title", text: /v8\.1\.3/
+  end
+
   test "every page renders the accessibility scaffolding" do
     get root_path
     assert_response :success

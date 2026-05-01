@@ -53,7 +53,10 @@
 
     <header class="site-header">
       <div class="site-header__inner">
-        <%= link_to "Ruby on Rails API", root_path, class: "site-header__brand" %>
+        <%= link_to root_path, class: "site-header__brand", title: "API Guides home" do %>
+          <%= image_tag "logo_rails-circle.svg", class: "site-header__logo", alt: "" %>
+          <span class="site-header__title">API Guides</span>
+        <% end %>
         <%= form_with url: search_path, method: :get, local: true, class: "site-header__search" do |f| %>
           <%= f.text_field :q, value: params[:q], placeholder: "Search docs",
                                 autocomplete: "off", aria: { label: "Search documentation" } %>
@@ -67,9 +70,13 @@
       </div>
     </header>
 
-    <main class="site-main" id="main-content" tabindex="-1">
-      <%= yield %>
-    </main>
+    <div class="site-shell">
+      <%= render "shared/module_nav" %>
+
+      <main class="site-main" id="main-content" tabindex="-1">
+        <%= yield %>
+      </main>
+    </div>
 
     <footer class="site-footer">
       <p>API documentation for the Ruby on Rails framework.</p>

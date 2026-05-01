@@ -549,7 +549,6 @@ pre code {
 
 .site-header {
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-soft);
 }
 
 .site-header__inner {
@@ -561,16 +560,217 @@ pre code {
   gap: 1.5rem;
 }
 
+/* Logo + "API Guides" wordmark, mirroring the rails/guides header
+ * lockup. Logo sits left, wordmark in Calibre to match guides type. */
 .site-header__brand {
-  font-weight: 600;
-  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
   color: var(--color-text);
+  text-decoration: none;
+}
+
+.site-header__brand:hover { text-decoration: none; color: var(--rf-brand); }
+
+.site-header__logo {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+}
+
+.site-header__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+/* App shell — left module-nav rail + main column. Sidebar is fixed
+ * to the viewport so it doesn't scroll with content; main content
+ * gets a left margin to clear it. Toggling `body.module-nav--collapsed`
+ * hides the rail and removes the offset. */
+.site-shell {
+  display: block;
 }
 
 .site-main {
   max-width: var(--max-width);
-  margin: 0 auto;
+  margin: 0 auto 0 18rem;   /* left offset clears the fixed module-nav */
   padding: 2rem 1.5rem 4rem;
+}
+
+@media (max-width: 60rem) {
+  .site-main { margin-left: auto; }
+}
+
+body.module-nav--collapsed .site-main {
+  margin-left: auto;
+}
+
+/* Module-nav (left rail) */
+.module-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 16.5rem;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  /* The header overlays the top portion of the viewport; clear it. */
+  padding-top: 4.25rem;
+}
+
+body.module-nav--collapsed .module-nav { display: none; }
+
+@media (max-width: 60rem) {
+  .module-nav { display: none; }
+  body.module-nav--collapsed .module-nav { display: flex; }
+  body.module-nav--collapsed .site-main { margin-left: 0; }
+  /* On mobile the toggle inverts: nav is hidden by default, shows on toggle */
+}
+
+.module-nav__header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.module-nav__title {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.module-nav__filter {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-soft);
+  color: var(--color-text);
+}
+
+.module-nav__filter:focus {
+  outline: none;
+  border-color: var(--color-link);
+  box-shadow: 0 0 0 2px rgba(200, 20, 24, 0.15);
+}
+
+.module-nav__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.25rem 0;
+}
+
+/* Each framework is an expandable group. Closed by default unless
+ * the controller marks it active; the framework matching the current
+ * page opens automatically. */
+.module-nav__group {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.module-nav__group:last-child { border-bottom: none; }
+
+.module-nav__group-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+/* Style the disclosure marker — flip on open. */
+.module-nav__group-summary::-webkit-details-marker { display: none; }
+.module-nav__group-summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.5rem;
+  font-size: 0.7rem;
+  transition: transform 100ms ease;
+  color: var(--color-muted);
+}
+
+.module-nav__group[open] > .module-nav__group-summary::before {
+  transform: rotate(90deg);
+}
+
+.module-nav__group-summary:hover {
+  background: var(--color-bg-soft);
+  color: var(--color-link);
+}
+
+.module-nav__group-name { flex: 1; }
+.module-nav__group-count { font-size: 0.75rem; }
+
+.module-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.module-nav__item { margin: 0; }
+
+.module-nav__link {
+  display: block;
+  padding: 0.15rem 1rem;
+  color: var(--color-text);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-left: 2px solid transparent;
+}
+
+.module-nav__link:hover {
+  background: var(--color-bg-soft);
+  color: var(--color-link);
+  text-decoration: none;
+  border-left-color: var(--color-link);
+}
+
+.module-nav__empty {
+  padding: 1rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Toggle button — fixed bottom-left so it's always reachable. */
+.module-nav-toggle {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 11;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.module-nav-toggle:hover {
+  background: var(--color-bg-soft);
+  border-color: var(--color-link);
+  color: var(--color-link);
 }
 
 .site-footer {
