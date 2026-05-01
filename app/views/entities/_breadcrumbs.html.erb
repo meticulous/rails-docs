@@ -1,13 +1,26 @@
-<% segments = breadcrumb_segments(fqn) %>
-<% pv = local_assigns.fetch(:package_version, @package_version) %>
+<%
+  # Caller passes either `identity:` (preferred — produces full ancestor
+  # chain including the method/attribute as a leaf) or `fqn:` (legacy
+  # path that only walks `::` segments). The identity path also accepts
+  # an explicit package_version override.
+  identity = local_assigns[:identity]
+  pv = local_assigns.fetch(:package_version, @package_version)
+  segments = if identity
+    breadcrumbs_for(identity, pv)
+  else
+    breadcrumb_segments(local_assigns.fetch(:fqn)).map do |label, partial_path|
+      [ label, entity_path(version: version_url_segment(pv), path: partial_path), false ]
+    end.tap { |list| list.last[2] = true if list.any? }
+  end
+%>
 <nav class="breadcrumbs" aria-label="Namespace path">
   <ol>
-    <% segments.each_with_index do |(part, partial_path), idx| %>
+    <% segments.each do |label, url, current| %>
       <li>
-        <% if idx == segments.size - 1 %>
-          <span aria-current="page"><%= part %></span>
+        <% if current %>
+          <span aria-current="page"><%= label %></span>
         <% else %>
-          <%= link_to part, entity_path(version: version_url_segment(pv), path: partial_path) %>
+          <%= link_to label, url %>
         <% end %>
       </li>
     <% end %>

@@ -6,7 +6,7 @@
 
 <article class="entity entity--missing">
   <header class="entity__header">
-    <%= render "entities/breadcrumbs", fqn: @identity.fqn %>
+    <%= render "entities/breadcrumbs", identity: @identity %>
     <h1 class="entity__name">
       <span class="entity__kind"><%= @identity.kind %></span>
       <%= @identity.name %>

@@ -185,6 +185,39 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select "h1 code", text: /\[\]/
   end
 
+  test "method page breadcrumbs separate parent module and method" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+    assert_response :success
+    # Three crumbs: ActiveRecord, Persistence (clickable), #save (current)
+    assert_select ".breadcrumbs li a", text: "ActiveRecord"
+    assert_select ".breadcrumbs li a", text: "Persistence"
+    assert_select ".breadcrumbs li [aria-current='page']", text: "#save"
+    # Persistence link goes to its module page (so the user can click up)
+    assert_select ".breadcrumbs li a[href=?]", entity_path(version: "v8.1.3", path: "active_record/persistence"),
+      text: "Persistence"
+  end
+
+  test "singleton method breadcrumbs show .name leaf" do
+    singleton = sources(:rails).entity_identities.create!(
+      fqn: "Foo.create",
+      kind: "method",
+      name: "create",
+      scope: "singleton",
+      parent_fqn: "Foo"
+    )
+    EntityVersion.create!(entity_identity: singleton, package_version: package_versions(:v8_1_3))
+    get entity_path(version: "v8.1.3", path: "foo/create.class")
+    assert_response :success
+    assert_select ".breadcrumbs li [aria-current='page']", text: ".create"
+  end
+
+  test "constant breadcrumbs separate namespace and constant" do
+    get entity_path(version: "v8.1.3", path: "foo/bar")
+    assert_response :success
+    assert_select ".breadcrumbs li a", text: "Foo"
+    assert_select ".breadcrumbs li [aria-current='page']", text: "BAR"
+  end
+
   test "class page splits methods into public + collapsed private sections" do
     private_meth = sources(:rails).entity_identities.create!(
       fqn: "ActiveRecord::Persistence#_save_record",

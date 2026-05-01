@@ -14,7 +14,7 @@
 
 <article class="entity" data-controller="legacy-anchor anchor-copy">
   <header class="entity__header">
-    <%= render "entities/breadcrumbs", fqn: @presenter.fqn %>
+    <%= render "entities/breadcrumbs", identity: @presenter.identity %>
     <h1 class="entity__name">
       <span class="entity__kind"><%= @presenter.kind %></span>
       <%= @presenter.name %>

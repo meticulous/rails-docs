@@ -18,7 +18,7 @@
 
 <article class="entity entity--method" data-controller="legacy-anchor anchor-copy">
   <header class="entity__header">
-    <%= render "entities/breadcrumbs", fqn: @presenter.fqn %>
+    <%= render "entities/breadcrumbs", identity: @presenter.identity %>
     <h1 class="entity__name">
       <span class="entity__kind"><%= @presenter.scope == "singleton" ? "class method" : "instance method" %></span>
       <code><%= @presenter.scope_prefix %><%= @presenter.name %></code>

@@ -48,4 +48,37 @@ module EntityPathHelper
   def breadcrumb_segments(fqn)
     EntityIdentity.breadcrumb_segments_for(fqn)
   end
+
+  # Builds breadcrumbs for a specific entity. Each ancestor namespace
+  # becomes its own [label, url] crumb (so /v8.1.2/action_text/encryption/
+  # decrypt shows ActionText > Encryption > #decrypt with each segment
+  # clickable except the last). For methods and attributes the leaf
+  # uses the proper slug-encoded URL via entity_url_path so operator
+  # methods like #[] (slug "-bracket") still resolve.
+  def breadcrumbs_for(identity, package_version)
+    namespace_fqn, leaf_label =
+      case identity.kind
+      when "method"
+        prefix = identity.scope == "singleton" ? "." : "#"
+        [ identity.parent_fqn, "#{prefix}#{identity.name}" ]
+      when "attribute"
+        [ identity.parent_fqn, "##{identity.name}" ]
+      else
+        # class, module, constant — the FQN itself is the namespace path,
+        # the last `::` segment is the leaf.
+        parts = identity.fqn.split("::")
+        [ parts[0..-2].join("::").presence, parts.last ]
+      end
+
+    segments = []
+    if namespace_fqn.present?
+      parts = namespace_fqn.split("::")
+      parts.each_with_index do |part, i|
+        segments << [ part, entity_path(version: version_url_segment(package_version),
+                                         path: parts[0..i].map(&:underscore).join("/")), false ]
+      end
+    end
+    segments << [ leaf_label, entity_path_for(identity, package_version), true ]
+    segments
+  end
 end
