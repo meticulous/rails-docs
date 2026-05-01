@@ -13,7 +13,9 @@
   <aside class="module-nav"
          data-controller="module-nav"
          data-module-nav-version-value="<%= version_url_segment(pv) %>"
-         data-module-nav-active-framework-value="<%= current_framework_slug %>">
+         data-module-nav-active-framework-value="<%= current_framework_slug %>"
+         data-module-nav-active-fqn-value="<%= nav_active_fqn %>"
+         data-module-nav-upstream-fqns-value="<%= nav_upstream_fqns.to_json %>">
     <div class="module-nav__header">
       <p class="module-nav__title">
         <%= pv.source.display_name %>

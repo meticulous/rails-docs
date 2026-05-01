@@ -746,6 +746,37 @@ body.module-nav--collapsed .module-nav { display: none; }
   border-left-color: var(--color-link);
 }
 
+/* Active trail: the current entity's row reverses to brand red with
+ * white text; every namespace ancestor on the way down gets a soft
+ * 10% red wash so the user can see the path at a glance. */
+.module-nav__item--active > .module-nav__link {
+  background: var(--rf-brand);
+  color: #fff;
+  border-left-color: var(--rf-brand-darker);
+  font-weight: 500;
+}
+
+.module-nav__item--active > .module-nav__link:hover {
+  background: var(--rf-brand-dark);
+  color: #fff;
+}
+
+.module-nav__item--upstream > .module-nav__link {
+  background: rgba(200, 20, 24, 0.1);
+  border-left-color: rgba(200, 20, 24, 0.4);
+}
+
+[data-theme="dark"] .module-nav__item--active > .module-nav__link {
+  background: var(--rf-brand-light);
+  color: #fff;
+  border-left-color: var(--rf-brand);
+}
+
+[data-theme="dark"] .module-nav__item--upstream > .module-nav__link {
+  background: rgba(232, 61, 64, 0.18);
+  border-left-color: rgba(232, 61, 64, 0.5);
+}
+
 .module-nav__empty {
   padding: 1rem;
   font-size: 0.85rem;

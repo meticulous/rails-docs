@@ -38,6 +38,20 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select "button.module-nav-toggle"
   end
 
+  test "module-nav data attrs expose the active FQN and its upstream trail" do
+    # Method page → active steps up to the parent class/module
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+    assert_response :success
+    assert_select "aside.module-nav[data-module-nav-active-fqn-value='ActiveRecord::Persistence']"
+    assert_select "aside.module-nav[data-module-nav-upstream-fqns-value=?]", "[\"ActiveRecord\"]"
+  end
+
+  test "module-nav has no active fqn on home / search / ecosystem" do
+    get root_path
+    assert_select "aside.module-nav[data-module-nav-active-fqn-value='']"
+    assert_select "aside.module-nav[data-module-nav-upstream-fqns-value='[]']"
+  end
+
   test "module-nav header carries source name and version" do
     get entity_path(version: "v8.1.3", path: "active_record/persistence")
     assert_select ".module-nav__title", text: /Ruby on Rails/
