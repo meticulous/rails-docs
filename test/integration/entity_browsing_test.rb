@@ -185,6 +185,18 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select "h1 code", text: /\[\]/
   end
 
+  test "Support and License sidebar block renders on entity pages" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence")
+    assert_response :success
+    assert_select "aside .sidebar-block .sidebar-block__title", text: "Support"
+    assert_select "aside .sidebar-block a[href=?]", "https://github.com/rails/rails/issues",
+      text: /filed for the Ruby on Rails project on GitHub/
+    assert_select "aside .sidebar-block a[href=?]", "https://discuss.rubyonrails.org/c/rubyonrails-core",
+      text: /rubyonrails-core forum/
+    assert_select "aside .sidebar-block .sidebar-block__title", text: "License"
+    assert_select "aside .sidebar-block a[href=?]", "https://opensource.org/licenses/MIT", text: /MIT license/
+  end
+
   test "404 for unknown entities" do
     get entity_path(version: "v8.1.3", path: "does_not_exist")
     assert_response :not_found

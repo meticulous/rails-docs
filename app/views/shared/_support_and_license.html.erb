@@ -1,0 +1,32 @@
+<%#
+  Curated Support + License block rendered in the entity-page sidebar
+  beneath "On this page". Replaces the boilerplate "## Support" / "##
+  License" sections that Rails-framework READMEs duplicate across
+  every framework — those are stripped at ingest in
+  rails_docs_ingester so they don't appear inline twice.
+%>
+
+<section class="sidebar-block sidebar-block--support" aria-label="Support and license">
+  <h2 class="sidebar-block__title">Support</h2>
+  <ul class="sidebar-block__list">
+    <li>
+      Bug Reports can be
+      <%= link_to "filed for the Ruby on Rails project on GitHub",
+                  "https://github.com/rails/rails/issues",
+                  target: "_blank", rel: "noopener noreferrer" %>.
+    </li>
+    <li>
+      Feature requests should be discussed on the
+      <%= link_to "rubyonrails-core forum",
+                  "https://discuss.rubyonrails.org/c/rubyonrails-core",
+                  target: "_blank", rel: "noopener noreferrer" %>.
+    </li>
+  </ul>
+
+  <h2 class="sidebar-block__title sidebar-block__title--license">License</h2>
+  <p class="sidebar-block__text">
+    Released under the
+    <%= link_to "MIT license", "https://opensource.org/licenses/MIT",
+                target: "_blank", rel: "noopener noreferrer" %>.
+  </p>
+</section>
