@@ -910,7 +910,7 @@ h4:hover > .anchor-link,
   font-size: 0.9rem;
 }
 
-.entity section h2 {
+.entity__body section h2 {
   margin-top: 2rem;
   font-size: 1.25rem;
   border-bottom: 1px solid var(--color-border);
