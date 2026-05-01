@@ -12,8 +12,13 @@ module EntityPathHelper
     link_to text, entity_path_for(identity, package_version)
   end
 
+  # `*` and `**` on their own are real Ruby operator methods (multiplication,
+  # exponentiation/double-splat). Treat the wildcard as a ghost marker only
+  # when it's mixed with other characters.
   def ghost_method?(identity)
-    identity.kind == "method" && identity.name.to_s.include?("*")
+    return false unless identity.kind == "method"
+    name = identity.name.to_s
+    name.include?("*") && name != "*" && name != "**"
   end
 
   # Builds a URL path for an entity_identity within a given package_version.
