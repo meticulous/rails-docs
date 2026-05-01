@@ -137,6 +137,7 @@
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --max-width: 64rem;
   --radius: 8px;
+  --header-h: 4rem;        /* sticky-header height; module-nav clears it */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -548,7 +549,11 @@ pre code {
 .muted { color: var(--color-muted); }
 
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;                          /* above .module-nav (10) */
   border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);          /* opaque so scrolled content doesn't bleed through */
 }
 
 .site-header__inner {
@@ -608,10 +613,12 @@ body.module-nav--collapsed .site-main {
   margin-left: auto;
 }
 
-/* Module-nav (left rail) */
+/* Module-nav (left rail). Starts beneath the sticky header (--header-h)
+ * so the logo and search are unobstructed; spans down to the bottom
+ * of the viewport with its own internal scroll. */
 .module-nav {
   position: fixed;
-  top: 0;
+  top: var(--header-h, 4rem);
   left: 0;
   bottom: 0;
   width: 16.5rem;
@@ -620,8 +627,6 @@ body.module-nav--collapsed .site-main {
   display: flex;
   flex-direction: column;
   z-index: 10;
-  /* The header overlays the top portion of the viewport; clear it. */
-  padding-top: 4.25rem;
 }
 
 body.module-nav--collapsed .module-nav { display: none; }
