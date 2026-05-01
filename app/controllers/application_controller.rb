@@ -39,10 +39,12 @@ class ApplicationController < ActionController::Base
   # Returns nil when there's no current entity (home, search, ecosystem).
   def nav_active_fqn
     return @nav_active_fqn if defined?(@nav_active_fqn)
-    @nav_active_fqn = case @identity&.kind
-                      when "class", "module"          then @identity.fqn
-                      when "method", "attribute", "constant" then @identity.parent_fqn
-                      end
+
+    @nav_active_fqn =
+      case @identity&.kind
+      when "class", "module"                 then @identity.fqn
+      when "method", "attribute", "constant" then @identity.parent_fqn
+      end
   end
 
   # FQN ancestors of nav_active_fqn (everything but the last :: segment),

@@ -13,12 +13,15 @@ class StaticExportTest < ActiveSupport::TestCase
   test "writes one HTML file per entity_version" do
     StaticExport.new(package_versions(:v8_1_3), @tmp).run
 
+    # EntityIdentity#url_path lowercases each FQN segment, so Foo::BAR
+    # exports as foo/bar.html (not foo/BAR.html). macOS' case-insensitive
+    # filesystem hides this; Linux CI is strict.
     expected_files = [
       "v8.1.3/active_record/base.html",
       "v8.1.3/active_record/persistence.html",
       "v8.1.3/active_record/persistence/save.html",
       "v8.1.3/foo/name.html",
-      "v8.1.3/foo/BAR.html"
+      "v8.1.3/foo/bar.html"
     ]
     expected_files.each do |f|
       assert File.exist?(File.join(@tmp, f)), "expected #{f} to exist"
