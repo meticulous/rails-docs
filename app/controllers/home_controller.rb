@@ -1,6 +1,12 @@
 class HomeController < ApplicationController
   def index
-    @package_versions = PackageVersion.ok.where.not(ingested_at: nil).order(ord: :desc)
+    # Scope to Rails versions only — the "All ingested Rails versions"
+    # list shouldn't pull in turbo-rails 2.0.23, kamal 2.11.0, etc.
+    # The /ecosystem page is the home for non-rails sources.
+    @package_versions = current_source.package_versions
+                                      .ok
+                                      .where.not(ingested_at: nil)
+                                      .order(ord: :desc)
     @current_stable = current_source.current_stable
 
     if @current_stable
