@@ -737,10 +737,20 @@ body.module-nav--collapsed .module-nav { display: none; }
 .module-nav__row {
   display: flex;
   align-items: center;
-  /* depth indent + base gutter; toggle/spacer keeps labels aligned */
-  padding-left: calc(0.5rem + (var(--depth, 0) * 0.7rem));
+  /* base gutter + 10px per nesting level; toggle/spacer keeps labels aligned */
+  padding-left: calc(0.5rem + (var(--depth, 0) * 10px));
   padding-right: 0.5rem;
   border-left: 2px solid transparent;
+}
+
+/* Faint zebra striping across rows. :where() zeroes the selector's
+ * specificity so hover / active / upstream backgrounds still win. */
+:where(.module-nav__node:nth-of-type(even)) > .module-nav__row {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] :where(.module-nav__node:nth-of-type(even)) > .module-nav__row {
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .module-nav__row:hover {
