@@ -737,8 +737,10 @@ body.module-nav--collapsed .module-nav { display: none; }
 .module-nav__row {
   display: flex;
   align-items: center;
-  /* base gutter + 10px per nesting level; toggle/spacer keeps labels aligned */
-  padding-left: calc(0.5rem + (var(--depth, 0) * 10px));
+  /* base gutter + one toggle-width (1rem) per nesting level, so a child's
+   * left edge aligns under its parent's label — the classic tree look,
+   * clearly indented rather than a too-subtle sub-toggle nudge. */
+  padding-left: calc(0.5rem + (var(--depth, 0) * 1rem));
   padding-right: 0.5rem;
   border-left: 2px solid transparent;
 }
