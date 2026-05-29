@@ -1,15 +1,17 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Filter the persistent left module-nav as the user types AND mark
-// the active row (where the user is) plus its upstream FQN trail.
-// Decoration happens in JS (not server-rendered) so the partial's
-// fragment cache stays per-version, not per-page.
+// Drives the persistent left module-nav, which is a collapsible
+// namespace tree grouped by framework. Three jobs:
 //
-// Each <li> carries data-fqn (lowercased FQN) so we do a substring
-// match without re-querying the DOM. While filtering, every framework
-// <details> auto-expands so matches in collapsed groups are still
-// visible; when the filter clears, groups restore to the default
-// (only the active-framework group open).
+//   1. toggleNode  — expand/collapse a single tree node's children.
+//   2. filter      — substring-match across the whole tree as the user
+//                    types, revealing matches plus their ancestors.
+//   3. active trail — on connect, expand the branch leading to the
+//                    current page and highlight it + its upstream
+//                    namespace ancestors. Done in JS (not server-
+//                    rendered) so the fragment cache stays per-version.
+//
+// Each <li class="module-nav__node"> carries data-fqn (lowercased FQN).
 export default class extends Controller {
   static targets = ["filter", "list", "empty", "group"]
   static values = {
@@ -23,58 +25,118 @@ export default class extends Controller {
     this.markActiveTrail()
   }
 
+  // Framework groups: open only the active framework by default.
   applyDefaultExpansion() {
     this.groupTargets.forEach(group => {
       group.open = group.dataset.frameworkSlug === this.activeFrameworkValue
     })
   }
 
-  markActiveTrail() {
-    const active = this.activeFqnValue
-    if (!active) return
-    const upstream = new Set(this.upstreamFqnsValue)
+  // Expand/collapse one node's immediate children.
+  toggleNode(event) {
+    const node = event.currentTarget.closest(".module-nav__node")
+    const children = node.querySelector(":scope > .module-nav__children")
+    if (!children) return
+    const show = children.hidden
+    children.hidden = !show
+    event.currentTarget.setAttribute("aria-expanded", show ? "true" : "false")
+  }
 
-    // Match the underlying FQN, not the lowercased slug — a single
-    // pass over every nav item.
+  markActiveTrail() {
+    const active = (this.activeFqnValue || "").toLowerCase()
+    if (!active) return
+    const upstream = new Set(this.upstreamFqnsValue.map(s => s.toLowerCase()))
+
     let activeEl = null
-    this.element.querySelectorAll(".module-nav__item").forEach(item => {
-      const fqn = item.querySelector(".module-nav__link")?.title
-      if (!fqn) return
+    this.element.querySelectorAll(".module-nav__node").forEach(node => {
+      const fqn = node.dataset.fqn
       if (fqn === active) {
-        item.classList.add("module-nav__item--active")
-        activeEl = item
+        node.classList.add("module-nav__node--active")
+        activeEl = node
       } else if (upstream.has(fqn)) {
-        item.classList.add("module-nav__item--upstream")
+        node.classList.add("module-nav__node--upstream")
       }
     })
 
-    if (activeEl) {
-      // Scroll the active row into view so a deep link doesn't leave
-      // it off-screen below the filter input.
-      activeEl.scrollIntoView({ block: "nearest", behavior: "instant" })
+    if (!activeEl) return
+
+    // Walk up, revealing each ancestor's children list and flipping the
+    // owning toggle, and open the enclosing framework <details>.
+    let el = activeEl.parentElement
+    while (el && this.element.contains(el)) {
+      if (el.classList?.contains("module-nav__children")) {
+        el.hidden = false
+        const owner = el.closest(".module-nav__node")
+        owner?.querySelector(":scope > .module-nav__row > .module-nav__toggle")
+          ?.setAttribute("aria-expanded", "true")
+      }
+      if (el.tagName === "DETAILS") el.open = true
+      el = el.parentElement
     }
+
+    // Also reveal the active node's own children so the user sees what's
+    // beneath the page they're on.
+    const ownChildren = activeEl.querySelector(":scope > .module-nav__children")
+    if (ownChildren) {
+      ownChildren.hidden = false
+      activeEl.querySelector(":scope > .module-nav__row > .module-nav__toggle")
+        ?.setAttribute("aria-expanded", "true")
+    }
+
+    activeEl.scrollIntoView({ block: "nearest", behavior: "instant" })
   }
 
   filter() {
     const query = this.filterTarget.value.trim().toLowerCase()
     const filtering = query.length > 0
-    let visibleTotal = 0
+    let anyVisible = false
 
     this.groupTargets.forEach(group => {
-      let visibleInGroup = 0
-      group.querySelectorAll(".module-nav__item").forEach(item => {
-        const matches = !filtering || item.dataset.fqn.includes(query)
-        item.hidden = !matches
-        if (matches) visibleInGroup++
+      let groupVisible = false
+      group.querySelectorAll(":scope > .module-nav__tree > .module-nav__node").forEach(node => {
+        if (this.filterNode(node, query, filtering)) groupVisible = true
       })
-      group.hidden = filtering && visibleInGroup === 0
-      if (filtering) {
-        group.open = visibleInGroup > 0
-      }
-      visibleTotal += visibleInGroup
+      group.hidden = filtering && !groupVisible
+      if (filtering) group.open = groupVisible
+      if (groupVisible) anyVisible = true
     })
 
-    if (!filtering) this.applyDefaultExpansion()
-    this.emptyTarget.hidden = visibleTotal > 0
+    if (!filtering) {
+      this.applyDefaultExpansion()
+      this.markActiveTrail()
+    }
+    this.emptyTarget.hidden = anyVisible || !filtering
+  }
+
+  // Post-order: a node is visible if it matches or any descendant does.
+  // While filtering we expand branches that contain a match.
+  filterNode(node, query, filtering) {
+    const selfMatch = !filtering || node.dataset.fqn.includes(query)
+    const childrenUl = node.querySelector(":scope > .module-nav__children")
+
+    let childVisible = false
+    if (childrenUl) {
+      childrenUl.querySelectorAll(":scope > .module-nav__node").forEach(child => {
+        if (this.filterNode(child, query, filtering)) childVisible = true
+      })
+    }
+
+    const visible = selfMatch || childVisible
+    node.hidden = !visible
+
+    if (childrenUl) {
+      if (filtering) {
+        childrenUl.hidden = !childVisible
+        node.querySelector(":scope > .module-nav__row > .module-nav__toggle")
+          ?.setAttribute("aria-expanded", childVisible ? "true" : "false")
+      } else {
+        // Reset to collapsed when the filter clears; active-trail re-expands.
+        childrenUl.hidden = true
+        node.querySelector(":scope > .module-nav__row > .module-nav__toggle")
+          ?.setAttribute("aria-expanded", "false")
+      }
+    }
+
+    return visible
   }
 }

@@ -718,61 +718,109 @@ body.module-nav--collapsed .module-nav { display: none; }
 .module-nav__group-name { flex: 1; }
 .module-nav__group-count { font-size: 0.75rem; }
 
-.module-nav__list {
+/* Collapsible namespace tree. Each node is one row (toggle + label);
+ * children nest in a hidden <ul> revealed by the toggle. Depth drives
+ * a CSS-var indent so deep FQNs read as a tree, leaf segment only. */
+.module-nav__tree,
+.module-nav__children {
   list-style: none;
   margin: 0;
-  padding: 0 0 0.5rem;
+  padding: 0;
   font-family: var(--font-mono);
   font-size: 0.78rem;
 }
 
-.module-nav__item { margin: 0; }
+.module-nav__tree { padding-bottom: 0.5rem; }
+
+.module-nav__node { margin: 0; }
+
+.module-nav__row {
+  display: flex;
+  align-items: center;
+  /* depth indent + base gutter; toggle/spacer keeps labels aligned */
+  padding-left: calc(0.5rem + (var(--depth, 0) * 0.7rem));
+  padding-right: 0.5rem;
+  border-left: 2px solid transparent;
+}
+
+.module-nav__row:hover {
+  background: var(--color-bg-soft);
+  border-left-color: var(--color-link);
+}
+
+.module-nav__toggle,
+.module-nav__toggle-spacer {
+  flex: 0 0 1rem;
+  width: 1rem;
+  height: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.module-nav__toggle {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.module-nav__toggle::before { content: "\25B8"; } /* ▸ */
+.module-nav__toggle[aria-expanded="true"]::before { content: "\25BE"; } /* ▾ */
 
 .module-nav__link {
   display: block;
-  padding: 0.15rem 1rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.15rem 0;
   color: var(--color-text);
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-left: 2px solid transparent;
 }
 
 .module-nav__link:hover {
-  background: var(--color-bg-soft);
   color: var(--color-link);
   text-decoration: none;
-  border-left-color: var(--color-link);
 }
+
+.module-nav__link--namespace { color: var(--color-muted); cursor: default; }
+.module-nav__link--overview { font-style: italic; }
 
 /* Active trail: the current entity's row reverses to brand red with
  * white text; every namespace ancestor on the way down gets a soft
  * 10% red wash so the user can see the path at a glance. */
-.module-nav__item--active > .module-nav__link {
+.module-nav__node--active > .module-nav__row {
   background: var(--rf-brand);
-  color: #fff;
   border-left-color: var(--rf-brand-darker);
+}
+
+.module-nav__node--active > .module-nav__row .module-nav__link {
+  color: #fff;
   font-weight: 500;
 }
 
-.module-nav__item--active > .module-nav__link:hover {
-  background: var(--rf-brand-dark);
-  color: #fff;
-}
+.module-nav__node--active > .module-nav__row .module-nav__toggle { color: #fff; }
 
-.module-nav__item--upstream > .module-nav__link {
+.module-nav__node--active > .module-nav__row:hover { background: var(--rf-brand-dark); }
+
+.module-nav__node--upstream > .module-nav__row {
   background: rgba(200, 20, 24, 0.1);
   border-left-color: rgba(200, 20, 24, 0.4);
 }
 
-[data-theme="dark"] .module-nav__item--active > .module-nav__link {
+[data-theme="dark"] .module-nav__node--active > .module-nav__row {
   background: var(--rf-brand-light);
-  color: #fff;
   border-left-color: var(--rf-brand);
 }
 
-[data-theme="dark"] .module-nav__item--upstream > .module-nav__link {
+[data-theme="dark"] .module-nav__node--active > .module-nav__row .module-nav__link { color: #fff; }
+
+[data-theme="dark"] .module-nav__node--upstream > .module-nav__row {
   background: rgba(232, 61, 64, 0.18);
   border-left-color: rgba(232, 61, 64, 0.5);
 }

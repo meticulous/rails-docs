@@ -38,6 +38,36 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select "button.module-nav-toggle"
   end
 
+  test "module-nav renders a namespace tree with leaf-only labels" do
+    # Give ActiveRecord a nested grandchild so a parent node gets a toggle.
+    enc = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::Encryption", kind: "module", name: "Encryption",
+      parent_fqn: "ActiveRecord", framework: frameworks(:activerecord)
+    )
+    EntityVersion.create!(entity_identity: enc, package_version: package_versions(:v8_1_3))
+    cipher = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::Encryption::Cipher", kind: "class", name: "Cipher",
+      parent_fqn: "ActiveRecord::Encryption", framework: frameworks(:activerecord)
+    )
+    EntityVersion.create!(entity_identity: cipher, package_version: package_versions(:v8_1_3))
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence")
+    assert_response :success
+
+    # Tree container, nodes keyed by lowercased FQN
+    assert_select "ul.module-nav__tree"
+    assert_select "li.module-nav__node[data-fqn='activerecord::persistence']"
+    assert_select "li.module-nav__node[data-fqn='activerecord::encryption::cipher']"
+
+    # Leaf label shows the last segment only, not the full FQN
+    assert_select "li.module-nav__node[data-fqn='activerecord::encryption::cipher'] .module-nav__link",
+                  text: "Cipher"
+
+    # A parent node carries a toggle button; its children start hidden
+    assert_select "li.module-nav__node[data-fqn='activerecord::encryption'] > .module-nav__row > button.module-nav__toggle"
+    assert_select "li.module-nav__node[data-fqn='activerecord::encryption'] > ul.module-nav__children[hidden]"
+  end
+
   test "module-nav data attrs expose the active FQN and its upstream trail" do
     # Method page → active steps up to the parent class/module
     get entity_path(version: "v8.1.3", path: "active_record/persistence/save")

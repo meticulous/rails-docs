@@ -1,9 +1,10 @@
 <%#
   Persistent left rail listing every class/module in the current
   package_version, grouped by framework into expandable <details>
-  sections. The framework matching the current page is open by
-  default; the rest stay collapsed until the user expands them or
-  starts filtering.
+  sections. Within each framework the entries form a collapsible
+  namespace tree (leaf segment only, indented by depth) so deep FQNs
+  stay readable. The framework matching the current page opens by
+  default; the active entity's branch expands on connect.
 
   Cached per (source, package_version, ingested_at) — invalidates
   automatically on a re-ingest because ingested_at moves.
@@ -48,6 +49,18 @@
         %>
         <% grouped.each do |(framework_slug, framework_display), framework_rows| %>
           <% group_label = framework_display || "Top-level" %>
+          <% forest = fqn_forest(framework_rows.map { |_, _, fqn| fqn }) %>
+          <%# Collapse a single shared root (e.g. the ActionCable module
+              for the Action Cable framework) into an "overview" link so
+              the user doesn't have to expand framework → root → children. %>
+          <% if forest.size == 1
+               root = forest.first
+               overview_fqn = root[:real] ? root[:fqn] : nil
+               nodes = root[:children]
+             else
+               overview_fqn = nil
+               nodes = forest
+             end %>
           <details class="module-nav__group"
                    data-module-nav-target="group"
                    data-framework-slug="<%= framework_slug %>">
@@ -55,15 +68,19 @@
               <span class="module-nav__group-name"><%= group_label %></span>
               <span class="module-nav__group-count muted"><%= framework_rows.size %></span>
             </summary>
-            <ol class="module-nav__list">
-              <% framework_rows.each do |_, _, fqn| %>
-                <li class="module-nav__item" data-fqn="<%= fqn.downcase %>">
-                  <%= link_to fqn,
-                              entity_path(version: version_segment, path: EntityIdentity.fqn_to_url_path(fqn)),
-                              class: "module-nav__link", title: fqn %>
+            <ul class="module-nav__tree">
+              <% if overview_fqn %>
+                <li class="module-nav__node" data-fqn="<%= overview_fqn.downcase %>">
+                  <div class="module-nav__row" style="--depth:0">
+                    <span class="module-nav__toggle-spacer"></span>
+                    <%= link_to root[:name],
+                                entity_path(version: version_segment, path: EntityIdentity.fqn_to_url_path(overview_fqn)),
+                                class: "module-nav__link module-nav__link--overview", title: overview_fqn %>
+                  </div>
                 </li>
               <% end %>
-            </ol>
+              <%= module_nav_tree(nodes, version_segment, depth: 0) %>
+            </ul>
           </details>
         <% end %>
       <% end %>
