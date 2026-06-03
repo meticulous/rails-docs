@@ -1,0 +1,5 @@
+<%= turbo_frame_tag "module-nav" do %>
+  <% if @nav_package_version %>
+    <%= render "shared/module_nav", pv: @nav_package_version %>
+  <% end %>
+<% end %>

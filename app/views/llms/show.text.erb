@@ -1,0 +1,39 @@
+# Ruby on Rails API Documentation
+
+> Per-version API reference for Ruby on Rails and the official ecosystem
+> gems (Turbo, Stimulus, Kamal, the Solid trio, and more). Every class,
+> module, method, constant, and attribute has a stable per-entity URL,
+> versioned back to Rails 2.2.
+
+## Machine-readable docs
+
+Append `.md` to any entity URL — or send `Accept: text/markdown` — to get
+a clean Markdown document (title, signature, documentation, source link,
+version availability) with none of the page chrome:
+
+  <%= root_url.chomp("/") %>/v<%= @stable&.channel || "8.1.2" %>/active_record/persistence/save.md
+
+## URL scheme
+
+  /v<VERSION>/<framework>/<path>            class or module page
+  /v<VERSION>/<framework>/<path>/<method>   instance method
+  /v<VERSION>/<framework>/<path>/<method>.class   class method
+  /<gem>/v<VERSION>/<path>                  ecosystem gem (turbo-rails, kamal, …)
+
+Version-less URLs (e.g. /active_record/persistence/save) redirect to the
+current stable release.
+
+<% if @frameworks.any? %>
+## Frameworks (current stable — Rails <%= @stable.channel %>)
+<% @frameworks.each do |fw| %>
+- <%= fw.display_name %>: <%= root_url.chomp("/") %>/v<%= @stable.channel %>/<%= fw.slug %>
+<% end %>
+<% end %>
+
+## Ecosystem
+
+- Foundation-maintained gems: <%= ecosystem_url %>
+
+## Sitemap
+
+- <%= sitemap_url %>

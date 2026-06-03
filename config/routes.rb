@@ -25,6 +25,15 @@ Rails.application.routes.draw do
 
   get "/ecosystem", to: "ecosystem#index", as: :ecosystem
 
+  # The persistent left module-nav, lazy-loaded into a turbo-frame so the
+  # 1,500-node tree doesn't ship inline on every content page (kept the
+  # AI-readable HTML 96% navigation chrome otherwise). Query params, not
+  # path segments, so the version format and `::` in fqns stay simple.
+  get "/_nav", to: "nav#show", as: :module_nav
+
+  # Machine-readable index for AI crawlers / agents.
+  get "/llms.txt", to: "llms#show", as: :llms, defaults: { format: :text }
+
   # Legacy sdoc URL shapes — 301 to the current stable equivalent.
   get "/classes/*sdoc_path", to: "legacy_redirects#class_show", format: false
   get "/files/*sdoc_path", to: "legacy_redirects#file_show", format: false

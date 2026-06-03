@@ -37,6 +37,14 @@
       <meta name="twitter:description" content="<%= description %>">
     <% end %>
 
+    <%# Per-page active context for the lazy-loaded module-nav frame.
+        The frame body is version-cached and shared across pages; these
+        tiny tags let the module-nav Stimulus controller highlight the
+        current entity's row + namespace trail client-side. %>
+    <meta name="nav-active-fqn" content="<%= nav_active_fqn %>">
+    <meta name="nav-active-framework" content="<%= current_framework_slug %>">
+    <meta name="nav-upstream-fqns" content="<%= nav_upstream_fqns.to_json %>">
+
     <%= yield :head %>
 
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -71,7 +79,23 @@
     </header>
 
     <div class="site-shell">
-      <%= render "shared/module_nav" %>
+      <%# Module-nav is lazy-loaded into this frame and marked permanent
+          so it loads once per session and survives Turbo navigations
+          (no blank-then-refill flicker as you click through it). Empty
+          in the initial HTML — content pages stay content-first for
+          crawlers and no-JS clients. %>
+      <% if nav_package_version %>
+        <%= turbo_frame_tag "module-nav",
+                            src: module_nav_path(source_slug: nav_package_version.source.slug, version: version_url_segment(nav_package_version)),
+                            loading: "lazy",
+                            data: { turbo_permanent: true } %>
+        <button type="button"
+                class="module-nav-toggle"
+                data-controller="module-nav-toggle"
+                data-action="click->module-nav-toggle#toggle"
+                aria-label="Toggle module navigation"
+                aria-expanded="true">☰</button>
+      <% end %>
 
       <main class="site-main" id="main-content" tabindex="-1">
         <%= yield %>

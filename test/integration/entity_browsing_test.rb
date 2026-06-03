@@ -26,20 +26,34 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".version-list a", text: "v8.1.3"
   end
 
-  test "left module-nav renders on every page, grouped by framework" do
+  test "content pages ship a lazy module-nav frame, not the inline tree" do
     get entity_path(version: "v8.1.3", path: "active_record/persistence")
     assert_response :success
-    # The persistent left nav: filter input + at least one framework group
-    assert_select "aside.module-nav .module-nav__filter"
-    assert_select "aside.module-nav details.module-nav__group", minimum: 1
-    # Active-framework slug is wired so the controller can pre-expand
-    assert_select "aside.module-nav[data-module-nav-active-framework-value='activerecord']"
-    # The toggle button persists the user's preference
+    # The 1,500-node tree must NOT be inline on the content page.
+    assert_select "aside.module-nav", false, "nav tree should be lazy-loaded, not inline"
+    # Instead, an empty permanent turbo-frame points at the nav endpoint.
+    assert_select "turbo-frame#module-nav[src*='/_nav'][data-turbo-permanent]"
+    assert_select "turbo-frame#module-nav[loading=?]", "lazy"
+    # The collapse toggle is in the layout, always present.
     assert_select "button.module-nav-toggle"
   end
 
-  test "module-nav renders a namespace tree with leaf-only labels" do
-    # Give ActiveRecord a nested grandchild so a parent node gets a toggle.
+  test "active context for the nav rides in <meta> tags on the page" do
+    # Method page → active steps up to the parent class/module.
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+    assert_response :success
+    assert_select "meta[name='nav-active-fqn'][content='ActiveRecord::Persistence']", count: 1
+    assert_select "meta[name='nav-active-framework'][content='activerecord']", count: 1
+    assert_select "meta[name='nav-upstream-fqns'][content=?]", "[\"ActiveRecord\"]", count: 1
+  end
+
+  test "active context meta tags are blank on home / search / ecosystem" do
+    get root_path
+    assert_select "meta[name='nav-active-fqn'][content='']", count: 1
+    assert_select "meta[name='nav-upstream-fqns'][content='[]']", count: 1
+  end
+
+  test "the /_nav frame renders the namespace tree grouped by framework" do
     enc = sources(:rails).entity_identities.create!(
       fqn: "ActiveRecord::Encryption", kind: "module", name: "Encryption",
       parent_fqn: "ActiveRecord", framework: frameworks(:activerecord)
@@ -51,41 +65,56 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     )
     EntityVersion.create!(entity_identity: cipher, package_version: package_versions(:v8_1_3))
 
-    get entity_path(version: "v8.1.3", path: "active_record/persistence")
+    get module_nav_path(source_slug: "rails", version: "v8.1.3")
     assert_response :success
 
-    # Tree container, nodes keyed by lowercased FQN
-    assert_select "ul.module-nav__tree"
-    assert_select "li.module-nav__node[data-fqn='activerecord::persistence']"
-    assert_select "li.module-nav__node[data-fqn='activerecord::encryption::cipher']"
+    # Wrapped in the matching turbo-frame so Turbo can swap it in.
+    assert_select "turbo-frame#module-nav aside.module-nav .module-nav__filter"
+    assert_select "details.module-nav__group", minimum: 1
+    assert_select ".module-nav__title", text: /Ruby on Rails/
+    assert_select ".module-nav__title", text: /v8\.1\.3/
 
-    # Leaf label shows the last segment only, not the full FQN
+    # Tree nodes keyed by lowercased FQN; leaf label is the last segment.
+    assert_select "ul.module-nav__tree"
     assert_select "li.module-nav__node[data-fqn='activerecord::encryption::cipher'] .module-nav__link",
                   text: "Cipher"
-
-    # A parent node carries a toggle button; its children start hidden
     assert_select "li.module-nav__node[data-fqn='activerecord::encryption'] > .module-nav__row > button.module-nav__toggle"
     assert_select "li.module-nav__node[data-fqn='activerecord::encryption'] > ul.module-nav__children[hidden]"
   end
 
-  test "module-nav data attrs expose the active FQN and its upstream trail" do
-    # Method page → active steps up to the parent class/module
-    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+  test "appending .md returns a clean Markdown document" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save.md")
     assert_response :success
-    assert_select "aside.module-nav[data-module-nav-active-fqn-value='ActiveRecord::Persistence']"
-    assert_select "aside.module-nav[data-module-nav-upstream-fqns-value=?]", "[\"ActiveRecord\"]"
+    assert_equal "text/markdown", response.media_type
+    assert_includes response.body, "# ActiveRecord::Persistence#save"
+    assert_includes response.body, "instance method"
+    assert_includes response.body, "Saves the record."
+    # No HTML chrome
+    refute_includes response.body, "<aside"
+    refute_includes response.body, "module-nav"
   end
 
-  test "module-nav has no active fqn on home / search / ecosystem" do
-    get root_path
-    assert_select "aside.module-nav[data-module-nav-active-fqn-value='']"
-    assert_select "aside.module-nav[data-module-nav-upstream-fqns-value='[]']"
+  test "Accept: text/markdown also yields Markdown" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save"),
+        headers: { "Accept" => "text/markdown" }
+    assert_response :success
+    assert_equal "text/markdown", response.media_type
+    assert_includes response.body, "# ActiveRecord::Persistence#save"
   end
 
-  test "module-nav header carries source name and version" do
-    get entity_path(version: "v8.1.3", path: "active_record/persistence")
-    assert_select ".module-nav__title", text: /Ruby on Rails/
-    assert_select ".module-nav__title", text: /v8\.1\.3/
+  test ".md on a version where the entity is absent 404s" do
+    get entity_path(version: "v8.1.3", path: "active_record/nonexistent_thing.md")
+    assert_response :not_found
+  end
+
+  test "llms.txt advertises the markdown convention and frameworks" do
+    package_versions(:v8_1_3).update!(ingest_status: "ok", ingested_at: Time.current)
+    get llms_path
+    assert_response :success
+    assert_equal "text/plain", response.media_type
+    assert_includes response.body, "Ruby on Rails API Documentation"
+    assert_includes response.body, ".md"
+    assert_includes response.body, "/sitemap.xml"
   end
 
   test "every page renders the accessibility scaffolding" do

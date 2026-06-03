@@ -12,23 +12,67 @@ import { Controller } from "@hotwired/stimulus"
 //                    rendered) so the fragment cache stays per-version.
 //
 // Each <li class="module-nav__node"> carries data-fqn (lowercased FQN).
+//
+// The nav body is version-cached and shared across pages (it loads into
+// a data-turbo-permanent frame once per session). The per-page active
+// context therefore can't live in the cached HTML — it's read from
+// <meta name="nav-*"> tags, which Turbo refreshes on each navigation.
+// We re-decorate on turbo:load so the highlight follows the user as
+// they click through the (persistent) nav.
 export default class extends Controller {
   static targets = ["filter", "list", "empty", "group"]
-  static values = {
-    activeFramework: String,
-    activeFqn: String,
-    upstreamFqns: { type: Array, default: [] },
-  }
 
   connect() {
+    this.boundRefresh = this.refreshActive.bind(this)
+    document.addEventListener("turbo:load", this.boundRefresh)
     this.applyDefaultExpansion()
     this.markActiveTrail()
   }
 
-  // Framework groups: open only the active framework by default.
+  disconnect() {
+    document.removeEventListener("turbo:load", this.boundRefresh)
+  }
+
+  // Read per-page active context from the document's meta tags.
+  get activeFqn() {
+    return (this.metaContent("nav-active-fqn") || "").toLowerCase()
+  }
+
+  get activeFramework() {
+    return this.metaContent("nav-active-framework") || ""
+  }
+
+  get upstreamFqns() {
+    try {
+      return JSON.parse(this.metaContent("nav-upstream-fqns") || "[]")
+    } catch {
+      return []
+    }
+  }
+
+  metaContent(name) {
+    return document.querySelector(`meta[name="${name}"]`)?.content
+  }
+
+  // Re-apply highlighting after a Turbo navigation (the frame itself
+  // persists, so connect() doesn't fire again — turbo:load does).
+  refreshActive() {
+    this.clearActive()
+    this.applyDefaultExpansion()
+    this.markActiveTrail()
+  }
+
+  clearActive() {
+    this.element.querySelectorAll(".module-nav__node--active, .module-nav__node--upstream")
+      .forEach(n => n.classList.remove("module-nav__node--active", "module-nav__node--upstream"))
+  }
+
+  // Framework groups: open the active framework (leave others as the
+  // user left them — don't collapse their manual expansions).
   applyDefaultExpansion() {
+    const active = this.activeFramework
     this.groupTargets.forEach(group => {
-      group.open = group.dataset.frameworkSlug === this.activeFrameworkValue
+      if (group.dataset.frameworkSlug === active) group.open = true
     })
   }
 
@@ -43,9 +87,9 @@ export default class extends Controller {
   }
 
   markActiveTrail() {
-    const active = (this.activeFqnValue || "").toLowerCase()
+    const active = this.activeFqn
     if (!active) return
-    const upstream = new Set(this.upstreamFqnsValue.map(s => s.toLowerCase()))
+    const upstream = new Set(this.upstreamFqns.map(s => s.toLowerCase()))
 
     let activeEl = null
     this.element.querySelectorAll(".module-nav__node").forEach(node => {

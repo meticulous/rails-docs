@@ -3,10 +3,15 @@ class EntitiesController < ApplicationController
 
   def show
     @package_version = current_source.package_versions.find_by!(channel: channel_from_param)
+    @markdown = markdown_requested?
     @identity = resolve_entity!
     @entity_version = @identity.entity_versions.find_by(package_version: @package_version)
 
-    if @entity_version
+    if @markdown
+      return head :not_found unless @entity_version
+      render plain: EntityMarkdown.new(@entity_version).to_s,
+             content_type: "text/markdown"
+    elsif @entity_version
       @presenter = build_presenter
       render template_for(@identity)
     else
@@ -20,12 +25,24 @@ class EntitiesController < ApplicationController
     @available_versions = PackageVersion.where.not(ingested_at: nil).order(ord: :desc)
   end
 
+  # An AI agent can fetch the clean, structured doc for any entity by
+  # appending `.md` to the URL or sending `Accept: text/markdown` —
+  # no 96%-navigation HTML, no JS. The `.md` suffix is stripped before
+  # entity resolution.
+  def markdown_requested?
+    request.format.to_s.include?("markdown") ||
+      request.headers["Accept"].to_s.include?("text/markdown") ||
+      params[:path].to_s.end_with?(".md")
+  end
+
   def channel_from_param
     params[:version] == "edge" ? "edge" : params[:version].sub(/\Av/, "")
   end
 
   def resolve_entity!
-    parts = params[:path].split("/")
+    path = params[:path].to_s
+    path = path.delete_suffix(".md") if @markdown
+    parts = path.split("/")
     raise ActiveRecord::RecordNotFound if parts.empty?
 
     identity = resolve_class_or_module(parts) ||
