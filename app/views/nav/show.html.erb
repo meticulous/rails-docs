@@ -1,4 +1,5 @@
-<%= turbo_frame_tag "module-nav" do %>
+<%# target="_top" so nav links navigate the whole page, not this frame. %>
+<%= turbo_frame_tag "module-nav", target: "_top" do %>
   <% if @nav_package_version %>
     <%= render "shared/module_nav", pv: @nav_package_version %>
   <% end %>

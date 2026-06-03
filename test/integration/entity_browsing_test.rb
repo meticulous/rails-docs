@@ -34,6 +34,10 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     # Instead, an empty permanent turbo-frame points at the nav endpoint.
     assert_select "turbo-frame#module-nav[src*='/_nav'][data-turbo-permanent]"
     assert_select "turbo-frame#module-nav[loading=?]", "lazy"
+    # target=_top so nav links drive a full-page nav, not a frame nav
+    # (otherwise clicking a link loads the target's empty nav stub ->
+    # "content missing").
+    assert_select "turbo-frame#module-nav[target=?]", "_top"
     # The collapse toggle is in the layout, always present.
     assert_select "button.module-nav-toggle"
   end
@@ -68,7 +72,9 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     get module_nav_path(source_slug: "rails", version: "v8.1.3")
     assert_response :success
 
-    # Wrapped in the matching turbo-frame so Turbo can swap it in.
+    # Wrapped in the matching turbo-frame (target=_top so its links
+    # navigate the page, not the frame) so Turbo can swap it in.
+    assert_select "turbo-frame#module-nav[target=?]", "_top"
     assert_select "turbo-frame#module-nav aside.module-nav .module-nav__filter"
     assert_select "details.module-nav__group", minimum: 1
     assert_select ".module-nav__title", text: /Ruby on Rails/

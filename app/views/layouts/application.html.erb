@@ -85,9 +85,14 @@
           in the initial HTML — content pages stay content-first for
           crawlers and no-JS clients. %>
       <% if nav_package_version %>
+        <%# target="_top" so clicking a nav link drives a full-page
+            navigation, not a navigation *within* this frame (which would
+            try to load the target page's empty nav stub and show
+            "content missing"). %>
         <%= turbo_frame_tag "module-nav",
                             src: module_nav_path(source_slug: nav_package_version.source.slug, version: version_url_segment(nav_package_version)),
                             loading: "lazy",
+                            target: "_top",
                             data: { turbo_permanent: true } %>
         <button type="button"
                 class="module-nav-toggle"
