@@ -60,7 +60,11 @@ module ModuleNavHelper
         tag.span("", class: "module-nav__toggle-spacer")
       end
 
-    row = tag.div(toggle + label, class: "module-nav__row", style: "--depth:#{depth}")
+    # Depth rides on a data attribute, not an inline `style="--depth:N"` —
+    # our CSP (`style-src 'self' 'nonce-…'`) doesn't cover inline style
+    # *attributes*, so an inline style would log a violation per row. CSS
+    # maps [data-depth] → the --depth custom property.
+    row = tag.div(toggle + label, class: "module-nav__row", data: { depth: depth })
 
     children =
       if has_children

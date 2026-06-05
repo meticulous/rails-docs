@@ -90,6 +90,11 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
                   text: "Cipher"
     assert_select "li.module-nav__node[data-fqn='activerecord::encryption'] > .module-nav__row > button.module-nav__toggle"
     assert_select "li.module-nav__node[data-fqn='activerecord::encryption'] > ul.module-nav__children[hidden]"
+
+    # Depth rides on data-depth, never an inline style="--depth" (CSP
+    # style-src would flag inline style attributes on every row).
+    assert_select "li.module-nav__node[data-fqn='activerecord::encryption::cipher'] > .module-nav__row[data-depth]"
+    assert_select ".module-nav__row[style]", false, "depth must not use an inline style attribute"
   end
 
   test "appending .md returns a clean Markdown document" do

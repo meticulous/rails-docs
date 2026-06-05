@@ -62,7 +62,7 @@
           <ul class="module-nav__tree">
             <% if overview_fqn %>
               <li class="module-nav__node" data-fqn="<%= overview_fqn.downcase %>">
-                <div class="module-nav__row" style="--depth:0">
+                <div class="module-nav__row" data-depth="0">
                   <span class="module-nav__toggle-spacer"></span>
                   <%= link_to root[:name],
                               entity_path(version: version_segment, path: EntityIdentity.fqn_to_url_path(overview_fqn)),

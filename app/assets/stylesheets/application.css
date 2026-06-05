@@ -745,6 +745,23 @@ body.module-nav--collapsed .module-nav { display: none; }
   border-left: 2px solid transparent;
 }
 
+/* Depth → --depth, driven by a data attribute rather than an inline
+ * style="--depth:N" (which CSP's style-src would flag per row). Covers
+ * the deepest Rails namespaces (~10 levels); anything deeper falls back
+ * to the var() default of 0. */
+.module-nav__row[data-depth="1"]  { --depth: 1; }
+.module-nav__row[data-depth="2"]  { --depth: 2; }
+.module-nav__row[data-depth="3"]  { --depth: 3; }
+.module-nav__row[data-depth="4"]  { --depth: 4; }
+.module-nav__row[data-depth="5"]  { --depth: 5; }
+.module-nav__row[data-depth="6"]  { --depth: 6; }
+.module-nav__row[data-depth="7"]  { --depth: 7; }
+.module-nav__row[data-depth="8"]  { --depth: 8; }
+.module-nav__row[data-depth="9"]  { --depth: 9; }
+.module-nav__row[data-depth="10"] { --depth: 10; }
+.module-nav__row[data-depth="11"] { --depth: 11; }
+.module-nav__row[data-depth="12"] { --depth: 12; }
+
 /* Faint zebra striping across rows. :where() zeroes the selector's
  * specificity so hover / active / upstream backgrounds still win. */
 :where(.module-nav__node:nth-of-type(even)) > .module-nav__row {
