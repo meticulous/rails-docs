@@ -29,7 +29,9 @@
   </div>
 
   <div class="module-nav__body" data-module-nav-target="list">
-    <% cache [ "module-nav-grouped", pv.source.slug, pv.channel, pv.ingested_at&.to_i ] do %>
+    <%# Bump the version token when the nav *markup* changes — the rest of
+        the key (source, channel, ingested_at) only busts on re-ingest. %>
+    <% cache [ "module-nav-grouped", "v2", pv.source.slug, pv.channel, pv.ingested_at&.to_i ] do %>
       <%
         rows = pv.source.entity_identities
           .where(kind: %w[class module])
