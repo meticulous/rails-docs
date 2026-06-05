@@ -190,6 +190,18 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".entity__kind", "instance method"
   end
 
+  test "source code is syntax-highlighted with Rouge (class spans, no inline style)" do
+    ev = entity_versions(:ar_persistence_save_v8_1_3)
+    ev.update!(source_code: "def save(**options)\n  create_or_update\nend")
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+    assert_response :success
+    # Rouge emits a pre.highlight with class-based token spans…
+    assert_select "section.entity__source-code pre.highlight code span.k", text: "def"
+    # …and never inline styles (would violate style-src CSP).
+    assert_select "pre.highlight [style]", false
+  end
+
   test "renders a singleton method via .class suffix" do
     singleton = sources(:rails).entity_identities.create!(
       fqn: "ActiveRecord::Persistence.create",

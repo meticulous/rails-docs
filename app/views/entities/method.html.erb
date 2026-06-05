@@ -34,16 +34,16 @@
         <section class="entity__signature" id="section-signature">
           <h2 class="visually-hidden">Signature</h2>
           <% if @presenter.call_seq.present? %>
-            <pre class="signature signature--call-seq"><code><%= @presenter.call_seq %></code></pre>
+            <%= highlight_code(@presenter.call_seq) %>
           <% else %>
-            <pre class="signature"><code><%= @presenter.scope_prefix %><%= @presenter.name %><%= @presenter.signature_text %></code></pre>
+            <%= highlight_code("#{@presenter.scope_prefix}#{@presenter.name}#{@presenter.signature_text}") %>
           <% end %>
         </section>
       <% end %>
 
       <section class="entity__doc" id="section-doc">
         <% if @presenter.doc_html.present? %>
-          <%= sanitize_doc_html @presenter.doc_html %>
+          <%= highlight_doc_code(sanitize_doc_html(@presenter.doc_html)) %>
         <% elsif @presenter.doc_markdown.present? %>
           <%= simple_format(h(@presenter.doc_markdown)) %>
         <% else %>
@@ -82,7 +82,7 @@
         <section class="entity__source-code" id="section-source">
           <details>
             <summary>Source</summary>
-            <pre><code><%= @presenter.source_code %></code></pre>
+            <%= highlight_code(@presenter.source_code) %>
           </details>
         </section>
       <% end %>

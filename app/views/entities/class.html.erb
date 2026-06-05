@@ -28,7 +28,7 @@
     <div class="entity__body">
       <section class="entity__doc">
         <% if @presenter.doc_html.present? %>
-          <%= sanitize_doc_html @presenter.doc_html %>
+          <%= highlight_doc_code(sanitize_doc_html(@presenter.doc_html)) %>
         <% elsif @presenter.doc_markdown.present? %>
           <%= simple_format(h(@presenter.doc_markdown)) %>
         <% else %>
