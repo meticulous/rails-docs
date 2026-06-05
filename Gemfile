@@ -20,7 +20,7 @@ gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 # Line- and word-level diffs for the version comparison view
-gem "diff-lcs", "~> 1.5"
+gem "diff-lcs", "~> 2.0"
 
 # Server-side syntax highlighting for code blocks (the highlighter
 # rails/guides uses; CSS-class output, so no inline styles vs CSP)
