@@ -84,7 +84,7 @@ class StaticExport
       slug = "#{slug}.class" if identity.scope == "singleton"
       "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{slug}"
     when "attribute"
-      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{identity.name}"
+      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{MethodSlug.encode(identity.name)}"
     end
   end
 end

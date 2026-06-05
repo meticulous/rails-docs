@@ -83,9 +83,10 @@ class EntitiesController < ApplicationController
     return nil if parts.size < 2
     parent = walk_namespace(parts[0..-2])
     return nil unless parent
+    decoded = MethodSlug.decode(parts.last)
     source.entity_identities
           .where(kind: "attribute", scope: "instance", parent_fqn: parent.fqn)
-          .find { |id| id.name == parts.last || id.name.underscore == parts.last }
+          .find { |id| [ id.name, id.name.underscore ].include?(parts.last) || id.name == decoded }
   end
 
   # Constants are typically ALL_CAPS — the URL slug lowercases them

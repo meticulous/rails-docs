@@ -229,6 +229,28 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".entity__kind", "attribute"
   end
 
+  test "predicate/bang attributes slug-encode like methods (no UrlGenerationError)" do
+    # An attribute named `ready?` must not put a literal `?` in the URL —
+    # that 500s the parent class page (UrlGenerationError on the route's
+    # path constraint). Encode/decode it the same as a method.
+    EntityVersion.create!(entity_identity: entity_identities(:foo), package_version: package_versions(:v8_1_3))
+    pred = sources(:rails).entity_identities.create!(
+      fqn: "Foo#ready?", kind: "attribute", name: "ready?", scope: "instance", parent_fqn: "Foo"
+    )
+    EntityVersion.create!(entity_identity: pred, package_version: package_versions(:v8_1_3))
+
+    # The parent class page links to it and must render.
+    get entity_path(version: "v8.1.3", path: "foo")
+    assert_response :success
+    assert_select "a[href=?]", "/v8.1.3/foo/ready-p"
+
+    # And the attribute page itself resolves from the encoded slug.
+    get entity_path(version: "v8.1.3", path: "foo/ready-p")
+    assert_response :success
+    assert_select ".entity__kind", "attribute"
+    assert_select "h1", text: /ready\?/
+  end
+
   test "all-caps constant slug round-trips through .underscore" do
     # ActionCable::INTERNAL — `.underscore` lowercases the constant
     # name to "internal" in the URL. The resolver has to undo that.

@@ -37,7 +37,10 @@ module EntityPathHelper
       slug = "#{slug}.class" if identity.scope == "singleton"
       "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{slug}"
     when "attribute"
-      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{identity.name}"
+      # Predicate/bang attributes (abstract?, closed?, headers=) carry
+      # characters the route's path constraint rejects, so slug-encode
+      # the leaf exactly like a method.
+      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{MethodSlug.encode(identity.name)}"
     else
       identity.url_path
     end
