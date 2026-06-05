@@ -22,6 +22,38 @@ class SearchTest < ActionDispatch::IntegrationTest
     assert_select ".search-result a", text: "ActiveRecord::Persistence#save"
   end
 
+  test "exact name match ranks first over docs that merely mention the term" do
+    # A method literally named `before_action`, plus a decoy method whose
+    # name only contains "action" but whose docs mention "before" — under
+    # plain FTS (which stems before_action -> befor & action) the decoy
+    # can outrank the real method. The exact-name boost must fix that.
+    exact = sources(:rails).entity_identities.create!(
+      fqn: "AbstractController::Callbacks::ClassMethods#before_action",
+      kind: "method", name: "before_action", scope: "instance",
+      parent_fqn: "AbstractController::Callbacks::ClassMethods", framework: frameworks(:activerecord)
+    )
+    exact_ev = EntityVersion.create!(
+      entity_identity: exact, package_version: package_versions(:v8_1_3),
+      doc_markdown: "Append a callback."
+    )
+    decoy = sources(:rails).entity_identities.create!(
+      fqn: "Turbo::Broadcastable#broadcast_action_to",
+      kind: "method", name: "broadcast_action_to", scope: "instance",
+      parent_fqn: "Turbo::Broadcastable", framework: frameworks(:activerecord)
+    )
+    decoy_ev = EntityVersion.create!(
+      entity_identity: decoy, package_version: package_versions(:v8_1_3),
+      doc_markdown: "Broadcast an action before and after rendering the partial."
+    )
+    populate_search_vector!(exact_ev)
+    populate_search_vector!(decoy_ev)
+
+    response = SearchAdapter.current.search(query: "before_action", limit: 5)
+    assert_equal "AbstractController::Callbacks::ClassMethods#before_action",
+                 response.results.first.entity_version.entity_identity.fqn,
+                 "exact-name match should rank first"
+  end
+
   test "non-matching query returns no results" do
     get search_path, params: { q: "asdfqwerzxcvnoresult" }
     assert_response :success

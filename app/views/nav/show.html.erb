@@ -1,5 +1,7 @@
-<%# target="_top" so nav links navigate the whole page, not this frame. %>
-<%= turbo_frame_tag "module-nav", target: "_top" do %>
+<%# Frame id is scoped to (source, version) — see nav_frame_id — so the
+    permanent frame reloads on a version switch. target="_top" so nav
+    links navigate the whole page, not this frame. %>
+<%= turbo_frame_tag nav_frame_id, class: "module-nav-frame", target: "_top" do %>
   <% if @nav_package_version %>
     <%= render "shared/module_nav", pv: @nav_package_version %>
   <% end %>

@@ -81,19 +81,30 @@ class SearchAdapter::Postgres
     end
   end
 
+  # Exact / prefix name match dominates the ranking. English FTS stems
+  # identifiers (`before_action` -> `befor` & `action`), so a plain
+  # ts_rank buries the exact method under everything that merely
+  # mentions "before" and "action". A big exact-name boost makes
+  # searching a method name behave like APIDock / api.rubyonrails.org:
+  # the thing you typed comes first, prefix matches next.
   def rank_expression(query)
     Arel.sql(
       ApplicationRecord.sanitize_sql([
         "ts_rank_cd(entity_versions.search_vector, websearch_to_tsquery('english', ?), 32) * " \
           "CASE WHEN entity_versions.deprecated THEN 0.4 ELSE 1.0 END * " \
           "CASE WHEN entity_versions.visibility = 'private' THEN 0.5 ELSE 1.0 END * " \
+          "CASE " \
+          "  WHEN lower(entity_identities.name) = lower(?) THEN 100.0 " \
+          "  WHEN lower(entity_identities.name) LIKE lower(?) || '%' THEN 8.0 " \
+          "  ELSE 1.0 " \
+          "END * " \
           "CASE entity_identities.kind " \
           "  WHEN 'method' THEN 1.6 " \
           "  WHEN 'attribute' THEN 1.4 " \
           "  WHEN 'constant' THEN 1.2 " \
           "  ELSE 1.0 " \
           "END DESC",
-        query
+        query, query, query
       ])
     )
   end

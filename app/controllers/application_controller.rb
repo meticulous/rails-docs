@@ -6,7 +6,7 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   helper_method :current_source, :nav_package_version, :current_framework_slug,
-                :nav_active_fqn, :nav_upstream_fqns
+                :nav_active_fqn, :nav_upstream_fqns, :nav_frame_id
 
   # Resolves the Source from params[:source_slug], defaulting to rails
   # when the route doesn't carry one. Controllers fetching entity data
@@ -21,6 +21,17 @@ class ApplicationController < ActionController::Base
   # ecosystem, errors) falls back to current_source.current_stable.
   def nav_package_version
     @nav_package_version ||= @package_version || current_source.current_stable
+  end
+
+  # The module-nav turbo-frame's id, scoped to (source, version). The
+  # frame is data-turbo-permanent, so a stable id would preserve the
+  # nav across a version switch — leaving its links pointed at the old
+  # version. Encoding source+version means a version (or source) change
+  # is a different frame → reloads fresh, while same-version navigation
+  # still reuses the loaded nav (no flicker).
+  def nav_frame_id(pv = nav_package_version)
+    return "module-nav" unless pv
+    "module-nav-#{pv.source.slug}-#{pv.channel}".parameterize
   end
 
   # Slug of the framework the current page belongs to (when there is

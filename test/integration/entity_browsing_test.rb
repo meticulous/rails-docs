@@ -32,15 +32,18 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     # The 1,500-node tree must NOT be inline on the content page.
     assert_select "aside.module-nav", false, "nav tree should be lazy-loaded, not inline"
     # Instead, an empty permanent turbo-frame points at the nav endpoint.
-    assert_select "turbo-frame#module-nav[src*='/_nav'][data-turbo-permanent]"
-    assert_select "turbo-frame#module-nav[loading=?]", "lazy"
+    # Its id is scoped to (source, version) so a version switch reloads it.
+    assert_select "turbo-frame.module-nav-frame[src*='/_nav'][data-turbo-permanent]"
+    assert_select "turbo-frame.module-nav-frame[id=?]", "module-nav-rails-8-1-3"
+    assert_select "turbo-frame.module-nav-frame[loading=?]", "lazy"
     # target=_top so nav links drive a full-page nav, not a frame nav
     # (otherwise clicking a link loads the target's empty nav stub ->
     # "content missing").
-    assert_select "turbo-frame#module-nav[target=?]", "_top"
+    assert_select "turbo-frame.module-nav-frame[target=?]", "_top"
     # The collapse toggle is in the layout, always present.
     assert_select "button.module-nav-toggle"
   end
+
 
   test "active context for the nav rides in <meta> tags on the page" do
     # Method page → active steps up to the parent class/module.
@@ -72,10 +75,11 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     get module_nav_path(source_slug: "rails", version: "v8.1.3")
     assert_response :success
 
-    # Wrapped in the matching turbo-frame (target=_top so its links
-    # navigate the page, not the frame) so Turbo can swap it in.
-    assert_select "turbo-frame#module-nav[target=?]", "_top"
-    assert_select "turbo-frame#module-nav aside.module-nav .module-nav__filter"
+    # Wrapped in a turbo-frame whose id matches the page stub's (scoped
+    # to source+version) and target=_top so its links navigate the page.
+    assert_select "turbo-frame.module-nav-frame[id=?]", "module-nav-rails-8-1-3"
+    assert_select "turbo-frame.module-nav-frame[target=?]", "_top"
+    assert_select "turbo-frame.module-nav-frame aside.module-nav .module-nav__filter"
     assert_select "details.module-nav__group", minimum: 1
     assert_select ".module-nav__title", text: /Ruby on Rails/
     assert_select ".module-nav__title", text: /v8\.1\.3/

@@ -89,7 +89,8 @@
             navigation, not a navigation *within* this frame (which would
             try to load the target page's empty nav stub and show
             "content missing"). %>
-        <%= turbo_frame_tag "module-nav",
+        <%= turbo_frame_tag nav_frame_id,
+                            class: "module-nav-frame",
                             src: module_nav_path(source_slug: nav_package_version.source.slug, version: version_url_segment(nav_package_version)),
                             loading: "lazy",
                             target: "_top",
