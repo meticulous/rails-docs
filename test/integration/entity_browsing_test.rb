@@ -142,6 +142,9 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     # Landmarks
     assert_select "header.site-header"
     assert_select "footer.site-footer"
+    # Theme toggle ships a default glyph server-side so it's never blank
+    # before Stimulus connects.
+    assert_select "button.theme-toggle", text: /\S/
   end
 
   test "every page emits a Content-Security-Policy header" do

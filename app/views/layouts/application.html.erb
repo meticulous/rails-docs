@@ -70,11 +70,15 @@
                                 autocomplete: "off", aria: { label: "Search documentation" } %>
         <% end %>
         <%= yield :header %>
+        <%# Default to the "system" glyph server-side so the button is
+            never blank before Stimulus connects; theme_controller#connect
+            overwrites it from the saved preference on load. %>
         <button type="button"
                 class="theme-toggle"
                 data-action="click->theme#toggle"
                 data-theme-target="button"
-                aria-label="Toggle dark mode"></button>
+                aria-pressed="false"
+                aria-label="Toggle dark mode">◑</button>
       </div>
     </header>
 
