@@ -24,7 +24,7 @@ gem "diff-lcs", "~> 1.5"
 
 # Server-side syntax highlighting for code blocks (the highlighter
 # rails/guides uses; CSS-class output, so no inline styles vs CSP)
-gem "rouge", "~> 4.2"
+gem "rouge", "~> 5.0"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
