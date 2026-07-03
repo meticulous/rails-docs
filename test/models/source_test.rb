@@ -24,4 +24,13 @@ class SourceTest < ActiveSupport::TestCase
     assert source.errors.of_kind?(:display_name, :blank)
     assert source.errors.of_kind?(:github_repo, :blank)
   end
+
+  test "description returns the one-line blurb for known ecosystem gems" do
+    assert_equal Source::DESCRIPTIONS["turbo-rails"], sources(:turbo_rails).description
+  end
+
+  test "description returns nil for sources without a blurb" do
+    assert_nil sources(:rails).description
+    assert_nil Source.new(slug: "some_future_gem").description
+  end
 end

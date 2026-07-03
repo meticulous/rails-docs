@@ -3,3 +3,9 @@ rails:
   display_name: Ruby on Rails
   github_repo: rails/rails
   default_branch: main
+
+turbo_rails:
+  slug: turbo-rails
+  display_name: Turbo Rails
+  github_repo: hotwired/turbo-rails
+  default_branch: main

@@ -6,7 +6,8 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   helper_method :current_source, :nav_package_version, :current_framework_slug,
-                :nav_active_fqn, :nav_upstream_fqns, :nav_frame_id
+                :nav_active_fqn, :nav_upstream_fqns, :nav_frame_id,
+                :feed_url, :feed_title
 
   # Resolves the Source from params[:source_slug], defaulting to rails
   # when the route doesn't carry one. Controllers fetching entity data
@@ -56,6 +57,30 @@ class ApplicationController < ActionController::Base
       when "class", "module"                 then @identity.fqn
       when "method", "attribute", "constant" then @identity.parent_fqn
       end
+  end
+
+  # The Atom feed most relevant to the current page: the entity's own
+  # framework feed when we're inside one (e.g. Active Record pages link
+  # the Active Record feed), the current source's feed otherwise —
+  # including the rails source itself on neutral pages (home, search,
+  # ecosystem) that have no framework to narrow to.
+  def feed_url
+    if current_framework_slug
+      framework_feed_url(framework_slug: current_framework_slug)
+    else
+      source_feed_url(source_slug: current_source.slug)
+    end
+  end
+
+  # Human-readable label for feed_url, e.g. "Ruby on Rails API changes"
+  # or "Active Record API changes".
+  def feed_title
+    scope = if current_framework_slug
+      current_source.frameworks.find_by(slug: current_framework_slug)&.display_name
+    else
+      current_source.display_name
+    end
+    "#{scope || 'Ruby on Rails API'} changes"
   end
 
   # FQN ancestors of nav_active_fqn (everything but the last :: segment),

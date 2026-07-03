@@ -23,6 +23,38 @@ ar_persistence_save:
   parent_fqn: "ActiveRecord::Persistence"
   framework: activerecord
 
+# ActiveRecord::Validations — a sibling module of Persistence. Used to
+# exercise FQN linking and bare-constant namespace-chain resolution
+# (from ActiveRecord::Persistence, "Validations" -> ActiveRecord::Validations).
+ar_validations:
+  source: rails
+  fqn: "ActiveRecord::Validations"
+  kind: module
+  name: Validations
+  parent_fqn: "ActiveRecord"
+  framework: activerecord
+
+# ActiveRecord::Callbacks — HAS an identity but is deliberately given NO
+# entity_version in v8_1_3 (see entity_versions.yml), so it exercises the
+# "don't link a target absent from this package_version" rule.
+ar_callbacks:
+  source: rails
+  fqn: "ActiveRecord::Callbacks"
+  kind: module
+  name: Callbacks
+  parent_fqn: "ActiveRecord"
+  framework: activerecord
+
+# A second instance method on Persistence, for bare #method linking (#update!).
+ar_persistence_update_bang:
+  source: rails
+  fqn: "ActiveRecord::Persistence#update!"
+  kind: method
+  name: "update!"
+  scope: instance
+  parent_fqn: "ActiveRecord::Persistence"
+  framework: activerecord
+
 # Top-level Foo class exists so the URL resolver can walk /foo/* and
 # find Foo's children. Real RDoc-ingested data always has every
 # namespace as its own identity.

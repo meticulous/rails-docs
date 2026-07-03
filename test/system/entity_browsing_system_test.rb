@@ -29,8 +29,12 @@ class EntityBrowsingSystemTest < ApplicationSystemTestCase
 
   test "search box in header submits and renders results" do
     visit root_path
-    fill_in :q, with: "save"
-    find(".site-header__search input[name=q]").send_keys(:return)
+    # The home page also has its own inline search form (same name="q"),
+    # so scope to the header's to keep this test about header behavior.
+    within ".site-header__search" do
+      fill_in :q, with: "save"
+      find("input[name=q]").send_keys(:return)
+    end
     assert_selector "h1", text: "Search"
     assert_current_path(/\/search/)
   end

@@ -29,21 +29,7 @@ module EntityPathHelper
   end
 
   def entity_url_path(identity)
-    case identity.kind
-    when "class", "module", "constant"
-      identity.url_path
-    when "method"
-      slug = MethodSlug.encode(identity.name)
-      slug = "#{slug}.class" if identity.scope == "singleton"
-      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{slug}"
-    when "attribute"
-      # Predicate/bang attributes (abstract?, closed?, headers=) carry
-      # characters the route's path constraint rejects, so slug-encode
-      # the leaf exactly like a method.
-      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{MethodSlug.encode(identity.name)}"
-    else
-      identity.url_path
-    end
+    identity.entity_url_path
   end
 
   # Path-from-FQN for ad-hoc cases (inherited methods rendered from raw FQN
@@ -64,29 +50,58 @@ module EntityPathHelper
   # uses the proper slug-encoded URL via entity_url_path so operator
   # methods like #[] (slug "-bracket") still resolve.
   def breadcrumbs_for(identity, package_version)
-    namespace_fqn, leaf_label =
-      case identity.kind
-      when "method"
-        prefix = identity.scope == "singleton" ? "." : "#"
-        [ identity.parent_fqn, "#{prefix}#{identity.name}" ]
-      when "attribute"
-        [ identity.parent_fqn, "##{identity.name}" ]
-      else
-        # class, module, constant — the FQN itself is the namespace path,
-        # the last `::` segment is the leaf.
-        parts = identity.fqn.split("::")
-        [ parts[0..-2].join("::").presence, parts.last ]
-      end
+    namespace_fqn, leaf_label = breadcrumb_namespace_and_leaf(identity)
 
     segments = []
     if namespace_fqn.present?
-      parts = namespace_fqn.split("::")
-      parts.each_with_index do |part, i|
+      namespace_fqn.split("::").each_with_index do |part, i|
         segments << [ part, entity_path(version: version_url_segment(package_version),
-                                         path: parts[0..i].map(&:underscore).join("/")), false ]
+                                         path: breadcrumb_namespace_path(namespace_fqn, i)), false ]
       end
     end
     segments << [ leaf_label, entity_path_for(identity, package_version), true ]
     segments
+  end
+
+  # Same chain as breadcrumbs_for, but with absolute URLs and no
+  # label/current distinction — what BreadcrumbList JSON-LD wants.
+  def breadcrumb_urls_for(identity, package_version)
+    namespace_fqn, leaf_label = breadcrumb_namespace_and_leaf(identity)
+
+    items = []
+    if namespace_fqn.present?
+      namespace_fqn.split("::").each_with_index do |part, i|
+        items << [ part, entity_url(version: version_url_segment(package_version),
+                                     path: breadcrumb_namespace_path(namespace_fqn, i)) ]
+      end
+    end
+    items << [ leaf_label, entity_url(version: version_url_segment(package_version),
+                                       path: entity_url_path(identity)) ]
+    items
+  end
+
+  private
+
+  # [namespace_fqn, leaf_label] for the breadcrumb chain — the FQN of the
+  # containing namespace, and how the leaf itself should read (methods
+  # and attributes get their #/. sigil, class/module/constant just use
+  # their own name).
+  def breadcrumb_namespace_and_leaf(identity)
+    case identity.kind
+    when "method"
+      prefix = identity.scope == "singleton" ? "." : "#"
+      [ identity.parent_fqn, "#{prefix}#{identity.name}" ]
+    when "attribute"
+      [ identity.parent_fqn, "##{identity.name}" ]
+    else
+      # class, module, constant — the FQN itself is the namespace path,
+      # the last `::` segment is the leaf.
+      parts = identity.fqn.split("::")
+      [ parts[0..-2].join("::").presence, parts.last ]
+    end
+  end
+
+  def breadcrumb_namespace_path(namespace_fqn, upto_index)
+    namespace_fqn.split("::")[0..upto_index].map(&:underscore).join("/")
   end
 end

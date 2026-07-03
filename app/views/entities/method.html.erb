@@ -43,7 +43,7 @@
 
       <section class="entity__doc" id="section-doc">
         <% if @presenter.doc_html.present? %>
-          <%= highlight_doc_code(sanitize_doc_html(@presenter.doc_html)) %>
+          <%= autolink_references(highlight_doc_code(sanitize_doc_html(@presenter.doc_html))) %>
         <% elsif @presenter.doc_markdown.present? %>
           <%= simple_format(h(@presenter.doc_markdown)) %>
         <% else %>

@@ -18,6 +18,19 @@ class DiffPresenter
     "#{identity.fqn} — #{version_label(@from_version)} → #{version_label(@to_version)}"
   end
 
+  # Versions in which this entity exists, oldest first — the option list for
+  # the base/compare pickers in the diff header.
+  def available_versions
+    @available_versions ||= identity.available_versions.distinct.order(:ord).to_a
+  end
+
+  # package_version_ids whose content differs from the base (from) version.
+  # Drives the "changed"/"same" tags on the compare picker so the reader can
+  # see which versions actually differ from the one on the left.
+  def changed_version_ids
+    @changed_version_ids ||= identity.changed_version_ids(relative_to: @from_version)
+  end
+
   def added?
     @from.nil? && @to.present?
   end

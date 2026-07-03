@@ -1,0 +1,25 @@
+<dialog class="palette shortcuts-help"
+        aria-labelledby="shortcuts-help-label"
+        data-action="click->keyboard#closeHelp keydown->keyboard#closeHelp">
+  <div class="palette__inner shortcuts-help__inner" data-action="click->search-palette#stopPropagation">
+    <h2 id="shortcuts-help-label" class="shortcuts-help__title">Keyboard shortcuts</h2>
+    <dl class="shortcuts-help__list">
+      <div class="shortcuts-help__row">
+        <dt><kbd>/</kbd></dt>
+        <dd>Focus search</dd>
+      </div>
+      <div class="shortcuts-help__row">
+        <dt><kbd>⌘K</kbd> / <kbd>Ctrl-K</kbd></dt>
+        <dd>Command palette</dd>
+      </div>
+      <div class="shortcuts-help__row">
+        <dt><kbd>?</kbd></dt>
+        <dd>This help</dd>
+      </div>
+      <div class="shortcuts-help__row">
+        <dt><kbd>Esc</kbd></dt>
+        <dd>Close</dd>
+      </div>
+    </dl>
+  </div>
+</dialog>

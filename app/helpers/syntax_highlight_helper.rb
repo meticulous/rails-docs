@@ -28,4 +28,15 @@ module SyntaxHighlightHelper
     end
     doc.to_html.html_safe # rubocop:disable Rails/OutputSafety
   end
+
+  # Rebuild RDoc's crossref auto-linking against the DB: turn plain-text
+  # mentions of other API entities in a doc body into version-scoped links.
+  # A separate Nokogiri pass from highlight_doc_code — clarity beats saving a
+  # reparse, and the two concerns (code highlighting vs. reference linking)
+  # stay independent. Resolves against the entity currently being rendered
+  # (@identity) in its package_version (@package_version).
+  def autolink_references(html)
+    return html if html.blank? || @identity.nil? || @package_version.nil?
+    CrossrefLinker.new(@package_version, @identity).link(html.to_s).html_safe # rubocop:disable Rails/OutputSafety
+  end
 end

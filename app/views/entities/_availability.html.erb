@@ -22,7 +22,7 @@
           <option value="<%= diff_path(version: version_url_segment(presenter.package_version),
                                        entity_path: entity_url_path(presenter.identity),
                                        other_version: version_url_segment(pv)) %>">
-            <%= version_label(pv) %>
+            <%= version_diff_option_label(pv, changed: presenter.changed_version_ids.include?(pv.id)) %>
           </option>
         <% end %>
       </select>

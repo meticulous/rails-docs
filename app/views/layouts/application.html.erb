@@ -13,6 +13,8 @@
       <link rel="canonical" href="<%= canonical %>">
     <% end %>
 
+    <link rel="alternate" type="application/atom+xml" title="<%= feed_title %>" href="<%= feed_url %>">
+
     <% if (description = content_for(:meta_description)).present? %>
       <meta name="description" content="<%= description %>">
     <% end %>
@@ -107,15 +109,17 @@
                 aria-expanded="true">☰</button>
       <% end %>
 
-      <main class="site-main" id="main-content" tabindex="-1">
+      <main class="site-main" id="main-content" tabindex="-1" data-controller="code-copy">
         <%= yield %>
       </main>
     </div>
 
     <footer class="site-footer">
       <p>API documentation for the Ruby on Rails framework.</p>
+      <p>Follow changes: <%= link_to "Atom feed", feed_url %></p>
     </footer>
 
     <%= render "shared/search_palette" %>
+    <%= render "shared/shortcuts_help" %>
   </body>
 </html>

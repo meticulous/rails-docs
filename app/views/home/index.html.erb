@@ -12,9 +12,13 @@
       <%= link_to version_label(@current_stable),
                   version_path(version: version_url_segment(@current_stable)),
                   class: "version-list__link" %>
-      —
-      <%= link_to "search docs", search_path %>
     </p>
+
+    <%= form_with url: search_path, method: :get, local: true, class: "home__search" do |f| %>
+      <%= f.text_field :q, placeholder: "Search docs",
+                            autocomplete: "off", aria: { label: "Search documentation" } %>
+      <%= f.submit "Search" %>
+    <% end %>
   <% end %>
 
   <% if @frameworks.any? %>
@@ -42,7 +46,9 @@
     <section class="home__ecosystem">
       <h2>Ecosystem</h2>
       <p>
-        Documentation for the rest of the Rails stack:
+        Reference docs for the rest of the stack: Hotwire (Turbo, Stimulus),
+        deployment with Kamal, Solid Queue/Cache/Cable, GlobalID, Jbuilder,
+        Importmap, and Propshaft. Browse the
         <%= link_to "Ruby on Rails Ecosystem", ecosystem_path %>.
       </p>
     </section>
@@ -51,21 +57,20 @@
   <% if @package_versions.any? %>
     <section class="home__versions">
       <h2>All ingested Rails versions</h2>
-      <ul class="version-list">
-        <% @package_versions.each do |pv| %>
-          <li>
-            <%= link_to version_label(pv),
-                        version_path(version: version_url_segment(pv)),
-                        class: "version-list__link" %>
-            <span class="version-list__meta">
-              <% if pv.released_on %>
-                released <%= pv.released_on.to_fs(:long) %> ·
+      <dl class="version-groups">
+        <% @version_groups.each do |major, versions| %>
+          <div class="version-groups__row">
+            <dt class="version-groups__series"><%= version_group_label(major) %></dt>
+            <dd class="version-groups__list">
+              <% versions.each do |pv| %>
+                <%= link_to version_label(pv),
+                            version_path(version: version_url_segment(pv)),
+                            class: "version-list__link" %>
               <% end %>
-              ingested <%= time_ago_in_words(pv.ingested_at) %> ago
-            </span>
-          </li>
+            </dd>
+          </div>
         <% end %>
-      </ul>
+      </dl>
     </section>
   <% else %>
     <p class="muted">No versions ingested yet. Run <code>bin/load</code> to import a JSONL dump.</p>

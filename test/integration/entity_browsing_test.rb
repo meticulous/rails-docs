@@ -19,11 +19,29 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     )
   end
 
-  test "home page lists ingested versions" do
+  test "home page lists ingested versions grouped by major series" do
     get root_path
     assert_response :success
     assert_select "h1", "Ruby on Rails API"
-    assert_select ".version-list a", text: "v8.1.3"
+    assert_select ".version-groups__row" do
+      assert_select ".version-groups__series", text: "8.x"
+      assert_select ".version-list__link", text: "v8.1.3"
+    end
+  end
+
+  test "home page renders an inline search form" do
+    get root_path
+    assert_response :success
+    assert_select "form.home__search[action=?][method=?]", search_path, "get" do
+      assert_select "input[name=?][type=?]", "q", "text"
+      assert_select "input[type=?]", "submit"
+    end
+  end
+
+  test "home page frameworks render in a grid" do
+    get root_path
+    assert_response :success
+    assert_select ".framework-grid .framework-card", minimum: 1
   end
 
   test "content pages ship a lazy module-nav frame, not the inline tree" do
@@ -203,6 +221,23 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select "section.entity__source-code pre.highlight code span.k", text: "def"
     # …and never inline styles (would violate style-src CSP).
     assert_select "pre.highlight [style]", false
+  end
+
+  test "main content is wrapped in the code-copy controller so pre.highlight blocks get a copy button" do
+    ev = entity_versions(:ar_persistence_save_v8_1_3)
+    ev.update!(source_code: "def save(**options)\n  create_or_update\nend")
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+    assert_response :success
+    # code_copy_controller.js decorates pre.highlight on connect and after
+    # every turbo:load; it's attached at the <main> container level so it
+    # covers all highlighted blocks on the page without per-partial wiring.
+    assert_select "main#main-content[data-controller='code-copy']" do
+      assert_select "pre.highlight code", text: /def/
+    end
+    # The button itself is injected client-side (progressive enhancement),
+    # not server-rendered, so it must not appear in the initial HTML.
+    assert_select "pre.highlight .code-copy", false
   end
 
   test "renders a singleton method via .class suffix" do
@@ -452,5 +487,79 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
   test "404 for an unknown version" do
     get entity_path(version: "v0.0.0", path: "active_record/base")
     assert_response :not_found
+  end
+
+  test "doc body auto-links cross-references to other entities" do
+    # ActiveRecord::Persistence's docs mention a sibling module in prose;
+    # the crossref linker turns that plain-text FQN into a version-scoped link.
+    entity_versions(:ar_persistence_v8_1_3).update!(
+      doc_html: "<p>See ActiveRecord::Validations for more information. " \
+                "It also mentions ActiveRecord::Callbacks (absent here).</p>"
+    )
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence")
+    assert_response :success
+    # The FQN present in this version becomes a link…
+    assert_select ".entity__doc a[href=?]", "/v8.1.3/active_record/validations",
+      text: "ActiveRecord::Validations"
+    # …while the FQN absent from this version stays plain text.
+    assert_select ".entity__doc a", text: "ActiveRecord::Callbacks", count: 0
+  end
+
+  test "ecosystem page shows a one-line description for each gem" do
+    package_versions(:turbo_rails_v2_14_1).update!(ingest_status: "ok", ingested_at: Time.current)
+    EntityVersion.create!(entity_identity: entity_identities(:foo), package_version: package_versions(:turbo_rails_v2_14_1))
+
+    get ecosystem_path
+    assert_response :success
+    assert_select ".framework-card", text: /Turbo Rails/ do
+      assert_select "p.muted", text: sources(:turbo_rails).description
+    end
+  end
+
+  test "header version switcher only lists versions from the current source" do
+    package_versions(:edge).update!(ingest_status: "ok", ingested_at: Time.current)
+    package_versions(:turbo_rails_v2_14_1).update!(ingest_status: "ok", ingested_at: Time.current)
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+    assert_response :success
+    assert_select "#version-switcher-select option[value=?]", "v8.1.3"
+    assert_select "#version-switcher-select option[value=?]", "edge"
+    assert_select "#version-switcher-select option", text: "v2.14.1", count: 0
+  end
+
+  test "home page autodiscovers the rails source Atom feed" do
+    get root_path
+    assert_response :success
+    assert_select "link[rel='alternate'][type='application/atom+xml'][href=?]", source_feed_url(source_slug: "rails")
+  end
+
+  test "entity page autodiscovers its framework's Atom feed" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+    assert_response :success
+    assert_select "link[rel='alternate'][type='application/atom+xml'][href=?]",
+      framework_feed_url(framework_slug: "activerecord")
+  end
+
+  test "footer links the Atom feed" do
+    get root_path
+    assert_response :success
+    assert_select "footer.site-footer a[href=?]", source_feed_url(source_slug: "rails"), text: "Atom feed"
+  end
+
+  test "entity page emits BreadcrumbList JSON-LD with versioned ancestor URLs" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save")
+    assert_response :success
+
+    breadcrumb_lds = css_select('script[type="application/ld+json"]').map { |node| JSON.parse(node.text) }
+    breadcrumb_list = breadcrumb_lds.find { |data| data["@type"] == "BreadcrumbList" }
+    assert breadcrumb_list.present?, "Expected a BreadcrumbList JSON-LD script"
+
+    items = breadcrumb_list["itemListElement"]
+    assert_equal [ "ActiveRecord", "Persistence", "#save" ], items.map { |i| i["name"] }
+    assert_equal [ 1, 2, 3 ], items.map { |i| i["position"] }
+    assert_equal entity_url(version: "v8.1.3", path: "active_record"), items[0]["item"]
+    assert_equal entity_url(version: "v8.1.3", path: "active_record/persistence"), items[1]["item"]
+    assert_equal entity_url(version: "v8.1.3", path: "active_record/persistence/save"), items[2]["item"]
   end
 end

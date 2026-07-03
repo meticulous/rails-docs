@@ -7,14 +7,39 @@
       <span class="entity__kind">diff</span>
       <%= @identity.fqn %>
     </h1>
-    <p class="diff__subtitle">
-      Comparing
-      <%= link_to version_label(@from_version),
-                  entity_path(version: version_url_segment(@from_version), path: entity_url_path(@identity)) %>
-      →
-      <%= link_to version_label(@to_version),
-                  entity_path(version: version_url_segment(@to_version), path: entity_url_path(@identity)) %>
-    </p>
+
+    <div class="diff__switch" data-controller="diff-switcher">
+      <span class="diff__switch-group">
+        <label class="diff__switch-label" for="diff-base-version">Base</label>
+        <select id="diff-base-version" data-action="change->diff-switcher#go">
+          <% @diff.available_versions.reject { |v| v.id == @to_version.id }.each do |pv| %>
+            <option value="<%= diff_path(version: version_url_segment(pv),
+                                         entity_path: entity_url_path(@identity),
+                                         other_version: version_url_segment(@to_version)) %>"
+                    <%= "selected" if pv.id == @from_version.id %>>
+              <%= version_label(pv) %>
+            </option>
+          <% end %>
+        </select>
+      </span>
+      <span class="diff__switch-arrow" aria-hidden="true">→</span>
+      <span class="diff__switch-group">
+        <label class="diff__switch-label" for="diff-compare-version">Compare</label>
+        <select id="diff-compare-version" data-action="change->diff-switcher#go">
+          <% @diff.available_versions.reject { |v| v.id == @from_version.id }.each do |pv| %>
+            <option value="<%= diff_path(version: version_url_segment(@from_version),
+                                         entity_path: entity_url_path(@identity),
+                                         other_version: version_url_segment(pv)) %>"
+                    <%= "selected" if pv.id == @to_version.id %>>
+              <%= version_diff_option_label(pv, changed: @diff.changed_version_ids.include?(pv.id)) %>
+            </option>
+          <% end %>
+        </select>
+      </span>
+      <%= link_to "View #{version_label(@from_version)} without diff",
+                  entity_path(version: version_url_segment(@from_version), path: entity_url_path(@identity)),
+                  class: "diff__switch-plain" %>
+    </div>
   </header>
 
   <% if @diff.added? %>

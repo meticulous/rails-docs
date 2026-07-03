@@ -23,6 +23,15 @@
     }
     data[:description] = presenter.doc_summary if presenter.respond_to?(:doc_summary) && presenter.doc_summary.present?
     data.compact!
+
+    breadcrumb_data = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: breadcrumb_urls_for(presenter.identity, package_version).each_with_index.map do |(label, url), i|
+        { "@type": "ListItem", position: i + 1, name: label, item: url }
+      end
+    }
   %>
   <script type="application/ld+json" nonce="<%= content_security_policy_nonce %>"><%= raw JSON.generate(data) %></script>
+  <script type="application/ld+json" nonce="<%= content_security_policy_nonce %>"><%= raw JSON.generate(breadcrumb_data) %></script>
 <% end %>

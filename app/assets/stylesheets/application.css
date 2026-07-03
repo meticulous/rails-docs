@@ -138,6 +138,21 @@
   --max-width: 64rem;
   --radius: 8px;
   --header-h: 4rem;        /* sticky-header height; module-nav clears it */
+
+  /* Component colors that differ per theme live here (not in scattered
+   * [data-theme="dark"] component rules) so system-dark — where no
+   * data-theme attribute is set — picks them up via the media query
+   * below. A component override outside this variable layer WILL be
+   * invisible to prefers-color-scheme users; don't add one. */
+  --badge-since-text: var(--gray-900);
+  --badge-removed-text: var(--gray-900);
+  --badge-deprecated-text: var(--rf-brand-dark);
+  --badge-private-bg: var(--gray-200);
+  --badge-private-text: var(--gray-700);
+  --badge-private-border: var(--gray-400);
+  --nav-zebra: rgba(0, 0, 0, 0.03);
+  --nav-active-bg: var(--rf-brand);
+  --nav-active-border: var(--rf-brand-darker);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -150,6 +165,15 @@
     --color-bg: var(--gray-1000);
     --color-bg-soft: var(--gray-900);
     --color-code-bg: var(--gray-900);
+    --badge-since-text: #cffaff;
+    --badge-removed-text: #fff5b3;
+    --badge-deprecated-text: var(--rf-brand-lightest);
+    --badge-private-bg: var(--gray-850);
+    --badge-private-text: var(--gray-400);
+    --badge-private-border: var(--gray-700);
+    --nav-zebra: rgba(255, 255, 255, 0.03);
+    --nav-active-bg: var(--rf-brand-light);
+    --nav-active-border: var(--rf-brand);
   }
 }
 
@@ -162,6 +186,15 @@
   --color-bg: #fff;
   --color-bg-soft: var(--gray-100);
   --color-code-bg: var(--gray-200);
+  --badge-since-text: var(--gray-900);
+  --badge-removed-text: var(--gray-900);
+  --badge-deprecated-text: var(--rf-brand-dark);
+  --badge-private-bg: var(--gray-200);
+  --badge-private-text: var(--gray-700);
+  --badge-private-border: var(--gray-400);
+  --nav-zebra: rgba(0, 0, 0, 0.03);
+  --nav-active-bg: var(--rf-brand);
+  --nav-active-border: var(--rf-brand-darker);
 }
 
 [data-theme="dark"] {
@@ -173,6 +206,15 @@
   --color-bg: var(--gray-1000);
   --color-bg-soft: var(--gray-900);
   --color-code-bg: var(--gray-900);
+  --badge-since-text: #cffaff;
+  --badge-removed-text: #fff5b3;
+  --badge-deprecated-text: var(--rf-brand-lightest);
+  --badge-private-bg: var(--gray-850);
+  --badge-private-text: var(--gray-400);
+  --badge-private-border: var(--gray-700);
+  --nav-zebra: rgba(255, 255, 255, 0.03);
+  --nav-active-bg: var(--rf-brand-light);
+  --nav-active-border: var(--rf-brand);
 }
 
 /* Diff page */
@@ -196,6 +238,36 @@
 .diff__status--removed { border-color: var(--rf-brand); }
 
 .diff__section { margin: 2rem 0; }
+
+/* Inline base/compare version pickers in the diff header */
+.diff__switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.diff__switch-group {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.diff__switch-label {
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+.diff__switch-arrow { color: var(--color-muted); }
+
+.diff__switch-plain {
+  margin-left: auto;
+  font-size: 0.85rem;
+}
 
 .diff-lines {
   background: var(--color-code-bg);
@@ -274,38 +346,29 @@
 
 .badge--since {
   background: rgba(0, 240, 255, 0.12);
-  color: var(--gray-900);
+  color: var(--badge-since-text);
   border-color: rgba(0, 240, 255, 0.45);
 }
 
 .badge--removed {
   background: rgba(255, 214, 0, 0.18);
-  color: var(--gray-900);
+  color: var(--badge-removed-text);
   border-color: rgba(255, 214, 0, 0.55);
 }
 
 .badge--deprecated {
   background: rgba(200, 20, 24, 0.12);
-  color: var(--rf-brand-dark);
+  color: var(--badge-deprecated-text);
   border-color: rgba(200, 20, 24, 0.4);
 }
 
 .badge--private {
-  background: var(--gray-200);
-  color: var(--gray-700);
-  border-color: var(--gray-400);
+  background: var(--badge-private-bg);
+  color: var(--badge-private-text);
+  border-color: var(--badge-private-border);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 500;
-}
-
-[data-theme="dark"] .badge--since { color: #cffaff; }
-[data-theme="dark"] .badge--removed { color: #fff5b3; }
-[data-theme="dark"] .badge--deprecated { color: var(--rf-brand-lightest); }
-[data-theme="dark"] .badge--private {
-  background: var(--gray-850);
-  color: var(--gray-400);
-  border-color: var(--gray-700);
 }
 
 .badge-note {
@@ -368,6 +431,15 @@
 .palette__item:hover { background: var(--color-bg-soft); }
 
 .palette__fqn { background: transparent; padding: 0; }
+
+/* Containing path (e.g. "ActiveModel::SecurePassword::ClassMethods#") is
+ * de-emphasized so the eye lands on the method/class name itself. */
+.palette__fqn-path {
+  font-weight: 400;
+  color: var(--color-muted);
+}
+.palette__fqn-name { font-weight: 600; }
+
 .palette__kind {
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -397,6 +469,54 @@
   padding: 0 0.4em;
 }
 
+/* Keyboard-shortcuts help overlay ("?"). Shares the .palette dialog
+ * chrome (sizing, backdrop, shadow) but is a fixed-size list rather
+ * than a search box, so it gets its own inner layout. */
+.shortcuts-help {
+  width: min(24rem, 90vw);
+  max-height: none;
+}
+
+.shortcuts-help__inner {
+  padding: 1rem 1.25rem;
+}
+
+.shortcuts-help__title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.shortcuts-help__list {
+  margin: 0;
+}
+
+.shortcuts-help__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--color-border);
+}
+.shortcuts-help__row:first-child { border-top: none; }
+
+.shortcuts-help__row dt kbd {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0 0.4em;
+}
+
+.shortcuts-help__row dd {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
 .theme-toggle {
   background: transparent;
   border: 1px solid var(--color-border);
@@ -404,6 +524,7 @@
   font-size: 1rem;
   width: 2rem;
   height: 2rem;
+  flex-shrink: 0;
   border-radius: var(--radius);
   cursor: pointer;
   display: inline-flex;
@@ -565,6 +686,29 @@ pre code {
   gap: 1.5rem;
 }
 
+/* Narrow viewports: brand + search + version switcher + theme toggle can't
+ * all fit on one row without the flex items being squeezed past usable
+ * size (the search input in particular collapses toward zero width since
+ * flex items shrink to min-content by default). Wrap onto two rows instead:
+ * brand and theme toggle (plus version switcher, if present) stay on row
+ * one, and the search input gets its own full-width row where it can keep
+ * a real tap target. */
+@media (max-width: 40rem) {
+  .site-header__inner {
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
+  }
+
+  .site-header__brand { flex: 1 1 auto; }
+
+  .version-switcher { margin-left: 0; }
+
+  /* The search form's own wrap overrides live with its base rule (see
+   * "Search box in site header" below) — the base rule appears later in
+   * the file, and a same-specificity override placed here would lose the
+   * source-order tiebreak for the properties both declare. */
+}
+
 /* Logo + "API Guides" wordmark, mirroring the rails/guides header
  * lockup. Logo sits left, wordmark in Calibre to match guides type. */
 .site-header__brand {
@@ -607,6 +751,16 @@ pre code {
 
 @media (max-width: 60rem) {
   .site-main { margin-left: auto; }
+}
+
+/* Large monitors: let the content column and right rail use the room
+ * instead of leaving a third of the screen blank past 64rem. Prose
+ * stays readable because entity pages are mostly code + short
+ * paragraphs, and the outline rail absorbs 16rem of the extra width. */
+@media (min-width: 90rem) {
+  .site-main,
+  .site-header__inner { max-width: 84rem; }
+  .entity__layout { grid-template-columns: minmax(0, 1fr) 16rem; gap: 3rem; }
 }
 
 body.module-nav--collapsed .site-main {
@@ -765,11 +919,7 @@ body.module-nav--collapsed .module-nav { display: none; }
 /* Faint zebra striping across rows. :where() zeroes the selector's
  * specificity so hover / active / upstream backgrounds still win. */
 :where(.module-nav__node:nth-of-type(even)) > .module-nav__row {
-  background: rgba(0, 0, 0, 0.03);
-}
-
-[data-theme="dark"] :where(.module-nav__node:nth-of-type(even)) > .module-nav__row {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--nav-zebra);
 }
 
 .module-nav__row:hover {
@@ -824,8 +974,8 @@ body.module-nav--collapsed .module-nav { display: none; }
  * white text; every namespace ancestor on the way down gets a soft
  * 10% red wash so the user can see the path at a glance. */
 .module-nav__node--active > .module-nav__row {
-  background: var(--rf-brand);
-  border-left-color: var(--rf-brand-darker);
+  background: var(--nav-active-bg);
+  border-left-color: var(--nav-active-border);
 }
 
 .module-nav__node--active > .module-nav__row .module-nav__link {
@@ -841,13 +991,6 @@ body.module-nav--collapsed .module-nav { display: none; }
   background: rgba(200, 20, 24, 0.1);
   border-left-color: rgba(200, 20, 24, 0.4);
 }
-
-[data-theme="dark"] .module-nav__node--active > .module-nav__row {
-  background: var(--rf-brand-light);
-  border-left-color: var(--rf-brand);
-}
-
-[data-theme="dark"] .module-nav__node--active > .module-nav__row .module-nav__link { color: #fff; }
 
 [data-theme="dark"] .module-nav__node--upstream > .module-nav__row {
   background: rgba(232, 61, 64, 0.18);
@@ -897,19 +1040,104 @@ body.module-nav--collapsed .module-nav { display: none; }
 .home h1 { margin-top: 0; }
 .home__lede { font-size: 1.15rem; color: var(--color-muted); }
 
-.version-list {
-  list-style: none;
-  padding: 0;
+/* Inline search form under the hero — same look as the header search
+ * input, plus a visible submit button since there's room for one here. */
+.home__search {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 28rem;
+  margin: 0 0 1.5rem;
+}
+
+.home__search input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+}
+
+.home__search input[type="text"]:focus {
+  outline: none;
+  border-color: var(--color-link);
+  box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.15);
+}
+
+.home__search input[type="submit"] {
+  padding: 0.4rem 1rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-soft);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.home__search input[type="submit"]:hover {
+  border-color: var(--color-link);
+  color: var(--color-link);
+}
+
+/* Responsive multi-column grid — 3-ish columns on desktop, collapsing
+ * to fewer (then 1) as the viewport narrows. */
+.framework-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
   margin: 1rem 0;
 }
 
-.version-list li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-border);
+.framework-card {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
 }
+
+.framework-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.framework-card .muted { margin: 0; font-size: 0.85rem; }
 
 .version-list__link { font-weight: 500; margin-right: 0.5rem; }
 .version-list__meta { color: var(--color-muted); font-size: 0.9rem; }
+
+/* Version list grouped by major series — a label column plus a wrapping
+ * row of compact inline links, so the whole history fits in roughly a
+ * screenful instead of one row per patch release. */
+.version-groups {
+  margin: 1rem 0;
+}
+
+.version-groups__row {
+  display: flex;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.version-groups__series {
+  flex: 0 0 4rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.version-groups__list {
+  margin: 0;
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.9rem;
+  row-gap: 0.25rem;
+}
+
+@media (max-width: 30rem) {
+  .version-groups__row { flex-direction: column; gap: 0.25rem; }
+}
 
 .entity__breadcrumb {
   font-family: var(--font-mono);
@@ -986,6 +1214,10 @@ h4:hover > .anchor-link,
   color: var(--color-muted);
   font-size: 0.9rem;
 }
+
+/* File paths have no spaces to wrap at — let them break mid-token
+ * rather than widening the page on narrow viewports. */
+.entity__source code { overflow-wrap: anywhere; }
 
 .entity__body section h2 {
   margin-top: 2rem;
@@ -1091,8 +1323,18 @@ h4:hover > .anchor-link,
 }
 
 @media (max-width: 60rem) {
-  .entity__layout { grid-template-columns: 1fr; }
-  .entity__outline { order: -1; }
+  /* minmax(0, 1fr), not bare 1fr: a 1fr track's automatic minimum is
+   * min-content, so a wide <pre> would push the single column past the
+   * viewport instead of scrolling inside it — the same trap fixed on
+   * the desktop two-column template above. */
+  .entity__layout { grid-template-columns: minmax(0, 1fr); }
+  /* Previously `order: -1` here forced the outline (On this page / Support
+   * / License) to render above the doc body on narrow viewports, pushing
+   * the actual content below the fold. .entity__body already comes first
+   * in the DOM, so leaving order unset (the default, 0) makes the grid
+   * follow DOM order: body first, outline second. Desktop layout (body
+   * left, outline right) is unaffected since this rule only applies
+   * inside the max-width: 60rem media query. */
 }
 
 .entity__body { min-width: 0; }
@@ -1115,6 +1357,17 @@ h4:hover > .anchor-link,
 }
 .entity__doc :not(pre) > code {
   white-space: nowrap;
+}
+
+/* On narrow viewports an unbreakable inline token (a long FQN in <code>)
+ * can be wider than the whole screen — let it wrap mid-token there
+ * rather than force horizontal scroll. Placed after the nowrap rule so
+ * it wins the same-specificity source-order tiebreak. */
+@media (max-width: 40rem) {
+  .entity__doc :not(pre) > code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1216,15 +1469,60 @@ pre.highlight code {
 .highlight .go  { color: #b4b4b3; }
 .highlight .gp  { color: #fff; }
 
+/* Copy-to-clipboard button, injected by code_copy_controller.js into
+ * every pre.highlight. Positioned over the block rather than in normal
+ * flow so it doesn't add height or interfere with the pre's own
+ * horizontal scrolling. Subtle by default on pointer devices (revealed
+ * on hover/focus); always visible on touch, where there's no hover to
+ * reveal it. Colors come from the shared variables (not the Rouge
+ * token palette above, which is intentionally fixed-dark in both
+ * themes) so the control itself still follows light/dark mode. */
+pre.highlight {
+  position: relative;
+}
+.code-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25em 0.6em;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.1s ease-in-out;
+}
+pre.highlight:hover .code-copy,
+pre.highlight:focus-within .code-copy,
+.code-copy:focus {
+  opacity: 1;
+}
+.code-copy--copied {
+  color: var(--color-bg);
+  background: var(--color-text);
+  border-color: var(--color-text);
+}
+@media (hover: none) {
+  .code-copy {
+    opacity: 1;
+  }
+}
+
 /* Sticky right rail. The whole aside (outline + Support/License block)
  * sticks as one unit so the two children don't overlap on scroll. On
  * very tall pages where the rail is taller than the viewport,
- * max-height + overflow keep the rail scrollable on its own. */
+ * max-height + overflow keep the rail scrollable on its own. Top offset
+ * clears the sticky site header (z-index 20, opaque) — without it the
+ * rail's first rows disappear behind the header once you scroll. */
 .entity__outline {
   position: sticky;
-  top: 1rem;
+  top: calc(var(--header-h, 4rem) + 1rem);
   align-self: start;
-  max-height: calc(100vh - 2rem);
+  max-height: calc(100vh - var(--header-h, 4rem) - 2rem);
   overflow-y: auto;
 }
 
@@ -1317,10 +1615,11 @@ pre.highlight code {
 }
 
 /* Module list (for Includes/Extends/Namespace). Long FQNs like
- * ActionCable::Channel::NonInferrableChannelError would overflow the
- * grid cell and bleed into the next column; truncate with ellipsis
- * and rely on the link's title attribute (added in entity_link) for
- * the full name on hover. */
+ * ActionCable::Channel::NonInferrableChannelError must stay fully
+ * visible (user feedback: names are the information — never hide
+ * them), so cells wrap onto extra lines instead of truncating.
+ * overflow-wrap: anywhere lets an unbroken FQN break mid-token when
+ * it's wider than the cell, so it can't bleed into the next column. */
 .entity__module-list,
 .entity__simple-list {
   list-style: none;
@@ -1341,9 +1640,7 @@ pre.highlight code {
 .entity__module-list > li > code,
 .entity__simple-list > li > code {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 /* Signature block on method pages */
@@ -1463,12 +1760,27 @@ pre.highlight code {
 
 .site-header__search input {
   width: 100%;
+  min-width: 0;
   font-family: inherit;
   font-size: 0.95rem;
   padding: 0.4rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-bg);
+}
+
+@media (max-width: 40rem) {
+  /* Wrap to a full-width row of its own beneath brand/version/theme —
+   * on one shared row the input shrinks toward zero width. */
+  .site-header__search {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .site-header__search input {
+    min-height: 2.75rem;   /* keep a reasonable tap target on mobile */
+  }
 }
 
 .site-header__search input:focus {
@@ -1514,14 +1826,20 @@ pre.highlight code {
 
 .search-layout {
   display: grid;
-  grid-template-columns: 14rem 1fr;
+  grid-template-columns: 14rem minmax(0, 1fr);
   gap: 2rem;
   margin-top: 1.5rem;
 }
 
 @media (max-width: 768px) {
-  .search-layout { grid-template-columns: 1fr; }
+  .search-layout { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Results column is a grid item, but its own contents (long FQNs with no
+ * natural break points) still need to be told they're allowed to shrink —
+ * otherwise their min-content width pushes this column, the grid, and the
+ * whole .site-shell wider than the viewport, causing horizontal scroll. */
+.search-results-column { min-width: 0; }
 
 .search-facets h2 {
   font-size: 0.85rem;
@@ -1568,21 +1886,34 @@ pre.highlight code {
 .search-result {
   padding: 1rem 0;
   border-bottom: 1px solid var(--color-border);
+  min-width: 0;
 }
 
+/* FQNs like ActiveRecord::ConnectionAdapters::PostgreSQL::SchemaStatements
+ * have no natural break points, so without overflow-wrap they read as one
+ * unbreakable token and force this element (and every ancestor grid/flex
+ * track up to .site-shell) to widen past the viewport. Let long ones wrap. */
 .search-result__breadcrumb {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--color-muted);
   margin: 0;
+  overflow-wrap: break-word;
 }
 
 .search-result__name {
   font-size: 1.1rem;
   margin: 0.25rem 0;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: baseline;
+  min-width: 0;
+}
+
+.search-result__name a {
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .search-result__kind {

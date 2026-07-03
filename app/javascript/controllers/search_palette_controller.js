@@ -69,7 +69,7 @@ export default class extends Controller {
 
     const fqn = document.createElement("code")
     fqn.className = "palette__fqn"
-    fqn.textContent = result.fqn
+    fqn.appendChild(this.buildFqn(result.fqn))
     li.appendChild(fqn)
 
     const kind = document.createElement("span")
@@ -87,6 +87,39 @@ export default class extends Controller {
     return li
   }
 
+  // Splits a fully-qualified name like
+  // "ActiveModel::SecurePassword::ClassMethods#has_secure_password" into
+  // the containing path ("ActiveModel::SecurePassword::ClassMethods::" or
+  // "::") and the final segment ("has_secure_password"), so the path can
+  // be de-emphasized and the name the user is scanning for stays at full
+  // weight. Splits on whichever of the last "::" or "#" occurs later; a
+  // bare name (no separator) renders with no path segment at all.
+  buildFqn(fqn) {
+    const fragment = document.createDocumentFragment()
+    const splitAt = Math.max(fqn.lastIndexOf("::"), fqn.lastIndexOf("#"))
+
+    if (splitAt === -1) {
+      fragment.appendChild(document.createTextNode(fqn))
+      return fragment
+    }
+
+    const separatorLength = fqn[splitAt] === "#" ? 1 : 2
+    const path = fqn.slice(0, splitAt + separatorLength)
+    const name = fqn.slice(splitAt + separatorLength)
+
+    const pathSpan = document.createElement("span")
+    pathSpan.className = "palette__fqn-path"
+    pathSpan.textContent = path
+    fragment.appendChild(pathSpan)
+
+    const nameSpan = document.createElement("span")
+    nameSpan.className = "palette__fqn-name"
+    nameSpan.textContent = name
+    fragment.appendChild(nameSpan)
+
+    return fragment
+  }
+
   highlight(event) {
     const idx = parseInt(event.currentTarget.dataset.index, 10)
     if (Number.isNaN(idx)) return
@@ -94,6 +127,19 @@ export default class extends Controller {
   }
 
   onKeydown(event) {
+    // Handle Escape explicitly rather than relying on the dialog's native
+    // cancel behavior. Safari/WebKit intercepts Escape on a focused
+    // `type="search"` input to clear its value first and does not forward
+    // that keystroke to trigger the dialog's native Esc-to-close — so
+    // `close()` never fires there, even though Chrome handles it for free.
+    // Binding keydown here (on both the input and the dialog) and closing
+    // explicitly makes Esc work the same way in every browser.
+    if (event.key === "Escape") {
+      event.preventDefault()
+      this.close()
+      return
+    }
+
     const items = this.resultsTarget.querySelectorAll(".palette__item")
     if (event.key === "ArrowDown") {
       event.preventDefault()

@@ -22,7 +22,7 @@ class EntitiesController < ApplicationController
   private
 
   def load_available_versions
-    @available_versions = PackageVersion.where.not(ingested_at: nil).order(ord: :desc)
+    @available_versions = current_source.package_versions.where.not(ingested_at: nil).order(ord: :desc)
   end
 
   # An AI agent can fetch the clean, structured doc for any entity by

@@ -9,6 +9,19 @@ ar_persistence_save_v8_1_3:
   source_line_start: 412
   source_line_end: 450
 
+# Identical content to ar_persistence_save_v8_1_3 on purpose — exercises the
+# "same" case of the changed/same digest annotation on the version pickers.
+ar_persistence_save_v8_0_4:
+  entity_identity: ar_persistence_save
+  package_version: v8_0_4
+  framework: activerecord
+  visibility: public
+  doc_markdown: "Saves the record."
+  doc_summary: Saves the record.
+  source_path: activerecord/lib/active_record/persistence.rb
+  source_line_start: 412
+  source_line_end: 450
+
 ar_base_v8_1_3:
   entity_identity: ar_base
   package_version: v8_1_3
@@ -17,6 +30,21 @@ ar_base_v8_1_3:
 
 ar_persistence_v8_1_3:
   entity_identity: ar_persistence
+  package_version: v8_1_3
+  framework: activerecord
+  visibility: public
+
+ar_validations_v8_1_3:
+  entity_identity: ar_validations
+  package_version: v8_1_3
+  framework: activerecord
+  visibility: public
+
+# NOTE: no ar_callbacks entity_version here on purpose — ActiveRecord::Callbacks
+# has an identity but is absent from v8_1_3, so crossref linking must skip it.
+
+ar_persistence_update_bang_v8_1_3:
+  entity_identity: ar_persistence_update_bang
   package_version: v8_1_3
   framework: activerecord
   visibility: public

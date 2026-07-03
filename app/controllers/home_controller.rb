@@ -7,6 +7,13 @@ class HomeController < ApplicationController
                                       .ok
                                       .where.not(ingested_at: nil)
                                       .order(ord: :desc)
+    # Group into major series (8.x, 7.x, ...) so the version list reads
+    # as a handful of compact rows instead of one row per patch release.
+    # Edge has no major (it isn't a numbered series) — bucket it under
+    # its own group, shown first via the sort below.
+    @version_groups = @package_versions
+                        .group_by { |pv| pv.major || Float::INFINITY }
+                        .sort_by { |major, _| -major }
     @current_stable = current_source.current_stable
 
     if @current_stable

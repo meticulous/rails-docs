@@ -11,6 +11,22 @@ v8_1_3:
   ord: 8001003
   ingest_status: ok
 
+# Left un-ingested by default (no ingested_at) so it doesn't become a
+# framework's "current stable version" in the feeds tests. Tests that need
+# it visible (diff/availability) flip ingest_status/ingested_at in setup.
+v8_0_4:
+  source: rails
+  channel: "8.0.4"
+  major: 8
+  minor: 0
+  patch: 4
+  release_series: "8.0"
+  released_on: 2025-11-01
+  git_ref: "v8.0.4"
+  git_sha: 3333333333333333333333333333333333333333
+  ord: 8000004
+  ingest_status: pending
+
 edge:
   source: rails
   channel: edge
@@ -18,4 +34,17 @@ edge:
   git_ref: main
   git_sha: 1111111111111111111111111111111111111111
   ord: 9999999
+  ingest_status: ok
+
+turbo_rails_v2_14_1:
+  source: turbo_rails
+  channel: "2.14.1"
+  major: 2
+  minor: 14
+  patch: 1
+  release_series: "2.14"
+  released_on: 2026-01-10
+  git_ref: "v2.14.1"
+  git_sha: 2222222222222222222222222222222222222222
+  ord: 2014001
   ingest_status: ok

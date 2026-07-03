@@ -15,6 +15,9 @@
             <%= link_to source.display_name,
                         version_path(source_slug: source.slug, version: version_url_segment(latest)) %>
           </h3>
+          <% if source.description.present? %>
+            <p class="muted"><%= source.description %></p>
+          <% end %>
           <p class="muted">
             v<%= latest.channel %> ·
             <%= number_with_delimiter(entry[:entity_count]) %> documented entities ·

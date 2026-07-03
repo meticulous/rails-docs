@@ -78,6 +78,54 @@ class SearchTest < ActionDispatch::IntegrationTest
            "Expected SearchController to register a rate_limit callback"
   end
 
+  test "/search/suggest returns the full fqn as a single string for client-side splitting" do
+    # The ⌘K palette de-emphasizes the containing path (everything up to
+    # the last :: or #) client-side, so the JSON must keep shipping the
+    # plain fqn rather than pre-splitting it server-side.
+    get search_suggest_path, params: { q: "save" }
+    assert_response :success
+
+    body = JSON.parse(response.body)
+    result = body["results"].find { |r| r["fqn"] == "ActiveRecord::Persistence#save" }
+    assert result, "expected a suggest result for ActiveRecord::Persistence#save"
+    assert_equal "ActiveRecord::Persistence#save", result["fqn"]
+  end
+
+  test "search palette dialog is present on every page and closes via Escape regardless of input focus" do
+    # Safari/WebKit swallows Escape on a focused type=search input to
+    # clear its value, so the fix binds keydown->search-palette#onKeydown
+    # on the input itself (not just the dialog) and handles "Escape"
+    # explicitly in the controller rather than relying on native
+    # dialog cancel behavior. Assert the markup wiring that makes that
+    # possible is actually rendered.
+    get search_path
+    assert_response :success
+
+    assert_select "dialog.palette[data-search-palette-target='dialog']" do
+      assert_select "input#palette-input[data-search-palette-target='input']" do |inputs|
+        actions = inputs.first["data-action"]
+        assert_match(/keydown->search-palette#onKeydown/, actions,
+                     "Escape must be handled on the input itself, since WebKit " \
+                     "consumes Escape on a focused type=search input before " \
+                     "it can reach the dialog's native cancel handling")
+      end
+    end
+  end
+
+  test "keyboard shortcuts help dialog is present on every page and wired to close on Escape/backdrop click" do
+    get search_path
+    assert_response :success
+
+    assert_select "dialog.shortcuts-help" do |dialogs|
+      actions = dialogs.first["data-action"]
+      assert_match(/click->keyboard#closeHelp/, actions)
+      assert_match(/keydown->keyboard#closeHelp/, actions)
+      assert_select "kbd", text: "/"
+      assert_select "kbd", text: "?"
+      assert_select "kbd", text: "Esc"
+    end
+  end
+
   private
 
   def populate_search_vector!(entity_version)

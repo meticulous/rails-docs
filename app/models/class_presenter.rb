@@ -14,6 +14,13 @@ class ClassPresenter
     @available_versions ||= identity.available_versions.distinct.order(:ord).to_a
   end
 
+  # Versions whose content differs from the one being presented — drives
+  # the changed/same tags on the "Compare with" picker. Memoized here so
+  # the view goes through the presenter, not presenter.identity.
+  def changed_version_ids
+    @changed_version_ids ||= identity.changed_version_ids(relative_to: package_version)
+  end
+
   def first_seen_version
     identity.first_seen_version
   end
