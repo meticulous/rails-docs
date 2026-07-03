@@ -62,4 +62,41 @@ class DiffTest < ActionDispatch::IntegrationTest
     # v8.0.4 content is identical to base v8.1.3 -> "same"
     assert_select "select#diff-compare-version option", text: /v8\.0\.4 · same/
   end
+
+  test "renders a collapsed source diff when source_code changed" do
+    @save_in_v8.update!(source_code: "def save(**options)\n  create_or_update(**options)\nend")
+    @save_in_edge.update!(source_code: "def save(**options, &block)\n  create_or_update(**options, &block)\nend")
+
+    get diff_path(version: "v8.1.3", entity_path: "active_record/persistence/save", other_version: "edge")
+    assert_response :success
+    assert_select ".diff__section--source h2", text: "Source"
+    # Collapsed by default, heading outside the summary's button role.
+    assert_select ".diff__section--source details:not([open]) summary", text: /Show source changes/
+    assert_select ".diff__section--source details summary h2", false
+    assert_select ".diff__section--source .diff-line--added", text: /&block/
+  end
+
+  test "source-only change annotates the compare picker and shows no identical banner" do
+    # Same doc + signature as base, different source: without source in
+    # the digest this said "same" while the page had changes to show.
+    @save_in_edge.update!(
+      doc_markdown: @save_in_v8.doc_markdown,
+      signature_text: @save_in_v8.signature_text,
+      source_code: "def save; magic; end"
+    )
+    @save_in_v8.update!(source_code: "def save; end")
+
+    get diff_path(version: "v8.1.3", entity_path: "active_record/persistence/save", other_version: "edge")
+    assert_response :success
+    assert_select "select#diff-compare-version option", text: /edge · changed/
+    assert_select ".diff__status--unchanged", false
+    assert_select ".diff__section--source"
+  end
+
+  test "identical banner covers source and only shows when nothing differs" do
+    get diff_path(version: "v8.1.3", entity_path: "active_record/persistence/save", other_version: "v8.0.4")
+    assert_response :success
+    assert_select ".diff__status--unchanged", text: /Signature, documentation, and source are identical/
+    assert_select ".diff__section--source", false
+  end
 end

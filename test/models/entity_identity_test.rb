@@ -93,17 +93,33 @@ class EntityIdentityTest < ActiveSupport::TestCase
     assert_not_equal digests[package_versions(:v8_1_3).id], digests[package_versions(:edge).id]
   end
 
-  test "content_digest_by_version ignores fields the diff page does not render" do
+  test "content_digest_by_version distinguishes differing source_code" do
     identity = entity_identities(:ar_persistence_save)
     # Same doc_markdown/signature_text as v8.1.3, different source_code —
-    # the diff page only renders doc + signature, so this must digest
-    # "same" or the changed/same picker tags would promise a diff the
-    # page can't show.
+    # the diff page renders source diffs, so this must digest "changed".
     EntityVersion.create!(
       entity_identity: identity,
       package_version: package_versions(:edge),
       doc_markdown: "Saves the record.",
       source_code: "def save; super; end"
+    )
+
+    digests = identity.content_digest_by_version
+    assert_not_equal digests[package_versions(:v8_1_3).id], digests[package_versions(:edge).id]
+  end
+
+  test "content_digest_by_version ignores fields the diff page does not render" do
+    identity = entity_identities(:ar_persistence_save)
+    # Same doc/signature/source as v8.1.3; call_seq and deprecated differ.
+    # Neither is rendered by the diff page, so this must digest "same" or
+    # the changed/same picker tags would promise a diff the page can't
+    # show.
+    EntityVersion.create!(
+      entity_identity: identity,
+      package_version: package_versions(:edge),
+      doc_markdown: "Saves the record.",
+      call_seq: "save -> true or false",
+      deprecated: true
     )
 
     digests = identity.content_digest_by_version

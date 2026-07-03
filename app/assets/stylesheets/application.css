@@ -247,6 +247,12 @@
 
 .diff__section { margin: 2rem 0; }
 
+.diff__section--source summary {
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
 /* Inline base/compare version pickers in the diff header */
 .diff__switch {
   display: flex;

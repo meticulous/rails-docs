@@ -51,9 +51,9 @@
       Removed in <%= version_label(@to_version) %> — last seen in <%= version_label(@from_version) %>.
     </p>
   <% else %>
-    <% unless @diff.signature_changed? || @diff.doc_changed? %>
+    <% unless @diff.signature_changed? || @diff.doc_changed? || @diff.source_changed? %>
       <p class="diff__status diff__status--unchanged">
-        Signature and documentation are identical between
+        Signature, documentation, and source are identical between
         <%= version_label(@from_version) %> and <%= version_label(@to_version) %>.
       </p>
     <% end %>
@@ -69,6 +69,20 @@
       <section class="diff__section">
         <h2>Documentation</h2>
         <%= render "diffs/lines", diff: @diff.doc_diff %>
+      </section>
+    <% end %>
+
+    <% if @diff.source_changed? %>
+      <%# Collapsed by default: implementation churn is secondary to the
+          doc/signature story, and source diffs can run long. The h2 sits
+          outside the <details> (a heading inside a summary's button role
+          disappears from screen-reader heading navigation). %>
+      <section class="diff__section diff__section--source">
+        <h2>Source</h2>
+        <details>
+          <summary>Show source changes</summary>
+          <%= render "diffs/lines", diff: @diff.source_diff %>
+        </details>
       </section>
     <% end %>
   <% end %>

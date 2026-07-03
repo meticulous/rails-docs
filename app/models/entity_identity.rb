@@ -22,14 +22,18 @@ class EntityIdentity < ApplicationRecord
   validates :fqn, uniqueness: { scope: [ :source_id, :kind, :scope ] }
 
   # Maps each package_version_id in which this identity exists to an md5
-  # digest of exactly the columns the diff page renders — doc_markdown and
-  # signature_text (DiffPresenter#doc_diff/#signature_diff) — so a
-  # "changed" tag on a version picker always means the diff page will
-  # actually show a difference. One round-trip over entity_versions —
+  # digest of exactly the columns the diff page renders — doc_markdown,
+  # signature_text, and source_code (DiffPresenter#doc_diff/
+  # #signature_diff/#source_diff) — so a "changed" tag on a version
+  # picker always means the diff page will actually show a difference.
+  # The "# File path, line N" header RDoc prefixes onto source_code is
+  # stripped (mirroring DiffPresenter#comparable_source): line numbers
+  # drift with every release and would mark byte-identical
+  # implementations as changed. One round-trip over entity_versions —
   # there is exactly one row per package_version (unique index
   # idx_entity_versions_unique), so no GROUP BY is needed. Nil columns
   # are coalesced to '' and joined with chr(31) (unit separator, never
-  # present in doc text) so field boundaries can't collide.
+  # present in doc/source text) so field boundaries can't collide.
   def content_digest_by_version
     @content_digest_by_version ||=
       entity_versions
@@ -38,7 +42,8 @@ class EntityIdentity < ApplicationRecord
           Arel.sql(<<~SQL.squish)
             md5(concat_ws(chr(31),
               coalesce(doc_markdown, ''),
-              coalesce(signature_text, '')))
+              coalesce(signature_text, ''),
+              regexp_replace(coalesce(source_code, ''), '^# File [^\\n]*\\n?', '')))
           SQL
         )
         .to_h
