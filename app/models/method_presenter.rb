@@ -22,7 +22,7 @@ class MethodPresenter
   end
 
   def title
-    "#{display_signature} — #{identity.parent_fqn} — Ruby on Rails #{package_version.channel}"
+    "#{display_signature} — #{identity.parent_fqn} — #{package_version.source.display_name} #{package_version.channel}"
   end
 
   def display_signature

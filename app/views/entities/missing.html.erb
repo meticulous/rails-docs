@@ -12,7 +12,7 @@
       <%= @identity.name %>
     </h1>
     <p class="entity__version muted">
-      Not present in Ruby on Rails <%= @package_version.channel %>.
+      Not present in <%= @package_version.source.display_name %> <%= @package_version.channel %>.
     </p>
   </header>
 

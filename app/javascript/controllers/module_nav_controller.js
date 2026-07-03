@@ -20,13 +20,14 @@ import { Controller } from "@hotwired/stimulus"
 // We re-decorate on turbo:load so the highlight follows the user as
 // they click through the (persistent) nav.
 export default class extends Controller {
-  static targets = ["filter", "list", "empty", "group"]
+  static targets = ["filter", "list", "empty", "group", "ecosystem"]
 
   connect() {
     this.boundRefresh = this.refreshActive.bind(this)
     document.addEventListener("turbo:load", this.boundRefresh)
     this.applyDefaultExpansion()
     this.markActiveTrail()
+    this.reconcileEcosystem()
   }
 
   disconnect() {
@@ -84,6 +85,44 @@ export default class extends Controller {
     const show = children.hidden
     children.hidden = !show
     event.currentTarget.setAttribute("aria-expanded", show ? "true" : "false")
+  }
+
+  // "Show ecosystem gems" checkbox (rails nav only). The ecosystem trees
+  // aren't hidden in the default payload — they're only rendered when the
+  // frame is requested with ?ecosystem=1 — so toggling reloads the frame
+  // with or without the param. The preference persists in localStorage;
+  // reconcileEcosystem() re-applies it on connect (fresh loads, and the
+  // frame reload the toggle itself triggers — where stored == checked, so
+  // it settles without looping).
+  toggleEcosystem() {
+    const on = this.ecosystemTarget.checked
+    try { localStorage.setItem("module-nav-ecosystem", on ? "1" : "0") } catch {}
+    this.reloadFrame(on)
+  }
+
+  reconcileEcosystem() {
+    if (!this.hasEcosystemTarget) return
+    let stored
+    try { stored = localStorage.getItem("module-nav-ecosystem") === "1" } catch { return }
+    if (stored !== this.ecosystemTarget.checked) {
+      this.ecosystemTarget.checked = stored
+      this.reloadFrame(stored)
+    }
+  }
+
+  reloadFrame(withEcosystem) {
+    const frame = this.element.closest("turbo-frame")
+    if (!frame?.src) return
+    const url = new URL(frame.src, window.location.origin)
+    if (withEcosystem) url.searchParams.set("ecosystem", "1")
+    else url.searchParams.delete("ecosystem")
+
+    // Setting src while the frame is still completing a load gets
+    // swallowed by Turbo (the attribute updates, the content doesn't) —
+    // wait for the in-flight load to finish first.
+    const apply = () => { frame.src = url.toString() }
+    if (frame.complete) apply()
+    else frame.addEventListener("turbo:frame-load", apply, { once: true })
   }
 
   markActiveTrail() {

@@ -115,6 +115,43 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".module-nav__row[style]", false, "depth must not use an inline style attribute"
   end
 
+  test "the /_nav frame appends ecosystem gem trees when ?ecosystem=1" do
+    ingest_turbo_rails_fixture!
+
+    get module_nav_path(source_slug: "rails", version: "v8.1.3", ecosystem: "1")
+    assert_response :success
+
+    assert_select ".module-nav__group--ecosystem .module-nav__group-name", text: "Turbo Rails"
+    # Ecosystem links must carry the source-slug prefix — without it they
+    # resolve against the rails source and 404.
+    assert_select ".module-nav__group--ecosystem a[href=?]", "/turbo-rails/v2.14.1/turbo/broadcastable"
+    assert_select ".module-nav__group--ecosystem a[href=?]", "/turbo-rails/v2.14.1/turbo"
+    assert_select ".module-nav__ecosystem input[checked]"
+  end
+
+  test "the /_nav frame leaves ecosystem gems out by default" do
+    ingest_turbo_rails_fixture!
+
+    get module_nav_path(source_slug: "rails", version: "v8.1.3")
+    assert_response :success
+
+    assert_select ".module-nav__group--ecosystem", false
+    assert_select ".module-nav__ecosystem input"
+    assert_select ".module-nav__ecosystem input[checked]", false
+  end
+
+  test "an ecosystem gem's own nav links carry its source slug and skip the checkbox" do
+    ingest_turbo_rails_fixture!
+
+    get module_nav_path(source_slug: "turbo-rails", version: "v2.14.1")
+    assert_response :success
+
+    assert_select ".module-nav__title", text: /Turbo Rails/
+    assert_select "a.module-nav__link[href=?]", "/turbo-rails/v2.14.1/turbo/broadcastable"
+    # "Show ecosystem" only makes sense on the rails nav.
+    assert_select ".module-nav__ecosystem", false
+  end
+
   test "appending .md returns a clean Markdown document" do
     get entity_path(version: "v8.1.3", path: "active_record/persistence/save.md")
     assert_response :success
@@ -561,5 +598,20 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_equal entity_url(version: "v8.1.3", path: "active_record"), items[0]["item"]
     assert_equal entity_url(version: "v8.1.3", path: "active_record/persistence"), items[1]["item"]
     assert_equal entity_url(version: "v8.1.3", path: "active_record/persistence/save"), items[2]["item"]
+  end
+
+  private
+
+  # Marks the turbo-rails fixture version as ingested (fixtures leave it
+  # un-ingested so it stays out of current_stable elsewhere) and gives it
+  # a tiny Turbo namespace so the nav has a tree to render.
+  def ingest_turbo_rails_fixture!
+    package_versions(:turbo_rails_v2_14_1).update!(ingest_status: "ok", ingested_at: Time.current)
+    turbo = sources(:turbo_rails).entity_identities.create!(fqn: "Turbo", kind: "module", name: "Turbo")
+    EntityVersion.create!(entity_identity: turbo, package_version: package_versions(:turbo_rails_v2_14_1))
+    broadcastable = sources(:turbo_rails).entity_identities.create!(
+      fqn: "Turbo::Broadcastable", kind: "module", name: "Broadcastable", parent_fqn: "Turbo"
+    )
+    EntityVersion.create!(entity_identity: broadcastable, package_version: package_versions(:turbo_rails_v2_14_1))
   end
 end

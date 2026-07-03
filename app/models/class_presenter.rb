@@ -30,7 +30,7 @@ class ClassPresenter
   end
 
   def title
-    "#{fqn} — Ruby on Rails #{package_version.channel}"
+    "#{fqn} — #{package_version.source.display_name} #{package_version.channel}"
   end
 
   def own_methods

@@ -19,7 +19,7 @@
       <span class="entity__kind"><%= @presenter.kind %></span>
       <%= @presenter.name %>
     </h1>
-    <p class="entity__version">Ruby on Rails <%= @package_version.channel %></p>
+    <p class="entity__version"><%= @package_version.source.display_name %> <%= @package_version.channel %></p>
     <%= render "entities/badges", presenter: @presenter, available_versions: @available_versions %>
     <%= render "entities/availability", presenter: @presenter %>
   </header>

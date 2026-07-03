@@ -12,6 +12,7 @@
 class NavController < ApplicationController
   def show
     @nav_package_version = resolve_package_version
+    @ecosystem_versions = include_ecosystem? ? ecosystem_versions : []
     expires_in 1.hour, public: true
     render layout: false
   end
@@ -26,5 +27,16 @@ class NavController < ApplicationController
     else
       source.current_stable
     end
+  end
+
+  # ?ecosystem=1 appends every ecosystem gem's tree (at its own current
+  # stable) below the Rails framework groups. Only meaningful on the
+  # rails nav — an ecosystem gem's own nav already shows that gem.
+  def include_ecosystem?
+    params[:ecosystem].present? && @nav_package_version&.source&.slug == "rails"
+  end
+
+  def ecosystem_versions
+    Source.where.not(slug: "rails").order(:display_name).filter_map(&:current_stable)
   end
 end

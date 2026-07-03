@@ -95,12 +95,14 @@
             navigation, not a navigation *within* this frame (which would
             try to load the target page's empty nav stub and show
             "content missing"). %>
+        <%# nav-ecosystem rewrites the src with ?ecosystem=1 before the
+            lazy load fires when the user has "Show ecosystem gems" on. %>
         <%= turbo_frame_tag nav_frame_id,
                             class: "module-nav-frame",
                             src: module_nav_path(source_slug: nav_package_version.source.slug, version: version_url_segment(nav_package_version)),
                             loading: "lazy",
                             target: "_top",
-                            data: { turbo_permanent: true } %>
+                            data: { turbo_permanent: true, controller: "nav-ecosystem" } %>
         <button type="button"
                 class="module-nav-toggle"
                 data-controller="module-nav-toggle"

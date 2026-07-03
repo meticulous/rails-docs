@@ -833,6 +833,23 @@ body.module-nav--collapsed .module-nav { display: none; }
   box-shadow: 0 0 0 2px rgba(200, 20, 24, 0.15);
 }
 
+/* "Show ecosystem gems" toggle beneath the filter (rails nav only). */
+.module-nav__ecosystem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.module-nav__ecosystem input {
+  margin: 0;
+  accent-color: var(--rf-brand);
+}
+
 .module-nav__body {
   flex: 1;
   overflow-y: auto;

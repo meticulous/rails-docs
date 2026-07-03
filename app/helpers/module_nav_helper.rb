@@ -19,13 +19,30 @@ module ModuleNavHelper
     sort_forest(root)
   end
 
+  # A single-root forest (all of turbo-rails under Turbo, say) collapses
+  # to that root: it becomes an "overview" link and its children render
+  # at depth 0 instead of everything nesting one level deep. Returns
+  # [overview_node_or_nil, nodes].
+  def module_nav_root_split(fqns)
+    forest = fqn_forest(fqns)
+    if forest.size == 1
+      root = forest.first
+      [ root[:real] ? root : nil, root[:children] ]
+    else
+      [ nil, forest ]
+    end
+  end
+
   # Recursively render a forest (array of nodes) as nested <li>s. Built
   # in a helper rather than a per-node partial so a cache miss doesn't
   # pay 1,500 partial renders; the whole nav is fragment-cached anyway.
-  def module_nav_tree(nodes, version_segment, depth: 0)
+  # source_slug prefixes every link for non-rails sources (rails is the
+  # slugless default) — without it, ecosystem links resolve against the
+  # rails source and 404.
+  def module_nav_tree(nodes, version_segment, depth: 0, source_slug: nil)
     return "".html_safe if nodes.empty?
 
-    safe_join(nodes.map { |node| module_nav_node(node, version_segment, depth) })
+    safe_join(nodes.map { |node| module_nav_node(node, version_segment, depth, source_slug) })
   end
 
   private
@@ -36,13 +53,13 @@ module ModuleNavHelper
     end
   end
 
-  def module_nav_node(node, version_segment, depth)
+  def module_nav_node(node, version_segment, depth, source_slug)
     has_children = node[:children].any?
 
     label =
       if node[:real]
         link_to node[:name],
-                entity_path(version: version_segment, path: EntityIdentity.fqn_to_url_path(node[:fqn])),
+                entity_path(source_slug: source_slug, version: version_segment, path: EntityIdentity.fqn_to_url_path(node[:fqn])),
                 class: "module-nav__link", title: node[:fqn]
       else
         tag.span(node[:name], class: "module-nav__link module-nav__link--namespace", title: node[:fqn])
@@ -68,7 +85,7 @@ module ModuleNavHelper
 
     children =
       if has_children
-        tag.ul(module_nav_tree(node[:children], version_segment, depth: depth + 1),
+        tag.ul(module_nav_tree(node[:children], version_segment, depth: depth + 1, source_slug: source_slug),
                class: "module-nav__children", hidden: true)
       else
         "".html_safe

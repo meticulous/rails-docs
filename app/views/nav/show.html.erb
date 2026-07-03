@@ -3,6 +3,6 @@
     links navigate the whole page, not this frame. %>
 <%= turbo_frame_tag nav_frame_id, class: "module-nav-frame", target: "_top" do %>
   <% if @nav_package_version %>
-    <%= render "shared/module_nav", pv: @nav_package_version %>
+    <%= render "shared/module_nav", pv: @nav_package_version, ecosystem_versions: @ecosystem_versions %>
   <% end %>
 <% end %>
