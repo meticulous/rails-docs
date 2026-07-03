@@ -9,7 +9,11 @@ CI.run do
   step "Security: Importmap vulnerability audit", "bin/importmap audit"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
   step "Tests: Rails", "bin/rails test"
-  step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
+  # db:test:prepare after the replant: seeding leaves rows in tables the
+  # fixtures don't truncate (inheritance_edges, closures) pointing at
+  # seed-created package_versions, and the next plain `bin/rails test`
+  # would fail fixture FK validation until the schema is reloaded.
+  step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant db:test:prepare"
 
   # Optional: Run system tests
   # step "Tests: System", "bin/rails test:system"
