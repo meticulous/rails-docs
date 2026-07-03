@@ -25,8 +25,15 @@ export default class extends Controller {
       this.element.setAttribute("data-theme", theme)
     }
     if (this.hasButtonTarget) {
-      this.buttonTarget.setAttribute("aria-pressed", theme === "dark")
+      // No aria-pressed: a binary pressed state can't represent a
+      // three-way cycle — the label names the current state and what
+      // activating does instead.
       this.buttonTarget.textContent = ({ light: "☀", dark: "☾", system: "◑" })[theme]
+      this.buttonTarget.setAttribute("aria-label", {
+        light: "Theme: light. Activate to switch to dark.",
+        dark: "Theme: dark. Activate to switch to system.",
+        system: "Theme: system. Activate to switch to light."
+      }[theme])
     }
   }
 }

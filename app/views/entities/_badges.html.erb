@@ -21,7 +21,11 @@
 <% end %>
 
 <% if presenter.respond_to?(:visibility) && presenter.visibility == "private" %>
-  <span class="badge badge--private" title="Implementation detail — not part of the public API">Private</span>
+  <%# title is invisible to touch and keyboard users — mirror it as
+      visually-hidden text so everyone gets the explanation. %>
+  <span class="badge badge--private" title="Implementation detail — not part of the public API">
+    Private<span class="visually-hidden"> — implementation detail, not part of the public API</span>
+  </span>
 <% end %>
 
 <% if presenter.respond_to?(:deprecated) && presenter.deprecated %>

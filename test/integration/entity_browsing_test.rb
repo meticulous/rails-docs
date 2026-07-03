@@ -97,7 +97,7 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     # to source+version) and target=_top so its links navigate the page.
     assert_select "turbo-frame.module-nav-frame[id=?]", "module-nav-rails-8-1-3"
     assert_select "turbo-frame.module-nav-frame[target=?]", "_top"
-    assert_select "turbo-frame.module-nav-frame aside.module-nav .module-nav__filter"
+    assert_select "turbo-frame.module-nav-frame nav.module-nav .module-nav__filter"
     assert_select "details.module-nav__group", minimum: 1
     assert_select ".module-nav__title", text: /Ruby on Rails/
     assert_select ".module-nav__title", text: /v8\.1\.3/
@@ -231,7 +231,9 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".breadcrumbs a", text: "ActiveRecord"
     assert_select ".entity__version", "Ruby on Rails 8.1.3"
     assert_select ".entity__inherited-methods h2", "Methods (inherited)"
-    assert_select ".method-group summary a", text: "ActiveRecord::Persistence"
+    # Plain text, not a link: a link inside <summary> nests interactive controls.
+    assert_select ".method-group summary code.method-group__ancestor", text: "ActiveRecord::Persistence"
+    assert_select ".method-group summary a", false
   end
 
   test "renders an Active Record module page" do
@@ -453,10 +455,11 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     # Public method shows in the main list, not the collapsed group
     assert_select ".entity__own-methods .method-list a", text: "save"
     # Private method shows inside the <details> block
-    assert_select "details.method-group summary h2", text: "Private methods"
+    assert_select "section.entity__private-methods h2#section-private-methods", text: /Private methods/
+    assert_select "details.method-group summary h2", false, "no heading inside the summary button"
     assert_select ".entity__private-methods details .method-list a", text: "_save_record"
     # Outline link points at the private-methods anchor
-    assert_select "aside .outline a[href='#section-private-methods']"
+    assert_select ".entity__outline .outline a[href='#section-private-methods']"
   end
 
   test "private method page renders a Private badge and meta-noindex" do
@@ -476,7 +479,7 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
 
     get entity_path(version: "v8.1.3", path: "active_record/persistence/_callback")
     assert_response :success
-    assert_select ".badge.badge--private", text: "Private"
+    assert_select ".badge.badge--private", text: /\APrivate/
     assert_select 'meta[name="robots"][content="noindex"]', count: 1
     # JSON-LD TechArticle is suppressed for private methods
     assert_select 'script[type="application/ld+json"]', count: 0
@@ -501,19 +504,19 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select "section.entity__namespace a", text: "Foo::Encryption"
     assert_select "section.entity__namespace a", text: "Foo::DangerousAttributeError"
     # Outline links to the section
-    assert_select "aside.entity__outline a[href='#section-namespace']"
+    assert_select ".entity__outline a[href='#section-namespace']"
   end
 
   test "Support and License sidebar block renders on entity pages" do
     get entity_path(version: "v8.1.3", path: "active_record/persistence")
     assert_response :success
-    assert_select "aside .sidebar-block .sidebar-block__title", text: "Support"
-    assert_select "aside .sidebar-block a[href=?]", "https://github.com/rails/rails/issues",
+    assert_select ".entity__outline .sidebar-block .sidebar-block__title", text: "Support"
+    assert_select ".entity__outline .sidebar-block a[href=?]", "https://github.com/rails/rails/issues",
       text: /filed for the Ruby on Rails project on GitHub/
-    assert_select "aside .sidebar-block a[href=?]", "https://discuss.rubyonrails.org/c/rubyonrails-core",
+    assert_select ".entity__outline .sidebar-block a[href=?]", "https://discuss.rubyonrails.org/c/rubyonrails-core",
       text: /rubyonrails-core forum/
-    assert_select "aside .sidebar-block .sidebar-block__title", text: "License"
-    assert_select "aside .sidebar-block a[href=?]", "https://opensource.org/licenses/MIT", text: /MIT license/
+    assert_select ".entity__outline .sidebar-block .sidebar-block__title", text: "License"
+    assert_select ".entity__outline .sidebar-block a[href=?]", "https://opensource.org/licenses/MIT", text: /MIT license/
   end
 
   test "404 for unknown entities" do

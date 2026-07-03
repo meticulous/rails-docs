@@ -5,7 +5,8 @@
 
   <%= form_with url: search_path, method: :get, local: true, class: "search-page__form" do |f| %>
     <%= f.text_field :q, value: @query, autofocus: true, autocomplete: "off",
-                          placeholder: "method, class, or doc text", class: "search-page__input" %>
+                          placeholder: "method, class, or doc text", class: "search-page__input",
+                          aria: { label: "Search documentation" } %>
     <% if @version %>
       <%= f.hidden_field :version, value: version_url_segment(@version) %>
     <% end %>
@@ -19,16 +20,20 @@
     <p class="muted">Type a query and hit Enter to search.</p>
   <% else %>
     <div class="search-layout">
-      <aside class="search-facets">
+      <aside class="search-facets" aria-label="Search filters">
         <% if @filters.any? || @version %>
           <p class="search-facets__active">
             <% if @version %>
               <span class="search-facets__chip">version: <%= version_label(@version) %></span>
             <% end %>
             <% @filters.each do |key, value| %>
-              <%= link_to "✕ #{key}: #{value}",
-                          search_path(@filters.except(key).merge(q: @query)),
-                          class: "search-facets__chip search-facets__chip--remove" %>
+              <%# The ✕ glyph reads as "multiplication sign" (or nothing)
+                  to screen readers — the aria-label carries the intent. %>
+              <%= link_to search_path(@filters.except(key).merge(q: @query)),
+                          class: "search-facets__chip search-facets__chip--remove",
+                          aria: { label: "Remove filter #{key}: #{value}" } do %>
+                <span aria-hidden="true">✕</span> <%= key %>: <%= value %>
+              <% end %>
             <% end %>
           </p>
         <% end %>

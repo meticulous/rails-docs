@@ -46,8 +46,10 @@
       <% end %>
 
       <% if @presenter.nested_classes_and_modules.any? %>
-        <section class="entity__namespace" id="section-namespace">
-          <h2>Namespace</h2>
+        <%# Anchor ids live on the h2s, not the sections — the outline's
+            scroll-spy observes h2[id^='section-']. %>
+        <section class="entity__namespace">
+          <h2 id="section-namespace">Namespace</h2>
           <% nested_grouped = @presenter.nested_classes_and_modules.group_by(&:kind) %>
           <% %w[module class].each do |kind| %>
             <% group = nested_grouped[kind] %>
@@ -63,7 +65,7 @@
       <% end %>
 
       <% if @presenter.included_modules.any? %>
-        <section class="entity__includes" id="section-includes">
+        <section class="entity__includes">
           <h2 id="section-includes">Includes</h2>
           <ul class="entity__module-list">
             <% @presenter.included_modules.each do |mod| %>
@@ -121,11 +123,18 @@
       <% end %>
 
       <% if @presenter.private_own_methods.any? %>
+        <%# The h2 lives outside the <details> — a heading inside a
+            <summary> (which exposes itself as a button) is flattened
+            out of screen-reader heading navigation and trips
+            nested-interactive checks. %>
         <section class="entity__private-methods">
+          <h2 id="section-private-methods">
+            Private methods
+            <span class="method-group__count">(<%= @presenter.private_own_methods.size %>)</span>
+          </h2>
           <details class="method-group">
             <summary>
-              <h2 id="section-private-methods">Private methods</h2>
-              <span class="method-group__count">(<%= @presenter.private_own_methods.size %>)</span>
+              Show private methods
               <span class="muted method-group__hint">Implementation detail — not part of the public API.</span>
             </summary>
             <ul class="method-list">
@@ -141,8 +150,8 @@
       <% end %>
 
       <% if @presenter.inheritors.any? %>
-        <section class="entity__inheritors" id="section-inheritors">
-          <h2>Used by</h2>
+        <section class="entity__inheritors">
+          <h2 id="section-inheritors">Used by</h2>
           <% @presenter.inheritors.each do |relation, identities| %>
             <h3 class="entity__inheritors-relation">
               <%= relation == "superclass" ? "Subclasses" : "#{relation.to_s.titleize}d by" %>
@@ -162,8 +171,12 @@
           <h2 id="section-inherited">Methods (inherited)</h2>
           <% @presenter.inherited_methods_grouped.each do |ancestor_fqn, methods| %>
             <details class="method-group" open>
+              <%# Plain text, no link — a link inside a <summary> nests two
+                  interactive controls, which keyboard/AT users can't
+                  operate reliably. The ancestor is linked from the
+                  Includes/Inherits sections and each method's own page. %>
               <summary>
-                From <%= link_to ancestor_fqn, entity_path(version: version_url_segment(@package_version), path: fqn_to_path(ancestor_fqn)) %>
+                From <code class="method-group__ancestor"><%= ancestor_fqn %></code>
                 <span class="method-group__count">(<%= methods.size %>)</span>
               </summary>
               <ul class="method-list">
@@ -180,9 +193,12 @@
       <% end %>
     </div>
 
-    <aside class="entity__outline" data-controller="outline">
+    <%# div, not <aside>: a complementary landmark may not nest inside
+        <main>, and the outline partial already provides its own labelled
+        <nav> landmark. %>
+    <div class="entity__outline" data-controller="outline">
       <%= render "entities/outline", presenter: @presenter %>
       <%= render "shared/support_and_license" %>
-    </aside>
+    </div>
   </div>
 </article>

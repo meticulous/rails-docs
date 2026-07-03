@@ -23,6 +23,15 @@ export default class extends Controller {
   handle(event) {
     if (this.isTypingInField(event.target)) return
 
+    // WCAG 2.1.4: single-character shortcuts must be disableable —
+    // speech-input users can trigger them with dictated words. The
+    // shortcuts-help dialog hosts the opt-out checkbox.
+    if (this.shortcutsDisabled) {
+      // "?" still opens the help dialog so the setting stays reachable.
+      if (event.key === "?") { event.preventDefault(); this.openHelp() }
+      return
+    }
+
     if (event.key === "/") {
       event.preventDefault()
       this.focusSearch()
@@ -30,6 +39,23 @@ export default class extends Controller {
       event.preventDefault()
       this.openHelp()
     }
+  }
+
+  get shortcutsDisabled() {
+    try { return localStorage.getItem("keyboard-shortcuts") === "off" } catch { return false }
+  }
+
+  // Bound from the checkbox in the shortcuts-help dialog.
+  toggleShortcuts(event) {
+    try {
+      localStorage.setItem("keyboard-shortcuts", event.target.checked ? "on" : "off")
+    } catch {}
+  }
+
+  // Sync the checkbox with the stored preference when the dialog opens.
+  syncShortcutsCheckbox() {
+    const box = document.querySelector(".shortcuts-help input[type=checkbox]")
+    if (box) box.checked = !this.shortcutsDisabled
   }
 
   focusSearch() {
@@ -42,6 +68,7 @@ export default class extends Controller {
   openHelp() {
     const dialog = document.querySelector(".shortcuts-help")
     if (!dialog || dialog.open) return
+    this.syncShortcutsCheckbox()
     dialog.showModal()
   }
 
@@ -61,6 +88,8 @@ export default class extends Controller {
 
   isTypingInField(target) {
     const tag = target.tagName
-    return tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable
+    // SELECT included: "/" while a version select has focus should feed
+    // its native type-ahead, not steal focus to the search box.
+    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable
   }
 }

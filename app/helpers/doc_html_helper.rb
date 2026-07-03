@@ -28,7 +28,20 @@ module DocHtmlHelper
   def sanitize_doc_html(html)
     return nil if html.blank?
     expanded = html.include?("{{") ? expand_cross_source_tokens(expand_guide_tokens(html)) : html
-    sanitize expanded, tags: DOC_HTML_TAGS, attributes: DOC_HTML_ATTRIBUTES
+    sanitize demote_doc_headings(expanded), tags: DOC_HTML_TAGS, attributes: DOC_HTML_ATTRIBUTES
+  end
+
+  # RDoc's `= Heading` emits <h1>, so a doc comment can put extra h1s
+  # (and inverted heading orders) under the page's own h1. Demote every
+  # doc heading one level so the comment's outline nests beneath the
+  # page structure instead of competing with it.
+  def demote_doc_headings(html)
+    return html unless html.match?(/<h[1-5]\b/i)
+    fragment = Nokogiri::HTML.fragment(html)
+    fragment.css("h5, h4, h3, h2, h1").each do |heading|
+      heading.name = "h#{heading.name[1].to_i + 1}"
+    end
+    fragment.to_html
   end
 
   # Expand `{{guide:slug}}`, `{{guide:slug#anchor}}`, and

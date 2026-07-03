@@ -54,18 +54,24 @@
       <% if @presenter.method_params.any? %>
         <section class="entity__params" id="section-params">
           <h2>Parameters</h2>
+          <%# Each param is a <div>-wrapped dt/dd group — HTML licenses
+              div inside dl, and it keeps the list valid when a param has
+              no doc (a bare run of <dt>s with no <dd> is not a
+              properly-ordered definition list). %>
           <dl class="param-list">
             <% @presenter.method_params.each do |param| %>
-              <dt>
-                <code><%= param.name %></code>
-                <span class="param-list__kind"><%= param.kind %></span>
-                <% if param.default_expr.present? %>
-                  <span class="param-list__default">= <%= param.default_expr %></span>
+              <div class="param-list__param">
+                <dt>
+                  <code><%= param.name %></code>
+                  <span class="param-list__kind"><%= param.kind %></span>
+                  <% if param.default_expr.present? %>
+                    <span class="param-list__default">= <%= param.default_expr %></span>
+                  <% end %>
+                </dt>
+                <% if param.doc.present? %>
+                  <dd><%= param.doc %></dd>
                 <% end %>
-              </dt>
-              <% if param.doc.present? %>
-                <dd><%= param.doc %></dd>
-              <% end %>
+              </div>
             <% end %>
           </dl>
         </section>
@@ -101,9 +107,12 @@
       <% end %>
     </div>
 
-    <aside class="entity__outline" data-controller="outline">
+    <%# div, not <aside>: a complementary landmark may not nest inside
+        <main>, and the outline partial already provides its own labelled
+        <nav> landmark. %>
+    <div class="entity__outline" data-controller="outline">
       <%= render "entities/method_outline", presenter: @presenter %>
       <%= render "shared/support_and_license" %>
-    </aside>
+    </div>
   </div>
 </article>

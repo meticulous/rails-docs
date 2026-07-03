@@ -74,13 +74,15 @@
         <%= yield :header %>
         <%# Default to the "system" glyph server-side so the button is
             never blank before Stimulus connects; theme_controller#connect
-            overwrites it from the saved preference on load. %>
+            overwrites glyph + aria-label from the saved preference on
+            load. No aria-pressed: this cycles three states (light, dark,
+            system), so a binary pressed state would misreport two of
+            them — the label carries the current state instead. %>
         <button type="button"
                 class="theme-toggle"
                 data-action="click->theme#toggle"
                 data-theme-target="button"
-                aria-pressed="false"
-                aria-label="Toggle dark mode">◑</button>
+                aria-label="Theme: system. Activate to change.">◑</button>
       </div>
     </header>
 
@@ -91,6 +93,17 @@
           in the initial HTML — content pages stay content-first for
           crawlers and no-JS clients. %>
       <% if nav_package_version %>
+        <%# The toggle precedes the frame in the DOM so keyboard users
+            reach the control before the ~1,500-link region it collapses
+            (its position is fixed, so visual placement is unaffected).
+            aria-expanded is set by the controller on connect — the
+            initial state differs between desktop (shown) and mobile
+            (hidden), so a hardcoded value would misreport one of them. %>
+        <button type="button"
+                class="module-nav-toggle"
+                data-controller="module-nav-toggle"
+                data-action="click->module-nav-toggle#toggle"
+                aria-label="Toggle module navigation">☰</button>
         <%# target="_top" so clicking a nav link drives a full-page
             navigation, not a navigation *within* this frame (which would
             try to load the target page's empty nav stub and show
@@ -103,12 +116,6 @@
                             loading: "lazy",
                             target: "_top",
                             data: { turbo_permanent: true, controller: "nav-ecosystem" } %>
-        <button type="button"
-                class="module-nav-toggle"
-                data-controller="module-nav-toggle"
-                data-action="click->module-nav-toggle#toggle"
-                aria-label="Toggle module navigation"
-                aria-expanded="true">☰</button>
       <% end %>
 
       <main class="site-main" id="main-content" tabindex="-1" data-controller="code-copy">
@@ -123,5 +130,11 @@
 
     <%= render "shared/search_palette" %>
     <%= render "shared/shortcuts_help" %>
+
+    <%# Shared polite announcer. Turbo Drive swaps the <body> without
+        telling assistive tech a navigation happened; application.js
+        announces the new page title here on turbo:load. Copy buttons
+        and other widgets reuse it for transient confirmations. %>
+    <p id="live-status" class="visually-hidden" role="status"></p>
   </body>
 </html>

@@ -20,7 +20,7 @@ import { Controller } from "@hotwired/stimulus"
 // We re-decorate on turbo:load so the highlight follows the user as
 // they click through the (persistent) nav.
 export default class extends Controller {
-  static targets = ["filter", "list", "empty", "group", "ecosystem"]
+  static targets = ["filter", "list", "empty", "group", "ecosystem", "status"]
 
   connect() {
     this.boundRefresh = this.refreshActive.bind(this)
@@ -189,6 +189,12 @@ export default class extends Controller {
       this.markActiveTrail()
     }
     this.emptyTarget.hidden = anyVisible || !filtering
+
+    // Announce the outcome — the tree filtering itself is silent.
+    if (this.hasStatusTarget) {
+      this.statusTarget.textContent = !filtering ? ""
+        : anyVisible ? `Filtered to matches for ${query}` : "No matches"
+    }
   }
 
   // Post-order: a node is visible if it matches or any descendant does.

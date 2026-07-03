@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { announce } from "announcer"
 
 // Adds a GitHub-style "#" affordance next to every h1–h4 with an id.
 // Hover reveals it; clicking copies the heading's permalink to the
@@ -10,7 +11,9 @@ export default class extends Controller {
       const link = document.createElement("a")
       link.href = `#${heading.id}`
       link.className = "anchor-link"
-      link.setAttribute("aria-label", "Copy link to this section")
+      // Short label: it's appended inside the heading, so it becomes
+      // part of every heading's accessible name — keep the noise down.
+      link.setAttribute("aria-label", "Copy link")
       link.textContent = "#"
       link.addEventListener("click", this.copy.bind(this))
       heading.appendChild(link)
@@ -25,5 +28,7 @@ export default class extends Controller {
     history.replaceState(null, "", `#${id}`)
     event.currentTarget.classList.add("anchor-link--copied")
     setTimeout(() => event.currentTarget.classList.remove("anchor-link--copied"), 1200)
+    // The " copied" affordance is CSS-generated — announce it for real.
+    announce("Link copied to clipboard")
   }
 }

@@ -9,7 +9,7 @@
         <dd>Focus search</dd>
       </div>
       <div class="shortcuts-help__row">
-        <dt><kbd>⌘K</kbd> / <kbd>Ctrl-K</kbd></dt>
+        <dt><kbd aria-label="Command K">⌘K</kbd> / <kbd>Ctrl-K</kbd></dt>
         <dd>Command palette</dd>
       </div>
       <div class="shortcuts-help__row">
@@ -21,5 +21,13 @@
         <dd>Close</dd>
       </div>
     </dl>
+    <%# WCAG 2.1.4 opt-out for the single-character shortcuts ("/", "?").
+        ⌘K/Ctrl-K are modified combos and stay on; "?" keeps opening this
+        dialog so the setting is always reachable. %>
+    <label class="shortcuts-help__setting">
+      <input type="checkbox" checked data-action="change->keyboard#toggleShortcuts">
+      Enable single-key shortcuts (<kbd>/</kbd> and <kbd>?</kbd>)
+    </label>
+    <button type="button" class="shortcuts-help__close" data-action="click->keyboard#closeHelp">Close</button>
   </div>
 </dialog>

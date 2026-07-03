@@ -1,6 +1,8 @@
 <% if @available_versions && @available_versions.size > 1 %>
   <div class="version-switcher">
-    <label for="version-switcher-select">Version:</label>
+    <%# The visually-hidden advisory satisfies WCAG 3.2.2: this select
+        navigates on change, which is unexpected without warning. %>
+    <label for="version-switcher-select">Version:<span class="visually-hidden"> (choosing a version navigates to that release)</span></label>
     <select id="version-switcher-select" data-controller="version-switcher" data-action="change->version-switcher#switch">
       <% @available_versions.each do |pv| %>
         <option value="<%= version_url_segment(pv) %>" <%= "selected" if pv.id == current.id %>>

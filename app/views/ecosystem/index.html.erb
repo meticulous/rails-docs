@@ -11,10 +11,12 @@
       <% @entries.each do |entry| %>
         <% source = entry[:source]; latest = entry[:latest] %>
         <article class="framework-card">
-          <h3>
+          <%# h2, not h3 — there's no h2 between these and the page h1,
+              and heading levels must not skip. %>
+          <h2>
             <%= link_to source.display_name,
                         version_path(source_slug: source.slug, version: version_url_segment(latest)) %>
-          </h3>
+          </h2>
           <% if source.description.present? %>
             <p class="muted"><%= source.description %></p>
           <% end %>

@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // /search/suggest, arrow-key navigation, Enter to open the highlighted
 // result, Escape to dismiss.
 export default class extends Controller {
-  static targets = ["dialog", "input", "results", "empty"]
+  static targets = ["dialog", "input", "results", "empty", "status"]
 
   connect() {
     this.activeIndex = -1
@@ -19,6 +19,9 @@ export default class extends Controller {
     this.resultsTarget.replaceChildren()
     this.emptyTarget.hidden = false
     this.activeIndex = -1
+    this.inputTarget.setAttribute("aria-expanded", "false")
+    this.inputTarget.removeAttribute("aria-activedescendant")
+    this.statusTarget.textContent = ""
     requestAnimationFrame(() => this.inputTarget.focus())
   }
 
@@ -58,11 +61,20 @@ export default class extends Controller {
     this.activeIndex = -1
     this.emptyTarget.hidden = results.length > 0
     this.resultsTarget.replaceChildren(...results.map((r, i) => this.buildResult(r, i)))
+    // Combobox state + a polite count announcement — the listbox
+    // re-rendering is invisible to screen readers on its own.
+    this.inputTarget.setAttribute("aria-expanded", results.length > 0 ? "true" : "false")
+    this.inputTarget.removeAttribute("aria-activedescendant")
+    this.statusTarget.textContent =
+      results.length === 0 ? "No results" : `${results.length} results`
   }
 
   buildResult(result, index) {
     const li = document.createElement("li")
     li.className = "palette__item"
+    li.id = `palette-option-${index}`
+    li.setAttribute("role", "option")
+    li.setAttribute("aria-selected", "false")
     li.dataset.action = "click->search-palette#go mouseenter->search-palette#highlight"
     li.dataset.url = result.url
     li.dataset.index = index
@@ -156,8 +168,15 @@ export default class extends Controller {
 
   setActive(idx) {
     const items = this.resultsTarget.querySelectorAll(".palette__item")
-    items.forEach((el, i) => el.classList.toggle("palette__item--active", i === idx))
+    items.forEach((el, i) => {
+      el.classList.toggle("palette__item--active", i === idx)
+      el.setAttribute("aria-selected", i === idx ? "true" : "false")
+    })
     this.activeIndex = idx
+    // aria-activedescendant keeps DOM focus in the input while telling
+    // assistive tech which option the arrow keys have reached.
+    if (items[idx]) this.inputTarget.setAttribute("aria-activedescendant", items[idx].id)
+    else this.inputTarget.removeAttribute("aria-activedescendant")
     items[idx]?.scrollIntoView({ block: "nearest" })
   }
 

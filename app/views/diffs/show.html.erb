@@ -10,7 +10,7 @@
 
     <div class="diff__switch" data-controller="diff-switcher">
       <span class="diff__switch-group">
-        <label class="diff__switch-label" for="diff-base-version">Base</label>
+        <label class="diff__switch-label" for="diff-base-version">Base<span class="visually-hidden"> (choosing a version navigates to that comparison)</span></label>
         <select id="diff-base-version" data-action="change->diff-switcher#go">
           <% @diff.available_versions.reject { |v| v.id == @to_version.id }.each do |pv| %>
             <option value="<%= diff_path(version: version_url_segment(pv),
@@ -24,7 +24,7 @@
       </span>
       <span class="diff__switch-arrow" aria-hidden="true">→</span>
       <span class="diff__switch-group">
-        <label class="diff__switch-label" for="diff-compare-version">Compare</label>
+        <label class="diff__switch-label" for="diff-compare-version">Compare<span class="visually-hidden"> (choosing a version navigates to that comparison)</span></label>
         <select id="diff-compare-version" data-action="change->diff-switcher#go">
           <% @diff.available_versions.reject { |v| v.id == @from_version.id }.each do |pv| %>
             <option value="<%= diff_path(version: version_url_segment(@from_version),

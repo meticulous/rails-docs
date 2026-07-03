@@ -153,10 +153,16 @@
   --nav-zebra: rgba(0, 0, 0, 0.03);
   --nav-active-bg: var(--rf-brand);
   --nav-active-border: var(--rf-brand-darker);
+
+  /* Tell the UA which scheme it's rendering so native form controls
+   * (selects, inputs, scrollbars) match the theme — without this they
+   * keep light-scheme chrome and black text on our dark backgrounds. */
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --color-text: #E5E5E5;
     --color-muted: var(--gray-500);
     --color-link: var(--rf-brand-lightest);
@@ -178,6 +184,7 @@
 }
 
 [data-theme="light"] {
+  color-scheme: light;
   --color-text: var(--gray-900);
   --color-muted: var(--gray-600);
   --color-link: var(--rf-brand);
@@ -198,6 +205,7 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --color-text: #E5E5E5;
   --color-muted: var(--gray-500);
   --color-link: var(--rf-brand-lightest);
@@ -418,7 +426,7 @@
 .palette__input:focus {
   outline: none;
   border-color: var(--color-link);
-  box-shadow: 0 0 0 2px rgba(200, 20, 24, 0.15);
+  box-shadow: 0 0 0 2px var(--color-link);
 }
 
 .palette__results {
@@ -528,6 +536,49 @@
   font-size: 0.9rem;
 }
 
+/* Shortcut opt-out (WCAG 2.1.4) + explicit close button. */
+.shortcuts-help__setting {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.shortcuts-help__setting input {
+  margin: 0;
+  accent-color: var(--rf-brand);
+}
+
+.shortcuts-help__setting kbd {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0 0.4em;
+}
+
+.shortcuts-help__close {
+  margin-top: 1rem;
+  padding: 0.35rem 1rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg-soft);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.shortcuts-help__close:hover {
+  border-color: var(--color-link);
+  color: var(--color-link);
+}
+
 .theme-toggle {
   background: transparent;
   border: 1px solid var(--color-border);
@@ -609,7 +660,7 @@ h2 {
   line-height: 1.1;
 }
 
-h2 a, h2 a:link, h2 a:visited { color: var(--rf-brand); }
+h2 a, h2 a:link, h2 a:visited { color: var(--color-link); }
 
 h2 code {
   font-size: 2rem;
@@ -659,6 +710,20 @@ a {
   color: var(--color-link);
   text-decoration: none;
 }
+
+/* Links inside running text must be distinguishable by more than hue
+ * (WCAG 1.4.1 / axe link-in-text-block) — underline them. Standalone
+ * link lists, nav trees, chips and headings aren't in running text and
+ * stay clean. */
+p a,
+.sidebar-block a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Availability chips sit inside a <p> but are distinguished by their
+ * border + background, not color alone — keep them unadorned. */
+.availability__row a { text-decoration: none; }
 
 a:hover {
   color: var(--color-link-hover);
@@ -830,7 +895,7 @@ body.module-nav--collapsed .module-nav { display: none; }
 .module-nav__filter:focus {
   outline: none;
   border-color: var(--color-link);
-  box-shadow: 0 0 0 2px rgba(200, 20, 24, 0.15);
+  box-shadow: 0 0 0 2px var(--color-link);
 }
 
 /* "Show ecosystem gems" toggle beneath the filter (rails nav only). */
@@ -969,6 +1034,7 @@ body.module-nav--collapsed .module-nav { display: none; }
   border: 0;
   background: none;
   cursor: pointer;
+  position: relative;
   color: var(--color-muted);
   font-size: 0.7rem;
   line-height: 1;
@@ -977,6 +1043,15 @@ body.module-nav--collapsed .module-nav { display: none; }
 
 .module-nav__toggle::before { content: "\25B8"; } /* ▸ */
 .module-nav__toggle[aria-expanded="true"]::before { content: "\25BE"; } /* ▾ */
+
+/* The visual glyph is 16×19px — well under the 24px touch-target
+ * floor. Grow the hit area with an invisible overlay instead of the
+ * element itself so the tree's indent math and row density stay put. */
+.module-nav__toggle::after {
+  content: "";
+  position: absolute;
+  inset: -4px -6px;
+}
 
 .module-nav__link {
   display: block;
@@ -1086,12 +1161,13 @@ body.module-nav--collapsed .module-nav { display: none; }
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .home__search input[type="text"]:focus {
   outline: none;
   border-color: var(--color-link);
-  box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.15);
+  box-shadow: 0 0 0 2px var(--color-link);
 }
 
 .home__search input[type="submit"] {
@@ -1100,6 +1176,7 @@ body.module-nav--collapsed .module-nav { display: none; }
   font-size: 0.95rem;
   border: 1px solid var(--color-border);
   background: var(--color-bg-soft);
+  color: var(--color-text);
   border-radius: var(--radius);
   cursor: pointer;
 }
@@ -1124,6 +1201,7 @@ body.module-nav--collapsed .module-nav { display: none; }
   border-radius: var(--radius);
 }
 
+.framework-card h2,
 .framework-card h3 {
   margin: 0 0 0.35rem;
   font-size: 1.05rem;
@@ -1303,18 +1381,19 @@ h4:hover > .anchor-link,
   margin-top: 0.15rem;
 }
 
-.method-group summary h2,
-.method-group summary h3 {
-  display: inline;
-  margin: 0;
-  font-size: 1rem;
-}
-
 .method-group .method-list {
   padding: 0 0.75rem 0.75rem;
 }
 
 .entity__private-methods { margin-top: 1.5rem; }
+
+/* Ancestor name in an inherited-methods group summary — plain text (a
+ * link inside a summary nests interactive controls), styled like the
+ * entity links around it. */
+.method-group__ancestor {
+  background: transparent;
+  padding: 0;
+}
 
 /* Breadcrumbs */
 .breadcrumbs {
@@ -1633,6 +1712,7 @@ pre.highlight:focus-within .code-copy,
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .version-switcher--single {
@@ -1795,6 +1875,7 @@ pre.highlight:focus-within .code-copy,
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-bg);
+  color: var(--color-text);   /* controls don't inherit text color */
 }
 
 @media (max-width: 40rem) {
@@ -1814,7 +1895,7 @@ pre.highlight:focus-within .code-copy,
 .site-header__search input:focus {
   outline: none;
   border-color: var(--color-link);
-  box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.15);
+  box-shadow: 0 0 0 2px var(--color-link);
 }
 
 /* Search results page */
@@ -1842,6 +1923,7 @@ pre.highlight:focus-within .code-copy,
   font-size: 1rem;
   border: 1px solid var(--color-border);
   background: var(--color-bg-soft);
+  color: var(--color-text);
   border-radius: var(--radius);
   cursor: pointer;
 }

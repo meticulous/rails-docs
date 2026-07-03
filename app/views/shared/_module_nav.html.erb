@@ -16,9 +16,14 @@
 %>
 <% ecosystem_versions = local_assigns.fetch(:ecosystem_versions, []) %>
 <% rails_nav = pv.source.slug == "rails" %>
-<aside class="module-nav"
-       data-controller="module-nav"
-       data-module-nav-version-value="<%= version_url_segment(pv) %>">
+<%# <nav>, not <aside>: this is the site's primary API navigation, and
+    an unlabeled complementary landmark hides that from the landmark
+    list. CSS and the Stimulus controller are class/data-based, so the
+    element swap changes nothing else. %>
+<nav class="module-nav"
+     aria-label="Modules and classes"
+     data-controller="module-nav"
+     data-module-nav-version-value="<%= version_url_segment(pv) %>">
   <div class="module-nav__header">
     <p class="module-nav__title">
       <%= pv.source.display_name %>
@@ -127,4 +132,8 @@
   <p class="module-nav__empty muted" data-module-nav-target="empty" hidden>
     No matches.
   </p>
-</aside>
+  <%# Live feedback for the filter — rows hiding/showing is silent for
+      screen readers, and the "No matches." p toggling hidden doesn't
+      announce reliably. Always present so role=status fires. %>
+  <p class="visually-hidden" role="status" data-module-nav-target="status"></p>
+</nav>

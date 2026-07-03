@@ -13,11 +13,11 @@
       <% end %>
     </p>
     <p class="availability__row availability__row--compare">
-      <label class="availability__label" for="diff-switcher-<%= presenter.identity.id %>">Compare with:</label>
+      <label class="availability__label" for="diff-switcher-<%= presenter.identity.id %>">Compare with:<span class="visually-hidden"> (choosing a version navigates to the comparison)</span></label>
       <select id="diff-switcher-<%= presenter.identity.id %>"
               data-controller="diff-switcher"
               data-action="change->diff-switcher#go">
-        <option value="">…</option>
+        <option value="">Choose a version</option>
         <% presenter.available_versions.reject { |v| v.id == presenter.package_version.id }.each do |pv| %>
           <option value="<%= diff_path(version: version_url_segment(presenter.package_version),
                                        entity_path: entity_url_path(presenter.identity),

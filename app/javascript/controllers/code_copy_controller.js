@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { announce } from "announcer"
 
 // Decorates every Rouge-highlighted code block (pre.highlight — method
 // signatures, source listings, doc examples; see
@@ -34,7 +35,9 @@ export default class extends Controller {
       const button = document.createElement("button")
       button.type = "button"
       button.className = "code-copy"
-      button.setAttribute("aria-label", "Copy code to clipboard")
+      // No aria-label: it would freeze the accessible name at "Copy…"
+      // while the visible text flips to "Copied" — let the text node be
+      // the name so both stay in sync.
       button.textContent = "Copy"
       button.addEventListener("click", this.copy.bind(this))
       pre.appendChild(button)
@@ -51,6 +54,7 @@ export default class extends Controller {
     navigator.clipboard.writeText(code).then(() => {
       button.textContent = "Copied"
       button.classList.add("code-copy--copied")
+      announce("Code copied to clipboard")
       clearTimeout(button._resetTimer)
       button._resetTimer = setTimeout(() => {
         button.textContent = "Copy"
