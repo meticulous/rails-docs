@@ -157,6 +157,11 @@ class CrossrefLinker
     original = node.text
     return unless original.match?(TOKEN_SCANNER)
 
+    # References in plain prose get a <code> wrapper (matching how RDoc
+    # renders crossrefs); references already inside <code> keep their
+    # existing wrapper rather than nesting a second one.
+    @in_code = node.ancestors.any? { |a| a.name == "code" }
+
     linked = false
     replacement = +""
     last = 0
@@ -204,11 +209,15 @@ class CrossrefLinker
     id && anchor(id, tok)
   end
 
-  # Build the <a> (with its optional inner <code> wrapper preserved by the
-  # caller — here we just wrap the visible token text). Text is HTML-escaped.
+  # Build the <a>. Both interpolations are escaped and must stay that
+  # way. Prose-context references get a <code> label so they read as
+  # code (like RDoc's own crossref output); inside an existing <code>
+  # the bare label avoids nesting code-in-code.
   def anchor(identity, label)
     href = path_for(identity)
-    %(<a href="#{ERB::Util.h(href)}">#{ERB::Util.h(label)}</a>)
+    text = ERB::Util.h(label)
+    text = "<code>#{text}</code>" unless @in_code
+    %(<a href="#{ERB::Util.h(href)}">#{text}</a>)
   end
 
   # Splits "ActiveRecord::Base#save" into ["ActiveRecord::Base", "save"];

@@ -54,6 +54,102 @@ class SearchTest < ActionDispatch::IntegrationTest
                  "exact-name match should rank first"
   end
 
+  test "a name match outranks an entity that only mentions the term in its doc body" do
+    # `#create!` is literally named for the query; `#create_table` merely
+    # says "create" in its prose. Under a plain ts_rank the richly-documented
+    # create_table can beat the bare create! — the body-only demotion fixes it.
+    named = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::Persistence::ClassMethods#create!",
+      kind: "method", name: "create!", scope: "instance",
+      parent_fqn: "ActiveRecord::Persistence::ClassMethods", framework: frameworks(:activerecord)
+    )
+    named_ev = EntityVersion.create!(
+      entity_identity: named, package_version: package_versions(:v8_1_3),
+      doc_markdown: "Creates an object and saves it."
+    )
+    body_only = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::ConnectionAdapters::SchemaStatements#create_table",
+      kind: "method", name: "create_table", scope: "instance",
+      parent_fqn: "ActiveRecord::ConnectionAdapters::SchemaStatements", framework: frameworks(:activerecord)
+    )
+    body_only_ev = EntityVersion.create!(
+      entity_identity: body_only, package_version: package_versions(:v8_1_3),
+      doc_markdown: "Create a new table. You can pass options to create the table however you like."
+    )
+    populate_search_vector!(named_ev)
+    populate_search_vector!(body_only_ev)
+
+    response = SearchAdapter.current.search(query: "create!", limit: 5)
+    assert_equal "ActiveRecord::Persistence::ClassMethods#create!",
+                 response.results.first.entity_version.entity_identity.fqn,
+                 "the entity named for the query must beat a doc-body-only mention"
+  end
+
+  test "a documented entity outranks an identically-named empty stub from another gem" do
+    # Ecosystem gems reopen Rails classes with no docs (jbuilder reopens
+    # ActionController). Both exact-match the name, so without the
+    # documented-entity boost the undocumented stub can win the tie and
+    # bury the canonical, documented Rails definition.
+    package_versions(:turbo_rails_v2_14_1).update!(ingest_status: "ok", ingested_at: Time.current)
+
+    documented = sources(:rails).entity_identities.create!(
+      fqn: "ActionCable", kind: "module", name: "ActionCable"
+    )
+    documented_ev = EntityVersion.create!(
+      entity_identity: documented, package_version: package_versions(:v8_1_3),
+      doc_markdown: "Action Cable integrates WebSockets with the rest of your Rails application."
+    )
+    stub = sources(:turbo_rails).entity_identities.create!(
+      fqn: "ActionCable", kind: "module", name: "ActionCable"
+    )
+    stub_ev = EntityVersion.create!(
+      entity_identity: stub, package_version: package_versions(:turbo_rails_v2_14_1)
+    )
+    populate_search_vector!(documented_ev)
+    populate_search_vector!(stub_ev)
+
+    response = SearchAdapter.current.search(query: "actioncable", limit: 5)
+    first = response.results.first.entity_version
+    assert_equal "ActionCable", first.entity_identity.fqn
+    assert_equal "rails", first.package_version.source.slug,
+                 "the documented Rails definition must outrank the empty cross-gem stub"
+  end
+
+  test "a private internal is demoted below an equally-matching public entity" do
+    # Two entities matching the query identically (same name token, same
+    # body) — visibility is the ONLY differentiator. Private internals kept
+    # surfacing in the top 10 on strong body matches; the firmer private
+    # demotion must keep them below the public API when all else is equal.
+    body = "Specifies a persist association with another class."
+    public_entity = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::Associations::ClassMethods#persist",
+      kind: "method", name: "persist", scope: "instance",
+      parent_fqn: "ActiveRecord::Associations::ClassMethods", framework: frameworks(:activerecord)
+    )
+    public_ev = EntityVersion.create!(
+      entity_identity: public_entity, package_version: package_versions(:v8_1_3),
+      visibility: "public", doc_markdown: body
+    )
+    private_entity = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::AutosaveAssociation#persist",
+      kind: "method", name: "persist", scope: "instance",
+      parent_fqn: "ActiveRecord::AutosaveAssociation", framework: frameworks(:activerecord)
+    )
+    private_ev = EntityVersion.create!(
+      entity_identity: private_entity, package_version: package_versions(:v8_1_3),
+      visibility: "private", doc_markdown: body
+    )
+    populate_search_vector!(public_ev)
+    populate_search_vector!(private_ev)
+
+    response = SearchAdapter.current.search(query: "persist association", limit: 5)
+    visibilities = response.results
+      .select { |r| r.entity_version.entity_identity.name == "persist" }
+      .map { |r| r.entity_version.visibility }
+    assert_equal %w[public private], visibilities,
+                 "the public entity must rank above the equally-matching private one"
+  end
+
   test "non-matching query returns no results" do
     get search_path, params: { q: "asdfqwerzxcvnoresult" }
     assert_response :success

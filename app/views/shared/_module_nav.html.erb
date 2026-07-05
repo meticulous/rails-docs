@@ -129,6 +129,13 @@
     <% end %>
   </div>
 
+  <%# Method/constant hits for the filter, fetched from /search/suggest
+      as you type — the tree above only carries classes and modules. %>
+  <div class="module-nav__methods" data-module-nav-target="methods" hidden>
+    <p class="module-nav__methods-title">Methods</p>
+    <ul data-module-nav-target="methodList"></ul>
+  </div>
+
   <p class="module-nav__empty muted" data-module-nav-target="empty" hidden>
     No matches.
   </p>

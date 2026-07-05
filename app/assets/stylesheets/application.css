@@ -448,14 +448,21 @@
   border-radius: 4px;
   cursor: pointer;
   display: grid;
-  grid-template-columns: 1fr auto;
+  /* Kind badge leads (fixed 5.5rem gutter) so it never gets pushed out
+   * of view by a long FQN; the name column wraps instead. */
+  grid-template-columns: 5.5rem minmax(0, 1fr);
   gap: 0 0.5rem;
 }
 
 .palette__item--active,
 .palette__item:hover { background: var(--color-bg-soft); }
 
-.palette__fqn { background: transparent; padding: 0; }
+.palette__fqn {
+  background: transparent;
+  padding: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;   /* long FQNs wrap instead of clipping */
+}
 
 /* Containing path (e.g. "ActiveModel::SecurePassword::ClassMethods#") is
  * de-emphasized so the eye lands on the method/class name itself. */
@@ -469,14 +476,24 @@
   font-size: 0.7rem;
   text-transform: uppercase;
   color: var(--color-muted);
-  align-self: center;
+  align-self: start;
+  padding-top: 0.25em;
 }
 
 .palette__summary {
-  grid-column: 1 / -1;
+  grid-column: 2;
   margin: 0.25rem 0 0;
   font-size: 0.85rem;
   color: var(--color-muted);
+}
+
+/* "See all N results" footer link into the full search page. */
+.palette__all {
+  display: block;
+  margin: 0.25rem 0.75rem 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.85rem;
 }
 
 .palette__empty,
@@ -768,13 +785,10 @@ pre code {
   gap: 1.5rem;
 }
 
-/* Narrow viewports: brand + search + version switcher + theme toggle can't
- * all fit on one row without the flex items being squeezed past usable
- * size (the search input in particular collapses toward zero width since
- * flex items shrink to min-content by default). Wrap onto two rows instead:
- * brand and theme toggle (plus version switcher, if present) stay on row
- * one, and the search input gets its own full-width row where it can keep
- * a real tap target. */
+/* Narrow viewports: brand + search button + version switcher + theme
+ * toggle can't all fit on one row without the flex items being squeezed
+ * past usable size. Wrap onto two rows; the search button shrinks to
+ * its content (its ⌘K hint hides — see .header-search-button). */
 @media (max-width: 40rem) {
   .site-header__inner {
     flex-wrap: wrap;
@@ -784,11 +798,6 @@ pre code {
   .site-header__brand { flex: 1 1 auto; }
 
   .version-switcher { margin-left: 0; }
-
-  /* The search form's own wrap overrides live with its base rule (see
-   * "Search box in site header" below) — the base rule appears later in
-   * the file, and a same-specificity override placed here would lose the
-   * source-order tiebreak for the properties both declare. */
 }
 
 /* Logo + "API Guides" wordmark, mirroring the rails/guides header
@@ -843,6 +852,20 @@ pre code {
   .site-main,
   .site-header__inner { max-width: 84rem; }
   .entity__layout { grid-template-columns: minmax(0, 1fr) 16rem; gap: 3rem; }
+}
+
+/* Ultra-wide (2560px-class): grow the shell further, bump the reading
+ * size a notch, and cap prose at a book-ish measure — code blocks,
+ * method grids and namespace lists still use the full column. This is
+ * the Stripe/Tailwind-docs pattern: panels spread, prose doesn't. */
+@media (min-width: 110rem) {
+  .site-main,
+  .site-header__inner { max-width: 100rem; }
+  .entity__layout { grid-template-columns: minmax(0, 1fr) 18rem; gap: 4rem; }
+  .entity__doc {
+    font-size: 1.0625rem;
+    max-width: 85ch;
+  }
 }
 
 body.module-nav--collapsed .site-main {
@@ -926,6 +949,41 @@ body.module-nav--collapsed .module-nav { display: none; }
   overflow-y: auto;
   padding: 0.25rem 0;
 }
+
+/* Method/constant/attribute hits for the sidebar filter — the tree only
+ * holds classes and modules, so as-you-type method results come from
+ * the suggest endpoint and render in their own group beneath it. */
+.module-nav__methods {
+  border-top: 1px solid var(--color-border);
+  padding: 0.5rem 0;
+}
+
+.module-nav__methods-title {
+  margin: 0 0.75rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+}
+
+.module-nav__methods ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.module-nav__methods a {
+  display: block;
+  padding: 0.15rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.module-nav__methods a:hover { color: var(--color-link); }
 
 /* Each framework is an expandable group. Closed by default unless
  * the controller marks it active; the framework matching the current
@@ -1125,6 +1183,10 @@ body.module-nav--collapsed .module-nav { display: none; }
   background: var(--color-bg);
   color: var(--color-text);
   font-size: 1rem;
+  /* line-height 1 + zero padding so the ☰ glyph actually centers in
+   * the circle — the inherited body line-height floats it high. */
+  line-height: 1;
+  padding: 0;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1721,6 +1783,14 @@ pre.highlight:focus-within .code-copy,
   color: var(--color-text);
 }
 
+/* Native dropdown popups follow color-scheme, but option text can still
+ * render dim against the popup background in dark mode — pin both to
+ * the theme palette. */
+select option {
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
 .version-switcher--single {
   font-family: var(--font-mono);
   background: var(--color-code-bg);
@@ -1865,43 +1935,47 @@ pre.highlight:focus-within .code-copy,
   }
 }
 
-/* Search box in site header */
-.site-header__search {
+/* Header search affordance — a button styled like an input that opens
+ * the ⌘K palette. One search UI instead of three: the palette (and the
+ * sidebar filter) do the searching; this is just the front door. */
+.header-search-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   flex: 1;
   max-width: 22rem;
-  margin: 0;
-}
-
-.site-header__search input {
-  width: 100%;
-  min-width: 0;
+  padding: 0.4rem 0.75rem;
   font-family: inherit;
   font-size: 0.95rem;
-  padding: 0.4rem 0.75rem;
+  color: var(--color-muted);
+  background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-bg);
-  color: var(--color-text);   /* controls don't inherit text color */
+  cursor: pointer;
+  text-align: left;
+}
+
+.header-search-button:hover {
+  border-color: var(--color-link);
+  color: var(--color-link);
+}
+
+.header-search-button kbd {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0 0.4em;
 }
 
 @media (max-width: 40rem) {
-  /* Wrap to a full-width row of its own beneath brand/version/theme —
-   * on one shared row the input shrinks toward zero width. */
-  .site-header__search {
-    order: 3;
-    flex: 1 1 100%;
-    max-width: none;
+  .header-search-button {
+    flex: 0 0 auto;
+    min-height: 2.75rem;   /* tap target */
   }
-
-  .site-header__search input {
-    min-height: 2.75rem;   /* keep a reasonable tap target on mobile */
-  }
-}
-
-.site-header__search input:focus {
-  outline: none;
-  border-color: var(--color-link);
-  box-shadow: 0 0 0 2px var(--color-link);
+  .header-search-button kbd { display: none; }
 }
 
 /* Search results page */

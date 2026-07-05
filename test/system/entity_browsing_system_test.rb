@@ -27,11 +27,15 @@ class EntityBrowsingSystemTest < ApplicationSystemTestCase
     assert_nil html[:"data-theme"]
   end
 
-  test "search box in header submits and renders results" do
+  test "header search button opens the palette" do
     visit root_path
-    # The home page also has its own inline search form (same name="q"),
-    # so scope to the header's to keep this test about header behavior.
-    within ".site-header__search" do
+    find(".header-search-button").click
+    assert_selector "dialog.palette[open]", visible: :all
+  end
+
+  test "home inline search form submits and renders results" do
+    visit root_path
+    within ".home__search" do
       fill_in :q, with: "save"
       find("input[name=q]").send_keys(:return)
     end
@@ -52,10 +56,9 @@ class EntityBrowsingSystemTest < ApplicationSystemTestCase
     assert_selector "dialog.palette[open]", visible: :all
   end
 
-  test '"/" focuses the inline header search box' do
+  test '"/" opens the search palette' do
     visit root_path
     page.send_keys "/"
-    active_name = evaluate_script("document.activeElement.name")
-    assert_equal "q", active_name, "Expected the q input to receive focus on /"
+    assert_selector "dialog.palette[open]", visible: :all
   end
 end

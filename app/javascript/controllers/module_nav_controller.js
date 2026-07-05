@@ -20,7 +20,8 @@ import { Controller } from "@hotwired/stimulus"
 // We re-decorate on turbo:load so the highlight follows the user as
 // they click through the (persistent) nav.
 export default class extends Controller {
-  static targets = ["filter", "list", "empty", "group", "ecosystem", "status"]
+  static targets = ["filter", "list", "empty", "group", "ecosystem", "status", "methods", "methodList"]
+  static values = { version: String }
 
   connect() {
     this.boundRefresh = this.refreshActive.bind(this)
@@ -195,6 +196,54 @@ export default class extends Controller {
       this.statusTarget.textContent = !filtering ? ""
         : anyVisible ? `Filtered to matches for ${query}` : "No matches"
     }
+
+    this.suggestMethods(query)
+  }
+
+  // The tree only holds classes and modules — method/constant/attribute
+  // hits come from the suggest endpoint as you type, like the old
+  // api.rubyonrails.org sidebar search.
+  suggestMethods(query) {
+    clearTimeout(this.suggestTimer)
+    if (query.length < 2) { this.clearMethods(); return }
+
+    this.suggestTimer = setTimeout(async () => {
+      try {
+        const version = this.hasVersionValue && this.versionValue ? `&version=${encodeURIComponent(this.versionValue)}` : ""
+        const res = await fetch(`/search/suggest.json?q=${encodeURIComponent(query)}${version}`)
+        const data = await res.json()
+        // Bail if the user kept typing while this request was in flight.
+        if (this.filterTarget.value.trim().toLowerCase() !== query) return
+        const items = (data.results || []).filter(r => r.kind !== "class" && r.kind !== "module")
+        this.renderMethods(items)
+      } catch {}
+    }, 150)
+  }
+
+  renderMethods(items) {
+    if (!this.hasMethodsTarget) return
+    if (items.length === 0) { this.clearMethods(); return }
+
+    this.methodListTarget.replaceChildren(...items.map(r => {
+      const li = document.createElement("li")
+      const a = document.createElement("a")
+      a.href = r.url
+      a.textContent = r.fqn
+      li.appendChild(a)
+      return li
+    }))
+    this.methodsTarget.hidden = false
+    // Method hits count as matches: suppress the tree's "No matches."
+    this.emptyTarget.hidden = true
+    if (this.hasStatusTarget) {
+      this.statusTarget.textContent = `${items.length} method matches`
+    }
+  }
+
+  clearMethods() {
+    if (!this.hasMethodsTarget) return
+    this.methodsTarget.hidden = true
+    this.methodListTarget.replaceChildren()
   }
 
   // Post-order: a node is visible if it matches or any descendant does.

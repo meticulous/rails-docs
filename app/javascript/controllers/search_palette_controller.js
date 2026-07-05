@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // /search/suggest, arrow-key navigation, Enter to open the highlighted
 // result, Escape to dismiss.
 export default class extends Controller {
-  static targets = ["dialog", "input", "results", "empty", "status"]
+  static targets = ["dialog", "input", "results", "empty", "status", "allLink"]
 
   connect() {
     this.activeIndex = -1
@@ -67,6 +67,11 @@ export default class extends Controller {
     this.inputTarget.removeAttribute("aria-activedescendant")
     this.statusTarget.textContent =
       results.length === 0 ? "No results" : `${results.length} results`
+    // Escape hatch to the full search page (facets, permalinks).
+    if (this.hasAllLinkTarget) {
+      this.allLinkTarget.hidden = results.length === 0
+      this.allLinkTarget.href = `/search?q=${encodeURIComponent(this.lastQuery)}`
+    }
   }
 
   buildResult(result, index) {
@@ -79,15 +84,17 @@ export default class extends Controller {
     li.dataset.url = result.url
     li.dataset.index = index
 
-    const fqn = document.createElement("code")
-    fqn.className = "palette__fqn"
-    fqn.appendChild(this.buildFqn(result.fqn))
-    li.appendChild(fqn)
-
+    // Kind badge leads so it survives long FQNs (which wrap in their
+    // own column instead of pushing the badge out of view).
     const kind = document.createElement("span")
     kind.className = "palette__kind"
     kind.textContent = result.kind
     li.appendChild(kind)
+
+    const fqn = document.createElement("code")
+    fqn.className = "palette__fqn"
+    fqn.appendChild(this.buildFqn(result.fqn))
+    li.appendChild(fqn)
 
     if (result.summary) {
       const summary = document.createElement("p")

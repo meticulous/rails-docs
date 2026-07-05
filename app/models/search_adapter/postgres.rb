@@ -87,14 +87,43 @@ class SearchAdapter::Postgres
   # mentions "before" and "action". A big exact-name boost makes
   # searching a method name behave like APIDock / api.rubyonrails.org:
   # the thing you typed comes first, prefix matches next.
+  #
+  # On top of that, three demotions/boosts keep the doc-body noise out of
+  # the top of the list (users on the full-search page reported "junk"):
+  #
+  # * body-only ×0.4 — a match that landed ONLY in the doc body (D weight),
+  #   with nothing in name/signature/summary (A/B/C), is a prose mention,
+  #   not the thing itself. `create_table`'s body says "create", but for
+  #   the query `create!` the real `#create!` methods must come first. We
+  #   detect this by re-ranking with the A/B/C weights zeroed: if that's 0
+  #   but the D-only rank is positive, the term appears only in the body.
+  # * documented ×1.15 — an entity that actually carries docs beats an
+  #   empty stub of the same name. Ecosystem gems reopen Rails classes
+  #   (jbuilder's `ActionController`, solid_cache's `ActiveSupport`) with
+  #   no docs; this mild boost floats the canonical, documented Rails
+  #   definition above those stubs without ever overturning a real match.
+  # * private ×0.35 (was 0.5) — internal helpers like
+  #   `build_default_constraint` were still surfacing in the top 10 on a
+  #   strong body match; a firmer demotion keeps them below public API.
+  #
+  # The exact clause also matches on the ::-stripped fqn, so a class typed
+  # without punctuation (`actioncable` -> ActionCable) exact-matches even
+  # when its name lexeme differs from the query.
   def rank_expression(query)
     Arel.sql(
       ApplicationRecord.sanitize_sql([
         "ts_rank_cd(entity_versions.search_vector, websearch_to_tsquery('english', ?), 32) * " \
           "CASE WHEN entity_versions.deprecated THEN 0.4 ELSE 1.0 END * " \
-          "CASE WHEN entity_versions.visibility = 'private' THEN 0.5 ELSE 1.0 END * " \
+          "CASE WHEN entity_versions.visibility = 'private' THEN 0.35 ELSE 1.0 END * " \
           "CASE " \
-          "  WHEN lower(entity_identities.name) = lower(?) THEN 100.0 " \
+          "  WHEN ts_rank_cd('{0,1,1,1}', entity_versions.search_vector, websearch_to_tsquery('english', ?), 32) = 0 " \
+          "   AND ts_rank_cd('{0,0,0,1}', entity_versions.search_vector, websearch_to_tsquery('english', ?), 32) > 0 " \
+          "  THEN 0.4 ELSE 1.0 " \
+          "END * " \
+          "CASE WHEN COALESCE(entity_versions.doc_summary, entity_versions.doc_markdown, '') <> '' THEN 1.15 ELSE 1.0 END * " \
+          "CASE " \
+          "  WHEN lower(entity_identities.name) = lower(?) " \
+          "    OR lower(replace(entity_identities.fqn, '::', '')) = lower(replace(?, '::', '')) THEN 100.0 " \
           "  WHEN lower(entity_identities.name) LIKE lower(?) || '%' THEN 8.0 " \
           "  ELSE 1.0 " \
           "END * " \
@@ -104,7 +133,7 @@ class SearchAdapter::Postgres
           "  WHEN 'constant' THEN 1.2 " \
           "  ELSE 1.0 " \
           "END DESC",
-        query, query, query
+        query, query, query, query, query, query
       ])
     )
   end

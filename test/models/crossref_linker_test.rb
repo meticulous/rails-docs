@@ -12,7 +12,7 @@ class CrossrefLinkerTest < ActiveSupport::TestCase
   test "links a fully-qualified constant that exists in this version" do
     html = "<p>See ActiveRecord::Validations for more information.</p>"
     result = link_from(@save, html)
-    assert_includes result, %(<a href="/v8.1.3/active_record/validations">ActiveRecord::Validations</a>)
+    assert_includes result, %(<a href="/v8.1.3/active_record/validations"><code>ActiveRecord::Validations</code></a>)
   end
 
   test "does not link a FQN whose identity is absent from this version" do
@@ -34,7 +34,7 @@ class CrossrefLinkerTest < ActiveSupport::TestCase
   test "links a fully-qualified method reference with #" do
     html = "<p>Prefer ActiveRecord::Persistence#update! over manual updates.</p>"
     result = link_from(@save, html)
-    assert_includes result, %(<a href="/v8.1.3/active_record/persistence/update-bang">ActiveRecord::Persistence#update!</a>)
+    assert_includes result, %(<a href="/v8.1.3/active_record/persistence/update-bang"><code>ActiveRecord::Persistence#update!</code></a>)
   end
 
   test "links a fully-qualified method reference with a dot" do
@@ -43,7 +43,7 @@ class CrossrefLinkerTest < ActiveSupport::TestCase
     html = "<p>Calls ActiveRecord::Persistence.save internally.</p>"
     result = link_from(@persistence, html)
     assert_includes result, %(href="/v8.1.3/active_record/persistence/save")
-    assert_includes result, "ActiveRecord::Persistence.save</a>"
+    assert_includes result, "ActiveRecord::Persistence.save</code></a>"
   end
 
   # ---- Bare #method on the current class ----
@@ -53,13 +53,13 @@ class CrossrefLinkerTest < ActiveSupport::TestCase
     # which also owns #update!.
     html = "<p>Unlike #update!, this does not run validations.</p>"
     result = link_from(@save, html)
-    assert_includes result, %(<a href="/v8.1.3/active_record/persistence/update-bang">#update!</a>)
+    assert_includes result, %(<a href="/v8.1.3/active_record/persistence/update-bang"><code>#update!</code></a>)
   end
 
   test "links a bare #method on a class page against the class itself" do
     html = "<p>Use #save to persist.</p>"
     result = link_from(@persistence, html)
-    assert_includes result, %(<a href="/v8.1.3/active_record/persistence/save">#save</a>)
+    assert_includes result, %(<a href="/v8.1.3/active_record/persistence/save"><code>#save</code></a>)
   end
 
   test "does not link a bare #method that does not exist on the current class" do
@@ -76,7 +76,7 @@ class CrossrefLinkerTest < ActiveSupport::TestCase
     # ActiveRecord::Validations).
     html = "<p>Validations run before save.</p>"
     result = link_from(@save, html)
-    assert_includes result, %(<a href="/v8.1.3/active_record/validations">Validations</a>)
+    assert_includes result, %(<a href="/v8.1.3/active_record/validations"><code>Validations</code></a>)
   end
 
   test "does not fall through to top-level for a bare constant" do

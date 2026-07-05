@@ -67,10 +67,16 @@
           <%= image_tag "logo_rails-circle.svg", class: "site-header__logo", alt: "" %>
           <span class="site-header__title">API Guides</span>
         <% end %>
-        <%= form_with url: search_path, method: :get, local: true, class: "site-header__search" do |f| %>
-          <%= f.text_field :q, value: params[:q], placeholder: "Search docs",
-                                autocomplete: "off", aria: { label: "Search documentation" } %>
-        <% end %>
+        <%# A button, not an input — the ⌘K palette is the search UI.
+            Keeps one live search surface (plus the sidebar filter)
+            instead of three parallel boxes. %>
+        <button type="button"
+                class="header-search-button"
+                data-action="click->search-palette#open"
+                aria-label="Search documentation">
+          Search docs
+          <kbd aria-hidden="true">⌘K</kbd>
+        </button>
         <%= yield :header %>
         <%# Default to the "system" glyph server-side so the button is
             never blank before Stimulus connects; theme_controller#connect

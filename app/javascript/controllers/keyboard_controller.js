@@ -58,11 +58,10 @@ export default class extends Controller {
     if (box) box.checked = !this.shortcutsDisabled
   }
 
+  // The header search box was retired in favor of the ⌘K palette —
+  // "/" opens the same palette (both controllers live on <body>).
   focusSearch() {
-    const input = document.querySelector(".site-header__search input[name=q]")
-    if (!input) return
-    input.focus()
-    input.select()
+    this.application.getControllerForElementAndIdentifier(document.body, "search-palette")?.open()
   }
 
   openHelp() {
