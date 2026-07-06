@@ -6,6 +6,22 @@ class DocHtmlHelperTest < ActionView::TestCase
     assert_equal html, sanitize_doc_html(html)
   end
 
+  test "unwraps rdoc-ref: anchors to plain text so the crossref linker can re-link them" do
+    # The sanitizer's protocol allow-list would strip the rdoc-ref: href
+    # and leave a dead <a> that CrossrefLinker (which skips text inside
+    # anchors) could never repair.
+    html = %(<p>See <a href="rdoc-ref:ActiveJob::Continuation">ActiveJob::Continuation</a> for usage.</p>)
+    result = sanitize_doc_html(html)
+    assert_equal "<p>See ActiveJob::Continuation for usage.</p>", result
+  end
+
+  test "leaves normal http anchors alone when unwrapping rdoc-refs" do
+    html = %(<p><a href="rdoc-ref:Foo">Foo</a> and <a href="https://example.com">docs</a></p>)
+    result = sanitize_doc_html(html)
+    assert_includes result, %(<a href="https://example.com">docs</a>)
+    assert_not_includes result, "rdoc-ref"
+  end
+
   test "expands a bare {{guide:slug}} token to a guides.rubyonrails.org link" do
     html = "<p>See {{guide:active_record_querying}}.</p>"
     result = sanitize_doc_html(html)

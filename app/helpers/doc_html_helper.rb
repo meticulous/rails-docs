@@ -28,7 +28,23 @@ module DocHtmlHelper
   def sanitize_doc_html(html)
     return nil if html.blank?
     expanded = html.include?("{{") ? expand_cross_source_tokens(expand_guide_tokens(html)) : html
-    sanitize demote_doc_headings(expanded), tags: DOC_HTML_TAGS, attributes: DOC_HTML_ATTRIBUTES
+    sanitize demote_doc_headings(unwrap_rdoc_refs(expanded)), tags: DOC_HTML_TAGS, attributes: DOC_HTML_ATTRIBUTES
+  end
+
+  # RDoc emits crossrefs as <a href="rdoc-ref:ActiveJob::Continuation">.
+  # The sanitizer's protocol allow-list strips that href, leaving a dead
+  # <a> — and CrossrefLinker deliberately skips text already inside an
+  # anchor, so it can never repair one. Unwrap these to plain text before
+  # sanitizing; the linker then resolves the mention into a real,
+  # version-scoped link (or leaves it as prose when the target doesn't
+  # exist in this version — either way, no dead link).
+  def unwrap_rdoc_refs(html)
+    return html unless html.include?("rdoc-ref:")
+    fragment = Nokogiri::HTML.fragment(html)
+    fragment.css(%(a[href^="rdoc-ref:"])).each do |a|
+      a.replace(Nokogiri::XML::Text.new(a.text, fragment.document))
+    end
+    fragment.to_html
   end
 
   # RDoc's `= Heading` emits <h1>, so a doc comment can put extra h1s
