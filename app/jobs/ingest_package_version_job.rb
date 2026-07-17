@@ -42,6 +42,7 @@ class IngestPackageVersionJob < ApplicationJob
       source_dirs: source_dirs
     )
     run_loader(jsonl)
+    prune_superseded(source_slug, channel)
     Rails.logger.info "[ingest] finished #{source_slug} #{channel}"
   end
 
@@ -92,6 +93,17 @@ class IngestPackageVersionJob < ApplicationJob
 
   def run_loader(jsonl_path)
     File.open(jsonl_path, "r:UTF-8") { |io| Loader.new(io).import! }
+  end
+
+  # Latest patch per series: the freshly ingested version replaces the
+  # older patches it supersedes (8.1.3 removes 8.1.2).
+  def prune_superseded(source_slug, channel)
+    return if channel == "edge"
+
+    pv = Source.find_by!(slug: source_slug).package_versions.find_by!(channel: channel)
+    pv.prune_superseded_patches!.each do |old|
+      Rails.logger.info "[ingest] pruned superseded #{source_slug} #{old.channel}"
+    end
   end
 
   def run_git(*args, cwd:)
