@@ -33,4 +33,11 @@ class SourceTest < ActiveSupport::TestCase
     assert_nil sources(:rails).description
     assert_nil Source.new(slug: "some_future_gem").description
   end
+
+  test "current_stable never returns edge, even when edge is ingested with the top ord" do
+    package_versions(:v8_1_3).update!(ingested_at: Time.current)
+    package_versions(:edge).update!(ingested_at: Time.current) # ord 9999999, above every release
+
+    assert_equal package_versions(:v8_1_3), sources(:rails).current_stable
+  end
 end

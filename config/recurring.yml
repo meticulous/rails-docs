@@ -19,3 +19,9 @@ production:
     class: RefreshEdgeJob
     queue: ingest
     schedule: every day at 4am
+  # Ingest newly-released stable versions (new patches, security
+  # releases on supported series, new minors/majors).
+  refresh_stable_docs:
+    class: RefreshStableJob
+    queue: ingest
+    schedule: every day at 3:30am

@@ -31,10 +31,14 @@ class Source < ApplicationRecord
 
   # The highest-ord ingested non-prerelease PackageVersion for this
   # source. Used as the canonical "current" version for cross-source
-  # links and per-source home/feed surfaces.
+  # links and per-source home/feed surfaces. Edge is explicitly
+  # excluded — its ord sorts above every numbered release, but a moving
+  # main snapshot must never become the default view or the target of
+  # version-less redirects.
   def current_stable
     package_versions
       .where.not(ingested_at: nil)
+      .where.not(channel: "edge")
       .where(prerelease: [ nil, "" ])
       .order(ord: :desc)
       .first
