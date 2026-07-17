@@ -4,6 +4,7 @@ class EntitiesController < ApplicationController
   def show
     @package_version = current_source.package_versions.find_by!(channel: channel_from_param)
     @markdown = markdown_requested?
+    @json = !@markdown && json_requested?
     @identity = resolve_entity!
     @entity_version = @identity.entity_versions.find_by(package_version: @package_version)
 
@@ -11,12 +12,34 @@ class EntitiesController < ApplicationController
       return head :not_found unless @entity_version
       render plain: EntityMarkdown.new(@entity_version).to_s,
              content_type: "text/markdown"
+    elsif @json
+      return head :not_found unless @entity_version
+      render json: EntityJson.new(@entity_version).as_json
     elsif @entity_version
       @presenter = build_presenter
       render template_for(@identity)
     else
       render "entities/missing", status: :not_found
     end
+  end
+
+  # Version-less URLs (the stable link shape llms.txt advertises):
+  # 302 to the same path under the source's current stable. 302, not
+  # 301 — the target moves with every release, so nothing may cache it.
+  # The leading path segment doubles as an ecosystem source slug
+  # (/turbo-rails/turbo/streams_channel); anything else is a rails path.
+  def current_stable
+    segments = params[:path].to_s.split("/")
+    src = Source.find_by(slug: segments.first)
+    path = src ? segments.drop(1).join("/") : params[:path]
+    src ||= Source.find_by!(slug: "rails")
+
+    stable = src.current_stable
+    raise ActiveRecord::RecordNotFound if stable.nil? || path.blank?
+    redirect_to entity_path(source_slug: (src.slug unless src.slug == "rails"),
+                            version: helpers.version_url_segment(stable),
+                            path: path),
+                status: :found
   end
 
   private
@@ -35,6 +58,14 @@ class EntitiesController < ApplicationController
       params[:path].to_s.end_with?(".md")
   end
 
+  # Same affordance as markdown, but structured: `.json` or
+  # `Accept: application/json` returns the entity as fields (EntityJson)
+  # instead of prose.
+  def json_requested?
+    params[:path].to_s.end_with?(".json") ||
+      request.headers["Accept"].to_s.include?("application/json")
+  end
+
   def channel_from_param
     params[:version] == "edge" ? "edge" : params[:version].sub(/\Av/, "")
   end
@@ -42,6 +73,7 @@ class EntitiesController < ApplicationController
   def resolve_entity!
     path = params[:path].to_s
     path = path.delete_suffix(".md") if @markdown
+    path = path.delete_suffix(".json") if @json
     parts = path.split("/")
     raise ActiveRecord::RecordNotFound if parts.empty?
 

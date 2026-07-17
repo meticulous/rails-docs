@@ -1,16 +1,28 @@
 class DiffsController < ApplicationController
   def show
+    @markdown = markdown_requested?
     @from_version = current_source.package_versions.find_by!(channel: channel(params[:version]))
-    @to_version = current_source.package_versions.find_by!(channel: channel(params[:other_version]))
+    @to_version = current_source.package_versions.find_by!(channel: channel(params[:other_version].delete_suffix(".md")))
     @identity = resolve_entity!(params[:entity_path])
     @diff = DiffPresenter.new(
       identity: @identity,
       from_version: @from_version,
       to_version: @to_version
     )
+
+    if @markdown
+      render plain: DiffMarkdown.new(@diff).to_s, content_type: "text/markdown"
+    end
   end
 
   private
+
+  # Mirrors EntitiesController's affordance: `.md` on the final URL
+  # segment (the other_version) or Accept: text/markdown.
+  def markdown_requested?
+    params[:other_version].to_s.end_with?(".md") ||
+      request.headers["Accept"].to_s.include?("text/markdown")
+  end
 
   def channel(segment)
     segment == "edge" ? "edge" : segment.sub(/\Av/, "")

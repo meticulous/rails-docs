@@ -152,6 +152,55 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".module-nav__ecosystem", false
   end
 
+  test "version-less URLs 302 to the current stable" do
+    get "/active_record/persistence/save"
+    assert_response :found
+    assert_redirected_to "/v8.1.3/active_record/persistence/save"
+  end
+
+  test "version-less URLs keep the .md suffix through the redirect" do
+    get "/active_record/persistence/save.md"
+    assert_response :found
+    assert_redirected_to "/v8.1.3/active_record/persistence/save.md"
+  end
+
+  test "version-less ecosystem URLs 302 to that source's current stable" do
+    ingest_turbo_rails_fixture!
+    get "/turbo-rails/turbo/broadcastable"
+    assert_response :found
+    assert_redirected_to "/turbo-rails/v2.14.1/turbo/broadcastable"
+  end
+
+  test "appending .json returns a structured JSON payload" do
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save.json")
+    assert_response :success
+    assert_equal "application/json", response.media_type
+
+    payload = JSON.parse(response.body)
+    assert_equal "ActiveRecord::Persistence#save", payload["fqn"]
+    assert_equal "method", payload["kind"]
+    assert_equal "instance", payload["scope"]
+    assert_equal "Saves the record.", payload["doc_markdown"]
+    assert_includes payload["available_in"], "v8.1.3"
+    assert_equal "/v8.1.3/active_record/persistence/save", payload.dig("urls", "html")
+    assert_equal "/v8.1.3/active_record/persistence/save.md", payload.dig("urls", "markdown")
+  end
+
+  test "Accept: application/json returns JSON instead of 500ing" do
+    # Regression: content negotiation used to raise MissingTemplate -> 500.
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/save"),
+        headers: { "Accept" => "application/json" }
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_equal "ActiveRecord::Persistence#save", JSON.parse(response.body)["fqn"]
+  end
+
+  test ".json 404s when the entity is absent from the version" do
+    # ActiveRecord::Callbacks has an identity but no entity_version in v8_1_3.
+    get entity_path(version: "v8.1.3", path: "active_record/callbacks.json")
+    assert_response :not_found
+  end
+
   test "appending .md returns a clean Markdown document" do
     get entity_path(version: "v8.1.3", path: "active_record/persistence/save.md")
     assert_response :success

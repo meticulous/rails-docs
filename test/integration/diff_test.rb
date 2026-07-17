@@ -99,4 +99,22 @@ class DiffTest < ActionDispatch::IntegrationTest
     assert_select ".diff__status--unchanged", text: /Signature, documentation, and source are identical/
     assert_select ".diff__section--source", false
   end
+
+  test "appending .md to the compare version returns the diff as Markdown" do
+    get "/v8.1.3/active_record/persistence/save/-/diff/edge.md"
+    assert_response :success
+    assert_equal "text/markdown", response.media_type
+    assert_includes response.body, "# ActiveRecord::Persistence#save"
+    assert_includes response.body, "## Documentation"
+    assert_includes response.body, "```diff"
+    assert_includes response.body, "+ Saves the model with extra magic."
+  end
+
+  test "Accept: text/markdown returns the diff as Markdown" do
+    get diff_path(version: "v8.1.3", entity_path: "active_record/persistence/save", other_version: "v8.0.4"),
+        headers: { "Accept" => "text/markdown" }
+    assert_response :success
+    assert_equal "text/markdown", response.media_type
+    assert_includes response.body, "identical"
+  end
 end

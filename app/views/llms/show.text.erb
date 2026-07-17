@@ -13,15 +13,28 @@ version availability) with none of the page chrome:
 
   <%= root_url.chomp("/") %>/v<%= @stable&.channel || "8.1.2" %>/active_record/persistence/save.md
 
+Append `.json` — or send `Accept: application/json` — for the same data
+as structured JSON (fqn, kind, signature, params, doc_markdown,
+available_in, source location):
+
+  <%= root_url.chomp("/") %>/v<%= @stable&.channel || "8.1.2" %>/active_record/persistence/save.json
+
+Version diffs are markdown-able too — append `.md` to the compare
+version:
+
+  <%= root_url.chomp("/") %>/v<%= @stable&.channel || "8.1.2" %>/active_record/persistence/save/-/diff/v7.0.10.md
+
 ## URL scheme
 
   /v<VERSION>/<framework>/<path>            class or module page
   /v<VERSION>/<framework>/<path>/<method>   instance method
   /v<VERSION>/<framework>/<path>/<method>.class   class method
   /<gem>/v<VERSION>/<path>                  ecosystem gem (turbo-rails, kamal, …)
+  /v<VERSION>/<path>/-/diff/v<OTHER>        what changed between versions
 
-Version-less URLs (e.g. /active_record/persistence/save) redirect to the
-current stable release.
+Version-less URLs (e.g. /active_record/persistence/save) 302-redirect to
+the current stable release — use them for long-lived links. The `.md` and
+`.json` suffixes survive the redirect.
 
 <% if @frameworks.any? %>
 ## Frameworks (current stable — Rails <%= @stable.channel %>)

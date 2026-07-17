@@ -46,11 +46,13 @@ class ErrorsTest < ActionDispatch::IntegrationTest
 
   private
 
-  # Append-and-restore: ActionDispatch routes can be appended to without
-  # blowing away the existing table, so all the named helpers
-  # (search_path, root_path, etc.) the views rely on remain intact.
+  # Prepend-and-restore: prepended so the temp route wins over the
+  # version-less catch-all at the bottom of the real route file (an
+  # appended route would never match — the catch-all takes everything).
+  # The existing table survives, so all the named helpers (search_path,
+  # root_path, etc.) the views rely on remain intact.
   def with_temp_route(path, controller_action)
-    Rails.application.routes.append do
+    Rails.application.routes.prepend do
       get path, to: controller_action
     end
     Rails.application.reload_routes!

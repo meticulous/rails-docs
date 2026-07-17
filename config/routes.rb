@@ -46,11 +46,13 @@ Rails.application.routes.draw do
       get "/", to: "versions#show", as: :version
       get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
       get "/og/*path", to: "og_images#show", as: :og_image, defaults: { format: :svg }, constraints: { path: %r{[^?]+} }
+      # The other_version segment optionally carries a .md suffix so a
+      # diff can be fetched as markdown; DiffsController strips it.
       get "*entity_path/-/diff/:other_version",
           to: "diffs#show",
           as: :diff,
           format: false,
-          constraints: { entity_path: %r{[^?]+}, other_version: /v[\d\.]+|edge/ }
+          constraints: { entity_path: %r{[^?]+}, other_version: /(?:v[\d\.]+|edge)(?:\.md)?/ }
       get "*path",
           to: "entities#show",
           as: :entity,
@@ -58,4 +60,18 @@ Rails.application.routes.draw do
           constraints: { path: %r{[^?]+} }
     end
   end
+
+  # Version-less URLs 302 to the same path under the source's current
+  # stable — the long-lived link shape llms.txt advertises. 302, not
+  # 301: "current stable" moves with every release. Deliberately the
+  # last route: anything with a version segment (or any named route
+  # above) has already matched before this catch-all runs. No
+  # (/:source_slug) prefix here — an optional segment would greedily eat
+  # /active_record/... as a slug; the controller peels a leading source
+  # slug off the path instead, where the DB lookup belongs.
+  get "*path",
+      to: "entities#current_stable",
+      as: :current_stable,
+      format: false,
+      constraints: { path: %r{[^?]+} }
 end
