@@ -10,6 +10,18 @@ require "open3"
 class IngestPackageVersionJob < ApplicationJob
   queue_as :ingest
 
+  # One ingest at a time: loaders upsert shared entity_identities rows,
+  # and two running in parallel deadlock or race the same inserts
+  # (seen in production the first night eight backfills were enqueued
+  # together). They're CPU-bound RDoc parses anyway — parallelism buys
+  # nothing here. Duration generously covers the slowest ingest (edge,
+  # ~10k entities) so the semaphore can't expire mid-run.
+  limits_concurrency to: 1, key: ->(**) { "ingest" }, duration: 1.hour
+
+  # Belt for anything that still slips through (e.g. a deploy restarting
+  # a loader mid-transaction).
+  retry_on ActiveRecord::Deadlocked, wait: 10.seconds, attempts: 3
+
   # source_slug:  "rails", "turbo-rails", etc.
   # channel:      "8.1.3", "edge"
   # git_ref:      "v8.1.3" (the tag/ref to check out)
