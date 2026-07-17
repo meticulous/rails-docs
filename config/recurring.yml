@@ -13,3 +13,9 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+  # Re-ingest rails main as the "edge" channel when its tip has moved
+  # (RefreshEdgeJob no-ops on an unchanged sha).
+  refresh_edge_docs:
+    class: RefreshEdgeJob
+    queue: ingest
+    schedule: every day at 4am

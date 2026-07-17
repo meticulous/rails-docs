@@ -19,7 +19,7 @@ class IngestPackageVersionJob < ApplicationJob
   def perform(source_slug:, channel:, git_ref:, git_sha:, ord:, source_dirs:)
     Rails.logger.info "[ingest] starting #{source_slug} #{channel} (#{git_ref})"
 
-    worktree = ensure_worktree(source_slug, git_ref)
+    worktree = ensure_worktree(source_slug, git_ref, git_sha)
     jsonl = run_ingester(
       source_slug: source_slug,
       channel: channel,
@@ -35,7 +35,7 @@ class IngestPackageVersionJob < ApplicationJob
 
   private
 
-  def ensure_worktree(source_slug, git_ref)
+  def ensure_worktree(source_slug, git_ref, git_sha)
     repo_root = ENV.fetch("INGEST_REPO_ROOT_#{source_slug.tr('-', '_').upcase}") {
       Rails.root.join("tmp/repos/#{source_slug}").to_s
     }
@@ -46,8 +46,14 @@ class IngestPackageVersionJob < ApplicationJob
     # the deploy needs to clone it once; we don't do `git clone` here to
     # avoid network-fetch surprises during a queued job.
     unless File.directory?(worktree)
-      run_git("worktree", "add", worktree, git_ref, cwd: repo_root)
+      run_git("worktree", "add", "--detach", worktree, git_ref, cwd: repo_root)
     end
+
+    # Pin the checkout to the exact sha this ingest resolved. A no-op for
+    # tags (they never move), but branch refs do — edge tracks main, and
+    # without this a reused worktree would re-parse whatever main pointed
+    # at the night the worktree was first created.
+    run_git("checkout", "--detach", git_sha, cwd: worktree)
     worktree
   end
 
