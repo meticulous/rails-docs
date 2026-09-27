@@ -15,9 +15,7 @@ class SitemapsController < ApplicationController
 
   def show
     @package_version = current_source.package_versions.find_by!(channel: channel_from_param)
-    @entities = @package_version.entity_versions
-                                 .preload(:entity_identity)
-                                 .order(:id)
+    @entities = @package_version.entity_versions.preload(:entity_identity)
     respond_to { |f| f.xml }
   end
 
