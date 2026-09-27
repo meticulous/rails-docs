@@ -163,7 +163,7 @@ class StaticSite
   # One forked worker per package version, `jobs` at a time. Rendering
   # is CPU-bound Ruby, so processes, not threads. Children get fresh
   # database connections (Active Record discards inherited pools on
-  # fork) and hand their Tally back through a file. Workers leave with
+  # fork) and hand their Tally back as JSON in a file. Workers leave with
   # exit!, success or not, so the parent's at_exit hooks never run twice.
   # One failure stops the build.
   def in_parallel(items)
@@ -173,7 +173,7 @@ class StaticSite
     until queue.empty? && running.empty?
       while running.size < jobs && (item = queue.shift)
         running << fork do
-          File.binwrite(tally_path(Process.pid), Marshal.dump(yield(item)))
+          File.write(tally_path(Process.pid), yield(item).to_h.to_json)
           exit!(0)
         rescue Exception => e # rubocop:disable Lint/RescueException
           warn e.full_message
@@ -189,7 +189,7 @@ class StaticSite
         FileUtils.rm_f(Dir[tally_path("*")])
         raise "export worker #{pid} failed: #{status.inspect}"
       end
-      results << Marshal.load(File.binread(tally_path(pid)))
+      results << Tally.new(**JSON.parse(File.read(tally_path(pid)), symbolize_names: true))
       File.delete(tally_path(pid))
     end
     results
@@ -279,11 +279,11 @@ class StaticSite
     attr_reader :files, :bytes, :failures, :script_hashes
     attr_accessor :elapsed
 
-    def initialize
-      @files = 0
-      @bytes = 0
-      @failures = []
-      @script_hashes = Set.new
+    def initialize(files: 0, bytes: 0, failures: [], script_hashes: [])
+      @files = files
+      @bytes = bytes
+      @failures = failures
+      @script_hashes = script_hashes.to_set
     end
 
     def wrote(bytesize)
@@ -301,6 +301,10 @@ class StaticSite
       @failures.concat(other.failures)
       @script_hashes.merge(other.script_hashes)
       self
+    end
+
+    def to_h
+      { files:, bytes:, failures:, script_hashes: script_hashes.to_a }
     end
 
     def summary
