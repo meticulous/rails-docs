@@ -12,7 +12,7 @@
   Locals: pv (PackageVersion);
           ecosystem_versions (ecosystem gems' current stables to append
           below the framework groups — empty unless the "Show ecosystem"
-          box is ticked, which reloads the frame with ?ecosystem=1).
+          box is ticked, which reloads the frame from .../ecosystem).
 %>
 <% ecosystem_versions = local_assigns.fetch(:ecosystem_versions, []) %>
 <% rails_nav = pv.source.slug == "rails" %>

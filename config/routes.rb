@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  version = /v[\d\.]+|edge/
+
   # Source slugs are an optional first segment so /v8.1.2/... continues
   # to route to rails (no canonical break) while /turbo-rails/v2.0.16/...
   # routes to the same controllers with current_source flipped. The
@@ -27,9 +29,11 @@ Rails.application.routes.draw do
 
   # The persistent left module-nav, lazy-loaded into a turbo-frame so the
   # 1,500-node tree doesn't ship inline on every content page (kept the
-  # AI-readable HTML 96% navigation chrome otherwise). Query params, not
-  # path segments, so the version format and `::` in fqns stay simple.
-  get "/_nav", to: "nav#show", as: :module_nav
+  # AI-readable HTML 96% navigation chrome otherwise). Path segments, not
+  # query params, so each variant is a plain file in the static export.
+  get "/_nav/:source_slug/:version", to: "nav#show", as: :module_nav, constraints: { version: }
+  get "/_nav/:source_slug/:version/ecosystem", to: "nav#show", as: :module_nav_with_ecosystem,
+      constraints: { version: }, defaults: { ecosystem: true }
 
   # Machine-readable index for AI crawlers / agents.
   get "/llms.txt", to: "llms#show", as: :llms, defaults: { format: :text }
@@ -42,22 +46,21 @@ Rails.application.routes.draw do
   post "/webhooks/ingest", to: "webhooks#ingest"
 
   scope "(/:source_slug)" do
-    scope ":version", constraints: { version: /v[\d\.]+|edge/ } do
+    scope ":version", constraints: { version: } do
       get "/", to: "versions#show", as: :version
       get "/sitemap.xml", to: "sitemaps#show", as: :version_sitemap, defaults: { format: :xml }
-      get "/og/*path", to: "og_images#show", as: :og_image, defaults: { format: :svg }, constraints: { path: %r{[^?]+} }
+      get "/og/*path", to: "og_images#show", as: :og_image, defaults: { format: :svg }, format: false
       # The other_version segment optionally carries a .md suffix so a
       # diff can be fetched as markdown; DiffsController strips it.
       get "*entity_path/-/diff/:other_version",
           to: "diffs#show",
           as: :diff,
           format: false,
-          constraints: { entity_path: %r{[^?]+}, other_version: /(?:v[\d\.]+|edge)(?:\.md)?/ }
+          constraints: { other_version: /(?:#{version})(?:\.md)?/ }
       get "*path",
           to: "entities#show",
           as: :entity,
-          format: false,
-          constraints: { path: %r{[^?]+} }
+          format: false
     end
   end
 
@@ -72,6 +75,5 @@ Rails.application.routes.draw do
   get "*path",
       to: "entities#current_stable",
       as: :current_stable,
-      format: false,
-      constraints: { path: %r{[^?]+} }
+      format: false
 end

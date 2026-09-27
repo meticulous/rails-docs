@@ -115,10 +115,10 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_select ".module-nav__row[style]", false, "depth must not use an inline style attribute"
   end
 
-  test "the /_nav frame appends ecosystem gem trees when ?ecosystem=1" do
+  test "the /_nav frame appends ecosystem gem trees under /ecosystem" do
     ingest_turbo_rails_fixture!
 
-    get module_nav_path(source_slug: "rails", version: "v8.1.3", ecosystem: "1")
+    get module_nav_with_ecosystem_path(source_slug: "rails", version: "v8.1.3")
     assert_response :success
 
     assert_select ".module-nav__group--ecosystem .module-nav__group-name", text: "Turbo Rails"
@@ -652,7 +652,57 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_equal entity_url(version: "v8.1.3", path: "active_record/persistence/save"), items[2]["item"]
   end
 
+  test "a path naming different entities over time resolves to the one in the requested version" do
+    method = create_persistence_member!(name: "set_cookie", kind: "method", version: :v8_0_4)
+    attribute = create_persistence_member!(name: "set_cookie", kind: "attribute", version: :v8_1_3)
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/set_cookie")
+    assert_response :success
+    assert_select "meta[name='nav-active-fqn'][content=?]", attribute.parent_fqn
+
+    get entity_path(version: "v8.0.4", path: "active_record/persistence/set_cookie")
+    assert_response :success
+    assert_select "h1", text: /#{method.name}/
+  end
+
+  test "names that don't slug cleanly still get pages and sitemap entries" do
+    create_persistence_member!(name: "*_changed?", kind: "method", version: :v8_1_3)
+
+    get version_sitemap_path(version: "v8.1.3")
+    assert_response :success
+    assert_includes response.body, "/v8.1.3/active_record/persistence/*_changed%3F"
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/*_changed?")
+    assert_response :success
+  end
+
+  test "a method named like an operator slug resolves to itself" do
+    create_persistence_member!(name: "and", kind: "method", version: :v8_1_3)
+
+    get entity_path(version: "v8.1.3", path: "active_record/persistence/and")
+    assert_response :success
+    assert_select "h1", text: /and/
+  end
+
+  test "og image renders for a singleton method" do
+    create_persistence_member!(name: "create", kind: "method", scope: "singleton", version: :v8_1_3)
+
+    get og_image_path(version: "v8.1.3", path: "active_record/persistence/create.class")
+    assert_response :success
+    assert_equal "image/svg+xml", response.media_type
+  end
+
   private
+
+  def create_persistence_member!(name:, kind:, version:, scope: "instance")
+    separator = scope == "singleton" ? "." : "#"
+    identity = sources(:rails).entity_identities.create!(
+      fqn: "ActiveRecord::Persistence#{separator}#{name}", kind: kind, name: name, scope: scope,
+      parent_fqn: "ActiveRecord::Persistence", framework: frameworks(:activerecord)
+    )
+    EntityVersion.create!(entity_identity: identity, package_version: package_versions(version))
+    identity
+  end
 
   # Marks the turbo-rails fixture version as ingested (fixtures leave it
   # un-ingested so it stays out of current_stable elsewhere) and gives it

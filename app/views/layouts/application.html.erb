@@ -114,7 +114,7 @@
             navigation, not a navigation *within* this frame (which would
             try to load the target page's empty nav stub and show
             "content missing"). %>
-        <%# nav-ecosystem rewrites the src with ?ecosystem=1 before the
+        <%# nav-ecosystem points the src at .../ecosystem before the
             lazy load fires when the user has "Show ecosystem gems" on. %>
         <%= turbo_frame_tag nav_frame_id,
                             class: "module-nav-frame",

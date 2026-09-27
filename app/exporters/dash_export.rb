@@ -82,7 +82,7 @@ class DashExport
 
   def copy_documents(docset)
     source = File.join(static_dir, version_segment)
-    raise "No static export found at #{source}; run rake export:static first" unless File.directory?(source)
+    raise "No static export found at #{source}; run bin/rails export:site first" unless File.directory?(source)
     FileUtils.cp_r(File.join(source, "."), documents_dir(docset))
   end
 
@@ -100,12 +100,10 @@ class DashExport
                      .preload(:entity_identity)
                      .find_each(batch_size: 500) do |ev|
         identity = ev.entity_identity
-        path = static_relative_path(identity)
-        next unless path
         begin
           db.execute(
             "INSERT INTO searchIndex(name, type, path) VALUES (?, ?, ?)",
-            [ identity.fqn, self.class.dash_type(identity.kind), path ]
+            [ identity.fqn, self.class.dash_type(identity.kind), "#{identity.entity_url_path}.html" ]
           )
         rescue SQLite3::ConstraintException
           # Skip duplicates (rare; same name/type/path collision)
@@ -113,18 +111,5 @@ class DashExport
       end
     end
     db.close
-  end
-
-  def static_relative_path(identity)
-    case identity.kind
-    when "class", "module", "constant"
-      "#{identity.url_path}.html"
-    when "method"
-      slug = MethodSlug.encode(identity.name)
-      slug = "#{slug}.class" if identity.scope == "singleton"
-      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{slug}.html"
-    when "attribute"
-      "#{EntityIdentity.fqn_to_url_path(identity.parent_fqn)}/#{identity.name}.html"
-    end
   end
 end

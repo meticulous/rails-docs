@@ -11,7 +11,8 @@
 # fragment caches as one blob per (source, version).
 class NavController < ApplicationController
   def show
-    @nav_package_version = resolve_package_version
+    @nav_package_version = current_source.package_versions.where.not(ingested_at: nil)
+                                         .find_by!(channel: params[:version].delete_prefix("v"))
     @ecosystem_versions = include_ecosystem? ? ecosystem_versions : []
     expires_in 1.hour, public: true
     render layout: false
@@ -19,21 +20,11 @@ class NavController < ApplicationController
 
   private
 
-  def resolve_package_version
-    source = Source.find_by(slug: params[:source_slug].presence || "rails") || current_source
-    if params[:version].present?
-      channel = params[:version] == "edge" ? "edge" : params[:version].sub(/\Av/, "")
-      source.package_versions.where.not(ingested_at: nil).find_by(channel: channel) || source.current_stable
-    else
-      source.current_stable
-    end
-  end
-
-  # ?ecosystem=1 appends every ecosystem gem's tree (at its own current
-  # stable) below the Rails framework groups. Only meaningful on the
-  # rails nav — an ecosystem gem's own nav already shows that gem.
+  # The /ecosystem variant appends every ecosystem gem's tree (at its own
+  # current stable) below the Rails framework groups. Only meaningful on
+  # the rails nav — an ecosystem gem's own nav already shows that gem.
   def include_ecosystem?
-    params[:ecosystem].present? && @nav_package_version&.source&.slug == "rails"
+    params[:ecosystem] && current_source.slug == "rails"
   end
 
   def ecosystem_versions

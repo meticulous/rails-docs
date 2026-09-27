@@ -16,6 +16,14 @@ class FeedsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Added: ActiveRecord::Base"
   end
 
+  test "feed entries link methods by their page URL" do
+    entity_identities(:ar_persistence_save).update!(first_seen_version: package_versions(:v8_1_3))
+
+    get framework_feed_url(framework_slug: "activerecord")
+    assert_response :success
+    assert_includes response.body, entity_url(version: "v8.1.3", path: "active_record/persistence/save")
+  end
+
   test "source feed lists entities for a non-rails source" do
     turbo_rails = sources(:turbo_rails)
     package_versions(:turbo_rails_v2_14_1).update!(ingest_status: "ok", ingested_at: Time.current)
