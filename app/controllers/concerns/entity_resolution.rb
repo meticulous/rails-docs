@@ -74,21 +74,23 @@ module EntityResolution
   # `name.underscore`, so acronym-y names like ActiveRecord::
   # ConnectionAdapters::PostgreSQLAdapter resolve from .../postgre_sql_adapter
   # without an inflections table — whatever url_path produces, this
-  # reverses.
+  # reverses. Several namespaces can share a segment (Rails' Erb
+  # generators module and Ruby's ERB are both "erb"), so every match is
+  # carried down to the next segment rather than just the first.
   def walk_namespace(identities, segments)
     return nil if segments.empty?
 
     fast = identities.where(kind: %w[class module], fqn: segments.map(&:camelize).join("::")).first
     return fast if fast
 
-    parent_fqn = nil
-    current = nil
+    parent_fqns = [ nil ]
+    matches = []
     segments.each do |segment|
-      current = identities.where(kind: %w[class module], parent_fqn: parent_fqn)
-                          .find { |id| id.name.underscore == segment }
-      return nil unless current
-      parent_fqn = current.fqn
+      matches = identities.where(kind: %w[class module], parent_fqn: parent_fqns)
+                          .select { |id| id.name.underscore == segment }
+      return nil if matches.empty?
+      parent_fqns = matches.map(&:fqn).uniq
     end
-    current
+    matches.first
   end
 end

@@ -676,6 +676,19 @@ class EntityBrowsingTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "a path resolves through namespaces that share a slug" do
+    %w[Erb ERB].each do |name|
+      identity = sources(:rails).entity_identities.create!(fqn: name, kind: name == "ERB" ? "class" : "module", name: name)
+      EntityVersion.create!(entity_identity: identity, package_version: package_versions(:v8_1_3))
+    end
+    util = sources(:rails).entity_identities.create!(fqn: "ERB::Util", kind: "module", name: "Util", parent_fqn: "ERB")
+    EntityVersion.create!(entity_identity: util, package_version: package_versions(:v8_1_3))
+
+    get entity_path(version: "v8.1.3", path: "erb/util")
+    assert_response :success
+    assert_select "meta[name='nav-active-fqn'][content=?]", "ERB::Util"
+  end
+
   test "a method named like an operator slug resolves to itself" do
     create_persistence_member!(name: "and", kind: "method", version: :v8_1_3)
 
